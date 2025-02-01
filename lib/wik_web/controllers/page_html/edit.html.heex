@@ -1,0 +1,8 @@
+<h1>Edit {@slug}</h1>
+<form action={"/pages/#{@slug}"} method="post">
+  <textarea name="content" rows="20" cols="80"><%= @content %></textarea>
+  <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
+
+  <br />
+  <button type="submit">Save</button>
+</form>

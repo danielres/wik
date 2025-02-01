@@ -18,6 +18,10 @@ defmodule WikWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    get "/pages/:slug", PageController, :show
+    get "/pages/:slug/edit", PageController, :edit
+    post "/pages/:slug", PageController, :update
   end
 
   # Other scopes may use custom stacks.

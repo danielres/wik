@@ -2,4 +2,5 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@import "typeset.css"
 /* This file is for your main application CSS */

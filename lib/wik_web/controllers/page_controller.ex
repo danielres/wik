@@ -28,4 +28,18 @@ defmodule WikWeb.PageController do
     Page.save(slug, content)
     redirect(conn, to: "/pages/#{slug}")
   end
+
+  def suggestions(conn, %{"term" => term}) do
+    pages =
+      "pages"
+      |> File.ls!()
+      |> Enum.filter(&String.ends_with?(&1, ".md"))
+      |> Enum.map(&Path.rootname/1)
+      |> Enum.filter(fn page ->
+        String.contains?(String.downcase(page), String.downcase(term))
+      end)
+      |> Enum.sort()
+
+    json(conn, pages)
+  end
 end

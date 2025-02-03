@@ -1,8 +1,116 @@
-<h1>Edit {@slug}</h1>
-<form action={"/pages/#{@slug}"} method="post">
-  <textarea name="content" rows="20" cols="80"><%= @content %></textarea>
+<form
+  action={"/pages/#{@slug}"}
+  method="post"
+  class="fixed inset-8 top-4 gap-4 grid grid-rows-[auto,1fr] "
+>
+  <div class="grid grid-cols-[1fr_auto] gap-2 items-end">
+    <ul id="pages-suggestions" class=""></ul>
+    <button type="submit" class="btn btn-primary" tabindex="2">Save</button>
+  </div>
+
+  <textarea autofocus name="content" class="px-8 py-4" tabindex="1">
+  <%= @content %>
+  </textarea>
   <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
 
   <br />
-  <button type="submit">Save</button>
 </form>
+
+<!-- Autocomplete suggestions container -->
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const textarea = document.querySelector("textarea[name='content']");
+    const suggestionsBox = document.getElementById("pages-suggestions");
+    let suggestions = [];  // Array of <li> elements
+    let activeIndex = 0;   // Currently active suggestion index
+
+    // Update active suggestion class
+    function updateActiveSuggestion() {
+      suggestions.forEach((item, idx) => {
+        if (idx === activeIndex) {
+          item.classList.add("active");
+        } else {
+          item.classList.remove("active");
+        }
+      });
+    }
+
+    // Insert the selected suggestion into the textarea
+    function insertSuggestion(suggestion) {
+      const cursorPos = textarea.selectionStart;
+      const textBeforeCursor = textarea.value.slice(0, cursorPos);
+      const match = textBeforeCursor.match(/\[\[([^\]]*)$/);
+      if (match) {
+        const startIndex = match.index;
+        const before = textarea.value.slice(0, startIndex);
+        const after = textarea.value.slice(cursorPos);
+        textarea.value = before + "[[" + suggestion + "]]" + after;
+        const newPos = before.length + suggestion.length + 4;
+        textarea.setSelectionRange(newPos, newPos);
+        textarea.focus();
+        suggestionsBox.innerHTML = "";
+        suggestions = [];
+        activeIndex = 0;
+      }
+    }
+
+    // Fetch suggestions based on the term after '[['.
+    function updateSuggestions(term) {
+      fetch("/api/pages_suggestions?term=" + encodeURIComponent(term))
+        .then(response => response.json())
+        .then(data => {
+          suggestionsBox.innerHTML = "";
+          suggestions = [];
+          data.forEach(suggestion => {
+            const item = document.createElement("li");
+            item.textContent = suggestion;
+            item.addEventListener("mousedown", function(e) {
+              // Prevent losing focus on the textarea.
+              e.preventDefault();
+              insertSuggestion(suggestion);
+            });
+            suggestionsBox.appendChild(item);
+            suggestions.push(item);
+          });
+          if (suggestions.length > 0) {
+            activeIndex = 0;
+            updateActiveSuggestion();
+          }
+        });
+    }
+
+    textarea.addEventListener("keyup", function(event) {
+      // Exclude navigation keys from triggering suggestion updates.
+      if (["Tab", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+        return;
+      }
+      const cursorPos = textarea.selectionStart;
+      const textBeforeCursor = textarea.value.slice(0, cursorPos);
+      // Look for an opening "[[" without a closing "]]" yet.
+      const match = textBeforeCursor.match(/\[\[([^\]]*)$/);
+      if(!match) return;
+      const term = match[1];
+      if(term.length === 0) return;
+      updateSuggestions(term);
+    });
+
+    textarea.addEventListener("keydown", function(event) {
+      if (suggestions.length === 0) return;
+      
+      // When suggestions are visible, handle keyboard navigation.
+      if (event.key === "Enter") {
+        event.preventDefault();
+        insertSuggestion(suggestions[activeIndex].textContent);
+      } else if ((event.key === "Tab" && !event.shiftKey) || event.key === "ArrowRight") {
+        event.preventDefault();
+        activeIndex = (activeIndex + 1) % suggestions.length;
+        updateActiveSuggestion();
+      } else if ((event.key === "Tab" && event.shiftKey) || event.key === "ArrowLeft") {
+        event.preventDefault();
+        activeIndex = (activeIndex - 1 + suggestions.length) % suggestions.length;
+        updateActiveSuggestion();
+      }
+    });
+  });
+</script>

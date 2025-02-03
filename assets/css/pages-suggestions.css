@@ -1,0 +1,12 @@
+#pages-suggestions {
+    @apply flex gap-4 h-6 overflow-x-hidden;
+
+    &>* {
+        @apply bg-blue-100 hover:bg-blue-300;
+        @apply text-nowrap px-2 cursor-pointer;
+    }
+
+    .active {
+        @apply !bg-blue-500 text-white;
+    }
+}

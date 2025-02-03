@@ -2,5 +2,20 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-@import "typeset.css"
+@import "typeset.css";
+@import "typeset-custom.css";
+
+@import "pages-suggestions.css";
+
+.btn {
+    @apply py-2 px-4 rounded opacity-60 hover:opacity-100 focus-within:opacity-100 outline-none;
+}
+
+.btn-primary {
+    @apply bg-slate-500 text-white;
+
+}
+
 /* This file is for your main application CSS */
+
+

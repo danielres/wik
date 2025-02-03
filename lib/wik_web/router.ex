@@ -14,6 +14,10 @@ defmodule WikWeb.Router do
     plug :accepts, ["json"]
   end
 
+  scope "/api", WikWeb do
+    get "/pages_suggestions", PageController, :suggestions
+  end
+
   scope "/", WikWeb do
     pipe_through :browser
 

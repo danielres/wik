@@ -2,4 +2,8 @@
     ul {
         list-style-type: initial;
     }
+
+    *:nth-child(1) {
+        margin-top: 0;
+    }
 }

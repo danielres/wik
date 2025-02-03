@@ -7,7 +7,8 @@ defmodule WikWeb.PageController do
     case Page.load(slug) do
       {:ok, content} ->
         rendered = Wiki.render(content)
-        render(conn, "show.html", slug: slug, content: rendered)
+        backlinks = Page.backlinks(slug)
+        render(conn, "show.html", slug: slug, content: rendered, backlinks: backlinks)
 
       :not_found ->
         render(conn, "not_found.html", slug: slug)

@@ -1,9 +1,20 @@
 <h1 class="text-2xl">{@slug}</h1>
 
-<div class="typeset">
+<div class="typeset hidden" id="md-content">
   {raw(@content)}
 </div>
 
 <form action={"/pages/#{@slug}/edit"} method="get">
   <button type="submit" class="btn btn-primary fixed top-4 right-8" tabindex="1">Edit</button>
 </form>
+
+<script type="module">
+  import markdownIt from 'https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/+esm';
+
+  const md = markdownIt();
+  const contentEl = document.getElementById("md-content");
+  const rawMarkdown = contentEl.textContent;
+  const rendered = md.render(rawMarkdown);
+  contentEl.innerHTML = rendered;
+  contentEl.classList.remove("hidden");
+</script>

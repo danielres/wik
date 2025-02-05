@@ -1,20 +1,30 @@
 <div class="space-y-4">
-  <h1 class="text-2xl">{@slug}</h1>
+  <h1 class="text-xl text-slate-700">{@slug}</h1>
 
-  <div class="bg-white p-8">
-    <div class="prose ">{raw(@content)}</div>
+  <div class="bg-slate-50 p-8 rounded shadow">
+    <div
+      :if={@backlinks && length(@backlinks) > 0}
+      class="float-right bg-white border p-6 py-5 rounded space-y-2 ml-8 mb-8 max-w-52 overflow-hidden"
+    >
+      <h2 class="text-xs font-semibold text-slate-500">Backlinks</h2>
+      <ul class="text-sm space-y-2">
+        <li :for={backlink <- @backlinks}>
+          <a
+            class="text-blue-600 hover:underline opacity-75 hover:opacity-100 leading-none block"
+            href={"/pages/#{backlink}"}
+          >
+            {backlink}
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="prose prose-sm prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-headings:text-slate-600 ">
+      {raw(@content)}
+    </div>
   </div>
 
   <form action={"/pages/#{@slug}/edit"} method="get">
     <button type="submit" class="btn btn-primary fixed top-4 right-8" tabindex="1">Edit</button>
   </form>
-
-  <div :if={@backlinks && length(@backlinks) > 0} class="bg-white p-4">
-    <h2 class="text-xs font-semibold text-slate-800">Backlinks</h2>
-    <ul class="flex flex-wrap gap-x-4 text-sm">
-      <li :for={backlink <- @backlinks}>
-        <a class="text-blue-600 hover:underline" href={"/pages/#{backlink}"}>{backlink}</a>
-      </li>
-    </ul>
-  </div>
 </div>

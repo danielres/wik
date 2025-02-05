@@ -2,9 +2,6 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-@import "typeset.css";
-@import "typeset-custom.css";
-
 @import "pages-suggestions.css";
 
 .btn {
@@ -17,5 +14,3 @@
 }
 
 /* This file is for your main application CSS */
-
-

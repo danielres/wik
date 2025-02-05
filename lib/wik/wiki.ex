@@ -3,6 +3,7 @@ defmodule Wik.Wiki do
   def render(content) do
     content
     |> replace_links()
+    |> Earmark.as_html!(escape: false)
   end
 
   defp replace_links(content) do

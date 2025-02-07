@@ -1,5 +1,22 @@
 import Config
 
+bot_token = System.fetch_env!("BOT_TOKEN")
+
+all_groups =
+  System.get_env("ALL_GROUPS", "")
+  |> String.split(",", trim: true)
+  |> Enum.map(fn group_str ->
+    case String.split(group_str, ":", parts: 2) do
+      [id, title] -> %{id: id, title: title}
+      _ -> nil
+    end
+  end)
+  |> Enum.reject(&is_nil/1)
+
+config :wik,
+  bot_token: bot_token,
+  all_groups: all_groups
+
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
 # system starts, so it is typically used to load production configuration

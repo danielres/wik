@@ -1,0 +1,31 @@
+#!/bin/bash
+# dotenv: a wrapper that sets environment variables then executes a command
+
+# example usage:
+#   $ ./dotenv bash
+#   $ ./dotenv mix phx.server
+
+# Source environment variables from a .env file, if it exists.
+# This expects lines in .env like:
+#   BOT_TOKEN="..."
+#   ALL_GROUPS="..."
+
+if [ -f .env ]; then
+    # Export each non-comment line found in .env
+    while IFS= read -r line; do
+        # Ignore empty lines and comments
+        if [[ -n "$line" && ! "$line" =~ ^# ]]; then
+            export "$line"
+        fi
+    done <.env
+fi
+
+# Or set environment variables inline (uncomment and adjust if you prefer)
+# export BOT_TOKEN="..."
+# export ALL_GROUPS="..."
+
+# Any commands here will run before the command passed as arguments.
+# echo "HELLO"
+
+# Finally, execute the command provided as arguments with the current environment.
+exec "$@"

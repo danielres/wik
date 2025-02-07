@@ -1,6 +1,47 @@
-<main class="px-4 py-20 sm:px-6 lg:px-8">
-  <div class="mx-auto max-w-2xl">
-    <.flash_group flash={@flash} />
-    {@inner_content}
+<%= if user = Plug.Conn.get_session(@conn, :user) do %>
+  <header class="bg-slate-200 py-4">
+    <div class="mx-auto max-w-2xl flex justify-between px-4">
+      <select
+        tabindex="1"
+        name="groups"
+        id="groups"
+        class="cursor-pointer opacity-75 hover:opacity-100 bg-white/50 border-none focus:ring-transparent rounded transition-colors text-xs"
+        class
+        class
+      >
+        <option :for={group <- user.member_of} value={group.id}>{group.title}</option>
+      </select>
+
+      <div class="flex gap-4 items-center">
+        <div class="text-right">
+          <div class="text-sm">{user.username}</div>
+
+          <a href={~p"/auth/logout"} class="text-slate-500 hover:underline block text-xs">
+            Logout
+          </a>
+        </div>
+
+        <img src={user.photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
+      </div>
+    </div>
+  </header>
+
+  <main class="py-8 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl px-4">
+      <.flash_group flash={@flash} />
+      {@inner_content}
+    </div>
+  </main>
+<% else %>
+  <div class="grid place-items-center h-[100vh]">
+    <script
+      async
+      src="https://telegram.org/js/telegram-widget.js?22"
+      data-telegram-login="neurospicybot"
+      data-size="large"
+      data-radius="3"
+      data-auth-url="/auth/telegram/callback"
+    >
+    </script>
   </div>
-</main>
+<% end %>

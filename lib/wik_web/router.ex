@@ -21,6 +21,9 @@ defmodule WikWeb.Router do
   scope "/", WikWeb do
     pipe_through :browser
 
+    get "/auth/telegram/callback", TelegramAuthController, :callback
+    get "/auth/logout", SessionController, :logout
+
     get "/", PageController, :home
 
     get "/pages/:slug", PageController, :show

@@ -1,7 +1,12 @@
 <div class="space-y-4">
-  <h1 class="text-xl text-slate-700">{@slug}</h1>
+  <div class="flex justify-between items-end">
+    <h1 class="text-xl text-slate-700">{@slug}</h1>
+    <form action={"/pages/#{@slug}/edit"} method="get">
+      <button type="submit" class="btn btn-primary" tabindex="1">Edit</button>
+    </form>
+  </div>
 
-  <div class="bg-slate-50 p-8 rounded shadow">
+  <div class="bg-slate-50 p-4 md:p-8 rounded shadow">
     <div
       :if={@backlinks && length(@backlinks) > 0}
       class="float-right bg-white border p-6 py-5 rounded space-y-2 ml-8 mb-8 max-w-52 overflow-hidden"
@@ -22,9 +27,7 @@
     <div class="prose prose-sm prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-headings:text-slate-600 ">
       {raw(@content)}
     </div>
-  </div>
 
-  <form action={"/pages/#{@slug}/edit"} method="get">
-    <button type="submit" class="btn btn-primary fixed top-4 right-8" tabindex="1">Edit</button>
-  </form>
+    <div class="clear-both"></div>
+  </div>
 </div>

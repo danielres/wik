@@ -1,14 +1,20 @@
+<div class="fixed inset-0 bg-slate-400"></div>
 <form
   action={"/pages/#{@slug}"}
   method="post"
-  class="fixed inset-8 top-4 gap-4 grid grid-rows-[auto,1fr] "
+  class="fixed inset-4 md:inset-8 gap-4 grid grid-rows-[auto,1fr] "
 >
   <div class="grid grid-cols-[1fr_auto] gap-2 items-end">
     <ul id="pages-suggestions" class=""></ul>
     <button type="submit" class="btn btn-primary" tabindex="2">Save</button>
   </div>
 
-  <textarea autofocus name="content" class="px-8 py-4" tabindex="1">
+  <textarea
+    autofocus
+    name="content"
+    class="md:px-8 py-4 rounded shadow focus:ring focus:ring-slate-500/50  focus:border-transparent focus:outline-none"
+    tabindex="1"
+  >
   <%= @content %>
   </textarea>
   <input type="hidden" name="_csrf_token" value={get_csrf_token()} />

@@ -4,6 +4,6 @@ defmodule WikWeb.SessionController do
   def logout(conn, _params) do
     conn
     |> configure_session(drop: true)
-    |> redirect(to: "/pages/home")
+    |> redirect(to: "/")
   end
 end

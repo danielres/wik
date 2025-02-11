@@ -6,8 +6,8 @@ all_groups =
   System.get_env("ALL_GROUPS", "")
   |> String.split(",", trim: true)
   |> Enum.map(fn group_str ->
-    case String.split(group_str, ":", parts: 2) do
-      [id, title] -> %{id: id, title: title}
+    case String.split(group_str, ":", parts: 3) do
+      [id, slug, title] -> %{id: id, slug: slug, title: title}
       _ -> nil
     end
   end)

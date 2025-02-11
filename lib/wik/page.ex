@@ -1,10 +1,11 @@
 defmodule Wik.Page do
-  @pages_dir "pages"
+  def pages_dir(group_slug), do: Path.join(Path.join("data", group_slug), "wiki")
 
-  def file_path(slug), do: Path.join(@pages_dir, "#{slug}.md")
+  def file_path(group_slug, slug),
+    do: Path.join(pages_dir(group_slug), "#{slug}.md")
 
-  def load(slug) do
-    path = file_path(slug)
+  def load(group_slug, slug) do
+    path = file_path(group_slug, slug)
 
     if File.exists?(path) do
       {:ok, File.read!(path)}
@@ -13,13 +14,13 @@ defmodule Wik.Page do
     end
   end
 
-  def save(slug, content) do
-    File.mkdir_p!(@pages_dir)
-    File.write!(file_path(slug), content)
+  def save(group_slug, slug, content) do
+    File.mkdir_p!(pages_dir(group_slug))
+    File.write!(file_path(group_slug, slug), content)
   end
 
-  def backlinks(current_slug) do
-    @pages_dir
+  def backlinks(group_slug, current_slug) do
+    pages_dir(group_slug)
     |> File.ls!()
     |> Enum.filter(&String.ends_with?(&1, ".md"))
     |> Enum.map(&Path.rootname/1)
@@ -28,7 +29,7 @@ defmodule Wik.Page do
       if slug == current_slug do
         false
       else
-        case load(slug) do
+        case load(group_slug, slug) do
           {:ok, content} ->
             regex = ~r/\[\[([^\]]+)\]\]/
 

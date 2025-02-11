@@ -3,31 +3,45 @@ defmodule WikWeb.PageController do
 
   alias Wik.{Page, Wiki}
 
-  def show(conn, %{"slug" => slug}) do
-    case Page.load(slug) do
+  def home(conn, _params) do
+    render(conn, "home.html", layout: false)
+  end
+
+  def wiki_index(conn, %{"group_slug" => group_slug}) do
+    redirect(conn, to: ~s"/#{group_slug}/wiki/home")
+  end
+
+  def show(conn, %{"group_slug" => group_slug, "slug" => slug}) do
+    case Page.load(group_slug, slug) do
       {:ok, content} ->
-        rendered = Wiki.render(content)
-        backlinks = Page.backlinks(slug)
-        render(conn, "show.html", slug: slug, content: rendered, backlinks: backlinks)
+        rendered = Wiki.render(group_slug, content)
+        backlinks = Page.backlinks(group_slug, slug)
+
+        render(conn, "show.html",
+          group_slug: group_slug,
+          slug: slug,
+          content: rendered,
+          backlinks: backlinks
+        )
 
       :not_found ->
-        render(conn, "not_found.html", slug: slug)
+        render(conn, "not_found.html", group_slug: group_slug, slug: slug)
     end
   end
 
-  def edit(conn, %{"slug" => slug}) do
+  def edit(conn, %{"group_slug" => group_slug, "slug" => slug}) do
     content =
-      case Page.load(slug) do
+      case Page.load(group_slug, slug) do
         {:ok, content} -> content
         :not_found -> ""
       end
 
-    render(conn, "edit.html", slug: slug, content: content)
+    render(conn, "edit.html", group_slug: group_slug, slug: slug, content: content)
   end
 
-  def update(conn, %{"slug" => slug, "content" => content}) do
-    Page.save(slug, content)
-    redirect(conn, to: "/pages/#{slug}")
+  def update(conn, %{"group_slug" => group_slug, "slug" => slug, "content" => content}) do
+    Page.save(group_slug, slug, content)
+    redirect(conn, to: ~p"/#{group_slug}/wiki/#{slug}")
   end
 
   def suggestions(conn, %{"term" => term}) do

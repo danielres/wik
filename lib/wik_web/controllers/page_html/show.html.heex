@@ -1,7 +1,7 @@
 <div class="space-y-4">
   <div class="flex justify-between items-end">
     <h1 class="text-xl text-slate-700">{@slug}</h1>
-    <form action={"/pages/#{@slug}/edit"} method="get">
+    <form action={~p"/#{@group_slug}/wiki/#{@slug}/edit"} method="get">
       <button type="submit" class="btn btn-primary" tabindex="1">Edit</button>
     </form>
   </div>
@@ -16,7 +16,7 @@
         <li :for={backlink <- @backlinks}>
           <a
             class="text-blue-600 hover:underline opacity-75 hover:opacity-100 leading-none block"
-            href={"/pages/#{backlink}"}
+            href={~p"/#{@group_slug}/wiki/#{backlink}"}
           >
             {backlink}
           </a>

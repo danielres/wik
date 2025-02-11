@@ -17,11 +17,11 @@ defmodule WikWeb.TelegramAuthController do
       conn
       |> put_session(:user, user)
       |> put_flash(:info, "Welcome #{user.first_name} #{user.last_name} (#{user.username})!")
-      |> redirect(to: "/pages/home")
+      |> redirect(to: "/")
     else
       conn
       |> put_flash(:error, "Invalid Telegram login")
-      |> redirect(to: "/pages/home")
+      |> redirect(to: "/")
     end
   end
 

@@ -1,15 +1,24 @@
+<.flash_group flash={@flash} />
+
 <%= if user = Plug.Conn.get_session(@conn, :user) do %>
   <header class="bg-slate-200 py-4">
-    <div class="mx-auto max-w-2xl flex justify-between px-4">
+    <form
+      class="mx-auto max-w-2xl flex justify-between px-4"
+      onchange="window.location.href = ['', this.elements.groups.value, 'wiki'].join('/')"
+    >
       <select
         tabindex="1"
         name="groups"
         id="groups"
         class="cursor-pointer opacity-75 hover:opacity-100 bg-white/50 border-none focus:ring-transparent rounded transition-colors text-xs"
-        class
-        class
       >
-        <option :for={group <- user.member_of} value={group.id}>{group.title}</option>
+        <option
+          :for={group <- user.member_of}
+          selected={@group_slug == group.slug}
+          value={group.slug}
+        >
+          {group.title}
+        </option>
       </select>
 
       <div class="flex gap-4 items-center">
@@ -23,12 +32,11 @@
 
         <img src={user.photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
       </div>
-    </div>
+    </form>
   </header>
 
   <main class="py-8 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-2xl px-4">
-      <.flash_group flash={@flash} />
       {@inner_content}
     </div>
   </main>

@@ -26,9 +26,11 @@ defmodule WikWeb.Router do
 
     get "/", PageController, :home
 
-    get "/pages/:slug", PageController, :show
-    get "/pages/:slug/edit", PageController, :edit
-    post "/pages/:slug", PageController, :update
+    get "/:group_slug/wiki", PageController, :wiki_index
+
+    get "/:group_slug/wiki/:slug", PageController, :show
+    get "/:group_slug/wiki/:slug/edit", PageController, :edit
+    post "/:group_slug/wiki/:slug", PageController, :update
   end
 
   # Other scopes may use custom stacks.

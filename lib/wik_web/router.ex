@@ -26,6 +26,7 @@ defmodule WikWeb.Router do
 
     get "/", PageController, :home
 
+    get "/:group_slug", PageController, :group_index
     get "/:group_slug/wiki", PageController, :wiki_index
 
     get "/:group_slug/wiki/:slug", PageController, :show

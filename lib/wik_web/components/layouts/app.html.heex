@@ -2,24 +2,19 @@
 
 <%= if user = Plug.Conn.get_session(@conn, :user) do %>
   <header class="bg-slate-200 py-4">
-    <form
-      class="mx-auto max-w-2xl flex justify-between px-4"
-      onchange="window.location.href = ['', this.elements.groups.value, 'wiki'].join('/')"
-    >
-      <select
-        tabindex="1"
-        name="groups"
-        id="groups"
-        class="cursor-pointer opacity-75 hover:opacity-100 bg-white/50 border-none focus:ring-transparent rounded transition-colors text-xs"
-      >
-        <option
-          :for={group <- user.member_of}
-          selected={@group_slug == group.slug}
-          value={group.slug}
+    <div class="mx-auto max-w-2xl flex justify-between pr-4 items-end">
+      <h1 class="flex gap-2 items-center">
+        <a href={~p"/"} class="flex hero-home-mini text-slate-400 hover:text-slate-500">
+          Home
+        </a>
+        <a
+          href={~p"/#{@group_slug}"}
+          class="flex text-slate-500 hover:text-slate-600"
+          style="font-variant: small-caps"
         >
-          {group.title}
-        </option>
-      </select>
+          {@group_title}
+        </a>
+      </h1>
 
       <div class="flex gap-4 items-center">
         <div class="text-right">
@@ -32,11 +27,11 @@
 
         <img src={user.photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
       </div>
-    </form>
+    </div>
   </header>
 
   <main class="py-8 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-2xl px-4">
+    <div class="mx-auto max-w-2xl">
       {@inner_content}
     </div>
   </main>

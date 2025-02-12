@@ -12,6 +12,9 @@ defmodule WikWeb.PageController do
   end
 
   def show(conn, %{"group_slug" => group_slug, "slug" => slug}) do
+    user = get_session(conn, :user)
+    group_title = user.member_of |> Enum.find(&(&1.slug == group_slug)) |> Map.get(:title)
+
     case Page.load(group_slug, slug) do
       {:ok, content} ->
         rendered = Wiki.render(group_slug, content)
@@ -19,6 +22,7 @@ defmodule WikWeb.PageController do
 
         render(conn, "show.html",
           group_slug: group_slug,
+          group_title: group_title,
           slug: slug,
           content: rendered,
           backlinks: backlinks

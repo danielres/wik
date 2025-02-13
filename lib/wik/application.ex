@@ -10,9 +10,7 @@ defmodule Wik.Application do
     children = [
       WikWeb.Telemetry,
       Wik.Repo,
-      {Ecto.Migrator,
-        repos: Application.fetch_env!(:wik, :ecto_repos),
-        skip: skip_migrations?()},
+      {Ecto.Migrator, repos: Application.fetch_env!(:wik, :ecto_repos), skip: skip_migrations?()},
       {DNSCluster, query: Application.get_env(:wik, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Wik.PubSub},
       # Start the Finch HTTP client for sending emails
@@ -20,7 +18,8 @@ defmodule Wik.Application do
       # Start a worker by calling: Wik.Worker.start_link(arg)
       # {Wik.Worker, arg},
       # Start to serve requests, typically the last entry
-      WikWeb.Endpoint
+      WikWeb.Endpoint,
+      {Wik.ResourceLockServer, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

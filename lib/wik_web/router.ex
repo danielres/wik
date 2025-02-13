@@ -29,7 +29,7 @@ defmodule WikWeb.Router do
     get "/:group_slug", PageController, :group_index
     get "/:group_slug/wiki", PageController, :wiki_index
 
-    get "/:group_slug/wiki/:slug", PageController, :show
+    live "/:group_slug/wiki/:slug", PageLive, :show
     get "/:group_slug/wiki/:slug/edit", PageController, :edit
     post "/:group_slug/wiki/:slug", PageController, :update
   end

@@ -1,6 +1,6 @@
 <.flash_group flash={@flash} />
 
-<%= if user = Plug.Conn.get_session(@conn, :user) do %>
+<%= if @user && @user != %{} do %>
   <header class="bg-slate-200 py-4">
     <div class="mx-auto max-w-2xl flex justify-between pr-4 items-end">
       <h1 class="flex gap-2 items-center">
@@ -18,14 +18,14 @@
 
       <div class="flex gap-4 items-center">
         <div class="text-right">
-          <div class="text-sm">{user.username}</div>
+          <div class="text-sm">{@user.username}</div>
 
           <a href={~p"/auth/logout"} class="text-slate-500 hover:underline block text-xs">
             Logout
           </a>
         </div>
 
-        <img src={user.photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
+        <img src={@user.photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
       </div>
     </div>
   </header>

@@ -54,10 +54,6 @@ defmodule WikWeb.PageLive do
     end
   end
 
-  def handle_params(%{"group_slug" => _group_slug} = params, uri, socket) do
-    handle_params(Map.put(params, "slug", "home"), uri, socket)
-  end
-
   @impl true
   def handle_event("suggest", %{"term" => term}, socket) do
     group_slug = socket.assigns.group_slug

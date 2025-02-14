@@ -25,13 +25,34 @@ defmodule WikWeb.Router do
     get "/auth/logout", SessionController, :logout
 
     get "/", PageController, :home
+  end
 
-    get "/:group_slug", PageController, :group_index
-    get "/:group_slug/wiki", PageController, :wiki_index
+  scope "/:group_slug", WikWeb do
+    pipe_through [:browser, :ensure_group_membership]
 
-    live "/:group_slug/wiki/:slug", PageLive, :show
-    get "/:group_slug/wiki/:slug/edit", PageController, :edit
-    post "/:group_slug/wiki/:slug", PageController, :update
+    get "/", PageController, :group_index
+
+    scope "/wiki" do
+      get "/", PageController, :wiki_index
+      live "/:slug", PageLive, :show
+      get "/:slug/edit", PageController, :edit
+      post "/:slug", PageController, :update
+    end
+  end
+
+  defp ensure_group_membership(conn, _opts) do
+    user = Plug.Conn.get_session(conn, :user)
+    group_slug = conn.params["group_slug"]
+    membership? = Enum.any?(user.member_of, fn group -> group.slug == group_slug end)
+
+    if membership? do
+      conn
+    else
+      conn
+      |> Phoenix.Controller.put_flash(:error, "You are not authorized to access this group.")
+      |> Phoenix.Controller.redirect(to: "/")
+      |> halt()
+    end
   end
 
   # Other scopes may use custom stacks.

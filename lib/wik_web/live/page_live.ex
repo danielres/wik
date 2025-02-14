@@ -3,10 +3,10 @@ defmodule WikWeb.PageLive do
 
   alias Wik.{Page, Wiki}
   alias Wik.ResourceLockServer
+  require Logger
 
   @impl true
   def mount(_params, session, socket) do
-    # Extract the logged-in user from the session.
     user = session["user"] || %{}
 
     {:ok,
@@ -18,7 +18,8 @@ defmodule WikWeb.PageLive do
      |> assign(:content, nil)
      |> assign(:backlinks, [])
      |> assign(:editing, false)
-     |> assign(:edit_content, nil)}
+     |> assign(:edit_content, nil)
+     |> assign(:suggestions, [])}
   end
 
   @impl true
@@ -37,7 +38,8 @@ defmodule WikWeb.PageLive do
          |> assign(:group_title, group_title)
          |> assign(:content, rendered)
          |> assign(:backlinks, backlinks)
-         |> assign(:editing, false)}
+         |> assign(:editing, false)
+         |> assign(:suggestions, [])}
 
       :not_found ->
         {:noreply,
@@ -47,13 +49,25 @@ defmodule WikWeb.PageLive do
          |> assign(:group_title, group_title)
          |> assign(:content, nil)
          |> assign(:backlinks, [])
-         |> assign(:editing, true)}
+         |> assign(:editing, true)
+         |> assign(:suggestions, [])}
     end
   end
 
-  # When only group_slug is provided, default slug to "home"
   def handle_params(%{"group_slug" => _group_slug} = params, uri, socket) do
     handle_params(Map.put(params, "slug", "home"), uri, socket)
+  end
+
+  @impl true
+  def handle_event("suggest", %{"term" => term}, socket) do
+    group_slug = socket.assigns.group_slug
+    suggestions = Page.suggestions(group_slug, term)
+    {:noreply, assign(socket, suggestions: suggestions)}
+  end
+
+  @impl true
+  def handle_event("select_suggestion", _params, socket) do
+    {:noreply, assign(socket, suggestions: [])}
   end
 
   @impl true
@@ -64,7 +78,6 @@ defmodule WikWeb.PageLive do
 
     case ResourceLockServer.lock(resource_path, user.id) do
       :ok ->
-        # Load the raw content for editing.
         case Page.load(group_slug, page_slug) do
           {:ok, content} ->
             {:noreply, assign(socket, editing: true, edit_content: content)}
@@ -88,17 +101,13 @@ defmodule WikWeb.PageLive do
     {:noreply, push_navigate(socket, to: ~p"/#{group_slug}/wiki/#{slug}")}
   end
 
-  # Release the lock when the LiveView process terminates.
   @impl true
-  def terminate(_reason, socket) do
-    if socket.assigns.editing do
-      ResourceLockServer.unlock(
-        "#{socket.assigns.group_slug}/wiki/#{socket.assigns.slug}",
-        socket.assigns.user.id
-      )
+  def terminate(reason, %{assigns: assigns} = _socket) do
+    if assigns.editing do
+      resource_path = "#{assigns.group_slug}/wiki/#{assigns.slug}"
+      ResourceLockServer.unlock(resource_path, assigns.user.id)
+      Logger.debug("Unlocked #{resource_path}. Reason: #{inspect(reason)}")
     end
-
-    IO.inspect(socket.assigns, label: "TERMINATE")
 
     :ok
   end
@@ -127,18 +136,41 @@ defmodule WikWeb.PageLive do
 
       <div>
         <%= if @editing do %>
-          <div>
-            <form
-              id="edit-form"
-              data-resource-path={"#{@group_slug}/wiki/#{@slug}"}
-              data-user-id={@user.id}
-              data-user-name={@user.username}
-              phx-hook="ResourceLock"
-              phx-submit="update_page"
+          <form
+            id="edit-form"
+            data-resource-path={"#{@group_slug}/wiki/#{@slug}"}
+            data-user-id={@user.id}
+            data-user-name={@user.username}
+            phx-submit="update_page"
+            class="focus-within:ring-2 rounded bg-white shadow pointer-events-none"
+          >
+            <ul
+              class="flex overflow-x-hidden bg-white rounded-t p-2 [&>li.active]:bg-blue-400"
+              id="suggestions-list"
             >
-              <textarea phx-mounted={JS.focus()} tabindex="1" name="content" class="w-full h-96"><%= @edit_content %></textarea>
-            </form>
-          </div>
+              <li class="spacer opacity-0 w-0 border pointer-events-none">spacer</li>
+              <li
+                :for={suggestion <- @suggestions}
+                :if={length(@suggestions) > 0}
+                phx-click="select_suggestion"
+                phx-value={suggestion}
+                phx-hook="SelectSuggestion"
+                phx-value-target="edit-textarea"
+                id={"suggestion-#{suggestion}"}
+                class={"cursor-pointer bg-blue-100 hover:bg-blue-300 text-nowrap px-2 mr-4 pointer-events-auto #{if suggestion == Enum.at(@suggestions, 0), do: "active", else: ""}"}
+              >
+                {suggestion}
+              </li>
+            </ul>
+            <textarea
+              phx-hook="ShowSuggestionsOnKeyup"
+              id="edit-textarea"
+              phx-mounted={JS.focus()}
+              tabindex="1"
+              name="content"
+              class="w-full h-96 border-t-0 bg-white focus:ring-0 rounded-b border-none pointer-events-auto"
+            ><%= @edit_content %></textarea>
+          </form>
         <% else %>
           <div tabindex="1" class="bg-slate-50 p-4 md:p-8 rounded shadow">
             <div
@@ -160,7 +192,7 @@ defmodule WikWeb.PageLive do
               </ul>
             </div>
 
-            <div class="prose prose-sm prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-headings:text-slate-600 ">
+            <div class="prose prose-sm prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-headings:text-slate-600">
               {raw(@content)}
             </div>
 

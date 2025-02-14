@@ -2,7 +2,6 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-@import "pages-suggestions.css";
 
 .btn {
     @apply py-2 px-4 rounded opacity-60 hover:opacity-100 focus-within:opacity-100 outline-none;

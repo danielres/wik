@@ -47,4 +47,18 @@ defmodule Wik.Page do
     end)
     |> Enum.sort()
   end
+
+  def suggestions(group_slug, term) do
+    files = File.ls!(pages_dir(group_slug))
+
+    root_names = files |> Enum.map(&Path.rootname/1)
+
+    filtered =
+      root_names
+      |> Enum.filter(fn page ->
+        String.contains?(String.downcase(page), String.downcase(term))
+      end)
+
+    Enum.sort(filtered)
+  end
 end

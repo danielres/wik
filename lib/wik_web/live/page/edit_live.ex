@@ -61,6 +61,15 @@ defmodule WikWeb.Page.EditLive do
   end
 
   @impl true
+  def handle_event("cancel_edit", _params, socket) do
+    group_slug = socket.assigns.group_slug
+    slug = socket.assigns.slug
+    user = socket.assigns.user
+    ResourceLockServer.unlock("#{group_slug}/wiki/#{slug}", user.id)
+    {:noreply, push_navigate(socket, to: ~p"/#{group_slug}/wiki/#{slug}")}
+  end
+
+  @impl true
   def terminate(reason, socket) do
     resource_path = socket.assigns.resource_path
     user_id = socket.assigns.user.id
@@ -72,12 +81,35 @@ defmodule WikWeb.Page.EditLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="space-y-4 grid grid-rows-[auto,1fr] max-w-2xl ">
+    <div
+      data-shortcuts="page_edit"
+      id="edit_live"
+      class="space-y-4 grid grid-rows-[auto,1fr] max-w-2xl "
+    >
       <div class="flex justify-between items-end">
         <h1 class="text-xl text-slate-700">{@slug || "Untitled"}</h1>
-        <button tabindex="2" form="edit-form" type="submit" class="btn btn-primary">
-          Save
-        </button>
+        <div class="flex gap-4">
+          <button
+            tabindex="3"
+            type="cancel"
+            class="btn btn-secondary"
+            phx-click="cancel_edit"
+            phx-hook="AddKeyboardShortcut"
+            id="button-cancel-edit"
+          >
+            Cancel
+          </button>
+          <button
+            tabindex="2"
+            form="edit-form"
+            type="submit"
+            class="btn btn-primary"
+            phx-hook="AddKeyboardShortcut"
+            id="button-save-edit"
+          >
+            Save
+          </button>
+        </div>
       </div>
 
       <form

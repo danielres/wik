@@ -53,7 +53,13 @@ defmodule WikWeb.Page.ShowLive do
       <div class="flex justify-between items-end">
         <h1 class="text-xl text-slate-700">{@slug}</h1>
 
-        <.link href={~p"/#{@group_slug}/wiki/#{@slug}/edit"} class="btn btn-primary mt-4">
+        <.link
+          href={~p"/#{@group_slug}/wiki/#{@slug}/edit"}
+          class="btn btn-primary mt-4"
+          title="Ctrl+e"
+          phx-hook="AddKeyboardShortcut"
+          id="button-edit-page"
+        >
           Edit
         </.link>
       </div>

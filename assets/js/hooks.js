@@ -1,4 +1,43 @@
 let Hooks = {};
+Hooks.AddKeyboardShortcut = {
+    mounted() {
+        this.abortController = new AbortController();
+        const { signal } = this.abortController;
+        const innerHtml = this.el.innerHTML;
+
+        // Shortcut for button EDIT  
+        if (this.el.id === "button-edit-page") {
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Control") this.el.innerHTML = "Ctrl + e";
+                if (e.ctrlKey && e.key === "e") this.el.click();
+            }, { signal });
+
+            document.addEventListener("keyup", (e) => {
+                if (e.key === "Control") this.el.innerHTML = innerHtml;
+            }, { signal });
+        }
+
+        // Shortcuts for buttons SAVE and CANCEL 
+        //// We have to attach the event listeners to the textarea
+        //// because the textarea captures the keyboad events
+        const textarea = document.querySelector("#edit-textarea");
+        if (textarea) {
+            textarea.addEventListener("keydown", (e) => {
+                if (e.key === "Control") {
+                    if (this.el.id === "button-save-edit") this.el.innerHTML = "Ctrl + s";
+                    if (this.el.id === "button-cancel-edit") this.el.innerHTML = "Ctrl + x";
+                };
+                if (this.el.id === "button-save-edit" && e.ctrlKey && e.key === "s") this.el.click();
+                if (this.el.id === "button-cancel-edit" && e.ctrlKey && e.key === "x") this.el.click();
+            }, { signal });
+            textarea.addEventListener("keyup", (e) => {
+                if (e.key === "Control") this.el.innerHTML = innerHtml;
+            }, { signal });
+        }
+    },
+
+    destroyed() { this.abortController.abort() }
+};
 
 Hooks.ShowSuggestionsOnKeyup = {
     mounted() {

@@ -9,6 +9,10 @@
 
 .btn-primary {
     @apply bg-slate-500 text-white;
+}
+
+.btn-secondary {
+    @apply bg-slate-500/50 hover:bg-slate-500 text-white;
 
 }
 

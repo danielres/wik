@@ -28,20 +28,36 @@ defmodule WikWeb.Router do
   end
 
   scope "/:group_slug", WikWeb do
-    pipe_through [:browser, :ensure_group_membership]
+    pipe_through [:browser, :ensure_auth, :ensure_group_membership]
 
     get "/", PageController, :group_index
 
     scope "/wiki" do
       get "/", PageController, :wiki_index
-      live "/:slug", PageLive, :show
-      get "/:slug/edit", PageController, :edit
-      post "/:slug", PageController, :update
+      live "/:slug", Page.ShowLive
+
+      live_session :default do
+        pipe_through [:handle_resource_lock]
+        live "/:slug/edit", Page.EditLive
+      end
+    end
+  end
+
+  defp ensure_auth(conn, _opts) do
+    user = Plug.Conn.get_session(conn, :user)
+
+    if user do
+      conn |> assign(:user, user)
+    else
+      conn
+      |> Phoenix.Controller.put_flash(:error, "You must be logged in to access this page.")
+      |> Phoenix.Controller.redirect(to: "/")
+      |> halt()
     end
   end
 
   defp ensure_group_membership(conn, _opts) do
-    user = Plug.Conn.get_session(conn, :user)
+    user = conn.assigns.user
     group_slug = conn.params["group_slug"]
     membership? = Enum.any?(user.member_of, fn group -> group.slug == group_slug end)
 
@@ -52,6 +68,24 @@ defmodule WikWeb.Router do
       |> Phoenix.Controller.put_flash(:error, "You are not authorized to access this group.")
       |> Phoenix.Controller.redirect(to: "/")
       |> halt()
+    end
+  end
+
+  defp handle_resource_lock(conn, _opts) do
+    user = conn.assigns.user
+    group_slug = conn.params["group_slug"]
+    slug = conn.params["slug"]
+    resource_path = "#{group_slug}/wiki/#{slug}"
+
+    case Wik.ResourceLockServer.lock(resource_path, user.id) do
+      :ok ->
+        conn
+
+      {:error, reason} ->
+        conn
+        |> Phoenix.Controller.put_flash(:error, reason)
+        |> Phoenix.Controller.redirect(to: "/#{group_slug}/wiki/#{slug}")
+        |> halt()
     end
   end
 

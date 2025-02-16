@@ -85,15 +85,7 @@ defmodule WikWeb.Page.EditLive do
       <div class="flex justify-between items-end">
         <h1 class="text-xl text-slate-700">{@slug || "Untitled"}</h1>
         <div class="flex gap-4">
-          <button
-            phx-hook="SetShortcut"
-            phx-hook-shortcut-key="x"
-            phx-click="cancel_edit"
-            id="button-cancel-edit"
-            tabindex="3"
-            type="cancel"
-            class="btn btn-secondary"
-          >
+          <button phx-click="cancel_edit" tabindex="3" type="cancel" class="btn btn-secondary">
             Cancel
           </button>
           <button

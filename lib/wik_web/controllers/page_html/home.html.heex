@@ -26,14 +26,19 @@
   </ul>
 <% else %>
   <div class="grid place-items-center h-[100vh]">
-    <script
-      async
-      src="https://telegram.org/js/telegram-widget.js?22"
-      data-telegram-login="neurospicybot"
-      data-size="large"
-      data-radius="3"
-      data-auth-url="/auth/telegram/callback"
-    >
-    </script>
+    <div>
+      <div :if={Mix.env() == :dev} class="text-center mb-4">
+        <.link class="btn btn-primary" href="/dev/auth">Login as test user</.link>
+      </div>
+      <script
+        async
+        src="https://telegram.org/js/telegram-widget.js?22"
+        data-telegram-login="neurospicybot"
+        data-size="large"
+        data-radius="3"
+        data-auth-url="/auth/telegram/callback"
+      >
+      </script>
+    </div>
   </div>
 <% end %>

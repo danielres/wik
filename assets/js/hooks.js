@@ -5,11 +5,15 @@ Hooks.AddKeyboardShortcut = {
         const { signal } = this.abortController;
         const innerHtml = this.el.innerHTML;
 
+        const is_edit_button = this.el.id === "button-edit-page";
+        const is_save_button = this.el.id === "button-save-edit";
+        const is_cancel_button = this.el.id === "button-cancel-edit";
+
         // Shortcut for button EDIT  
-        if (this.el.id === "button-edit-page") {
+        if (is_edit_button) {
             document.addEventListener("keydown", (e) => {
                 if (e.key === "Control") this.el.innerHTML = "Ctrl + e";
-                if (e.ctrlKey && e.key === "e") this.el.click();
+                if (e.ctrlKey && e.key === "e") { e.preventDefault(); this.el.click(); };
             }, { signal });
 
             document.addEventListener("keyup", (e) => {
@@ -24,11 +28,12 @@ Hooks.AddKeyboardShortcut = {
         if (textarea) {
             textarea.addEventListener("keydown", (e) => {
                 if (e.key === "Control") {
-                    if (this.el.id === "button-save-edit") this.el.innerHTML = "Ctrl + s";
-                    if (this.el.id === "button-cancel-edit") this.el.innerHTML = "Ctrl + x";
+                    if (is_save_button) this.el.innerHTML = "Ctrl + s";
+                    if (is_cancel_button) this.el.innerHTML = "Ctrl + x";
                 };
-                if (this.el.id === "button-save-edit" && e.ctrlKey && e.key === "s") this.el.click();
-                if (this.el.id === "button-cancel-edit" && e.ctrlKey && e.key === "x") this.el.click();
+                const is_saving = e.ctrlKey && e.key === "s" && is_save_button;
+                const is_cancelling = e.ctrlKey && e.key === "x" && is_cancel_button;
+                if (is_saving || is_cancelling) { e.preventDefault(); this.el.click(); };
             }, { signal });
             textarea.addEventListener("keyup", (e) => {
                 if (e.key === "Control") this.el.innerHTML = innerHtml;

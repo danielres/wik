@@ -30,16 +30,29 @@ Hooks.ShowSuggestionsOnKeyup = {
             const textarea = this.el;
             const value = textarea.value;
             const cursor = textarea.selectionStart;
-            const lastIndex = value.lastIndexOf("[[", cursor);
-            if (lastIndex === -1) {
-                this.pushEvent("suggest", { term: "" });
-                return;
-            }
 
-            const termBase = value.substring(lastIndex + 2, cursor);
-            const wsIndex = termBase.search(/\s/);
-            const term = wsIndex === -1 ? termBase : termBase.substring(0, wsIndex);
-            this.pushEvent("suggest", { term });
+            const lineBeforeCursor = value.substring(0, cursor).split("\n").pop();
+            const lineAfterCursor = value.substring(cursor, value.length).split("\n").shift();
+            const lineBeforeWithoutLinks = lineBeforeCursor.replace(/\[\[([^\]]*)\]\]/g, "");
+            const lineAfterWithoutLinks = lineAfterCursor.replace(/\[\[([^\]]*)\]\]/g, "");
+
+            const characterBeforeCursor = value.substring(cursor - 1, cursor);
+            const characterAfterCursor = value.substring(cursor, cursor + 1);
+            const isWithinOpeningDelimiters = characterBeforeCursor === "[" && characterAfterCursor === "[";
+            const isWithinClosingDelimiters = characterBeforeCursor === "]" && characterAfterCursor === "]";
+            const isWithinDelimiters = isWithinOpeningDelimiters || isWithinClosingDelimiters;
+
+            const isWithinExistingLink = !isWithinDelimiters && lineBeforeWithoutLinks.includes("[[") && lineAfterWithoutLinks.includes("]]");
+            const isWithinNewLink = !isWithinDelimiters && lineBeforeWithoutLinks.includes("[[") && !lineAfterWithoutLinks.includes("]]");
+            if (!isWithinExistingLink && !isWithinNewLink) return;
+
+            const linkTextBeforeCursor = lineBeforeWithoutLinks.split("[[")[1];
+            const linkTextAfterCursor = lineAfterWithoutLinks.split("]]")[0];
+            const linkText = linkTextBeforeCursor + linkTextAfterCursor;
+            const linkTextUntilWhitespace = linkText.split(" ")[0];
+
+            if (isWithinExistingLink) this.pushEvent("suggest", { term: linkText });
+            if (isWithinNewLink) this.pushEvent("suggest", { term: linkTextUntilWhitespace });
         }, { signal });
 
         // Keydown listener for inserting the first suggestion only when suggestions are active

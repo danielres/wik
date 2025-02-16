@@ -8,6 +8,8 @@ defmodule WikWeb.Page.ShowLive do
   def mount(_params, session, socket) do
     user = session["user"] || %{}
 
+    Phoenix.PubSub.subscribe(Wik.PubSub, "pages")
+
     {:ok,
      socket
      |> assign(:user, user)
@@ -43,6 +45,16 @@ defmodule WikWeb.Page.ShowLive do
          |> assign(:group_title, group_title)
          |> assign(:content, nil)
          |> assign(:backlinks, [])}
+    end
+  end
+
+  @impl true
+  def handle_info({:page_updated, _user, group_slug, slug, new_content}, socket) do
+    if(socket.assigns.group_slug == group_slug && socket.assigns.slug == slug) do
+      rendered = Wiki.render(group_slug, new_content)
+      {:noreply, socket |> assign(content: rendered)}
+    else
+      {:noreply, socket}
     end
   end
 

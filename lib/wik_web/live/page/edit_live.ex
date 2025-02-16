@@ -52,11 +52,13 @@ defmodule WikWeb.Page.EditLive do
 
   @impl true
   def handle_event("update_page", %{"content" => new_content}, socket) do
-    group_slug = socket.assigns.group_slug
-    slug = socket.assigns.slug
+    %{group_slug: group_slug, slug: slug, user: user} = socket.assigns
     Page.save(group_slug, slug, new_content)
-    user = socket.assigns.user
     ResourceLockServer.unlock("#{group_slug}/wiki/#{slug}", user.id)
+
+    msg = {:page_updated, user, group_slug, slug, new_content}
+    Phoenix.PubSub.broadcast(Wik.PubSub, "pages", msg)
+
     {:noreply, push_navigate(socket, to: ~p"/#{group_slug}/wiki/#{slug}")}
   end
 

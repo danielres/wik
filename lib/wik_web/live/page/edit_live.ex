@@ -81,31 +81,29 @@ defmodule WikWeb.Page.EditLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div
-      data-shortcuts="page_edit"
-      id="edit_live"
-      class="space-y-4 grid grid-rows-[auto,1fr] max-w-2xl "
-    >
+    <div id="edit_live" class="space-y-4 grid grid-rows-[auto,1fr] max-w-2xl ">
       <div class="flex justify-between items-end">
         <h1 class="text-xl text-slate-700">{@slug || "Untitled"}</h1>
         <div class="flex gap-4">
           <button
+            phx-hook="SetShortcut"
+            phx-hook-shortcut-key="x"
+            phx-click="cancel_edit"
+            id="button-cancel-edit"
             tabindex="3"
             type="cancel"
             class="btn btn-secondary"
-            phx-click="cancel_edit"
-            phx-hook="AddKeyboardShortcut"
-            id="button-cancel-edit"
           >
             Cancel
           </button>
           <button
+            phx-hook="SetShortcut"
+            phx-hook-shortcut-key="s"
+            id="button-save-edit"
             tabindex="2"
             form="edit-form"
             type="submit"
             class="btn btn-primary"
-            phx-hook="AddKeyboardShortcut"
-            id="button-save-edit"
           >
             Save
           </button>

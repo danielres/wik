@@ -1,46 +1,22 @@
 let Hooks = {};
-Hooks.AddKeyboardShortcut = {
+
+Hooks.SetShortcut = {
     mounted() {
         this.abortController = new AbortController();
         const { signal } = this.abortController;
+
+        const shortcutKey = this.el.getAttribute("phx-hook-shortcut-key");
         const innerHtml = this.el.innerHTML;
 
-        const is_edit_button = this.el.id === "button-edit-page";
-        const is_save_button = this.el.id === "button-save-edit";
-        const is_cancel_button = this.el.id === "button-cancel-edit";
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Control") this.el.innerHTML = "Ctrl + " + shortcutKey;
+            if (e.ctrlKey && e.key === shortcutKey) { e.preventDefault(); this.el.click(); };
+        }, { signal });
 
-        // Shortcut for button EDIT  
-        if (is_edit_button) {
-            document.addEventListener("keydown", (e) => {
-                if (e.key === "Control") this.el.innerHTML = "Ctrl + e";
-                if (e.ctrlKey && e.key === "e") { e.preventDefault(); this.el.click(); };
-            }, { signal });
-
-            document.addEventListener("keyup", (e) => {
-                if (e.key === "Control") this.el.innerHTML = innerHtml;
-            }, { signal });
-        }
-
-        // Shortcuts for buttons SAVE and CANCEL 
-        //// We have to attach the event listeners to the textarea
-        //// because the textarea captures the keyboad events
-        const textarea = document.querySelector("#edit-textarea");
-        if (textarea) {
-            textarea.addEventListener("keydown", (e) => {
-                if (e.key === "Control") {
-                    if (is_save_button) this.el.innerHTML = "Ctrl + s";
-                    if (is_cancel_button) this.el.innerHTML = "Ctrl + x";
-                };
-                const is_saving = e.ctrlKey && e.key === "s" && is_save_button;
-                const is_cancelling = e.ctrlKey && e.key === "x" && is_cancel_button;
-                if (is_saving || is_cancelling) { e.preventDefault(); this.el.click(); };
-            }, { signal });
-            textarea.addEventListener("keyup", (e) => {
-                if (e.key === "Control") this.el.innerHTML = innerHtml;
-            }, { signal });
-        }
+        document.addEventListener("keyup", (e) => {
+            if (e.key === "Control") this.el.innerHTML = innerHtml;
+        }, { signal });
     },
-
     destroyed() { this.abortController.abort() }
 };
 

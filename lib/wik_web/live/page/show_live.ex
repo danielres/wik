@@ -54,11 +54,12 @@ defmodule WikWeb.Page.ShowLive do
         <h1 class="text-xl text-slate-700">{@slug}</h1>
 
         <.link
+          phx-hook="SetShortcut"
+          phx-hook-shortcut-key="e"
+          id="button-edit-page"
           href={~p"/#{@group_slug}/wiki/#{@slug}/edit"}
           class="btn btn-primary mt-4"
           title="Ctrl+e"
-          phx-hook="AddKeyboardShortcut"
-          id="button-edit-page"
         >
           Edit
         </.link>

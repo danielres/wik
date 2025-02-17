@@ -28,28 +28,33 @@ defmodule Wik.Page do
     pages_dir(group_slug)
     |> File.ls!()
     |> Enum.filter(&String.ends_with?(&1, ".md"))
-    |> Enum.map(&Path.rootname/1)
-    |> Enum.filter(fn rootname ->
+    |> Enum.map(fn filename ->
+      rootname = Path.rootname(filename)
       # Skip the page itself
-      if rootname == current_page_slug do
-        false
-      else
+      if rootname != current_page_slug do
         case load(group_slug, rootname) do
           {:ok, {metadata, body}} ->
             regex = ~r/\[\[([^\]]+)\]\]/
 
-            Regex.scan(regex, body)
-            |> Enum.any?(fn [_, link_text] ->
-              slugified = Utils.slugify(link_text)
-              slugified == current_page_slug
-            end)
+            if Regex.scan(regex, body)
+               |> Enum.any?(fn [_, link_text] ->
+                 slugified = Utils.slugify(link_text)
+                 slugified == current_page_slug
+               end) do
+              {rootname, metadata}
+            else
+              nil
+            end
 
           :not_found ->
-            false
+            nil
         end
+      else
+        nil
       end
     end)
-    |> Enum.sort()
+    |> Enum.reject(&is_nil/1)
+    |> Enum.sort_by(fn {slug, _metadata} -> slug end)
   end
 
   defmemo suggestions(group_slug, term), expires_in: 15 * 1000 do

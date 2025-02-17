@@ -83,13 +83,13 @@ defmodule WikWeb.Page.ShowLive do
           >
             <h2 class="text-xs font-semibold text-slate-500">Backlinks</h2>
             <ul class="text-sm space-y-2">
-              <%= for backlink <- @backlinks do %>
+              <%= for {slug, metadata} <- @backlinks do %>
                 <li>
                   <a
                     class="text-blue-600 hover:underline opacity-75 hover:opacity-100 leading-none block"
-                    href={~p"/#{@group_slug}/wiki/#{backlink}"}
+                    href={~p"/#{@group_slug}/wiki/#{slug}"}
                   >
-                    {backlink}
+                    {metadata["title"] || slug}
                   </a>
                 </li>
               <% end %>

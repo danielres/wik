@@ -90,7 +90,7 @@ defmodule WikWeb.Router do
     user = conn.assigns.user
     group_slug = conn.params["group_slug"]
     slug = conn.params["slug"]
-    resource_path = "#{group_slug}/wiki/#{slug}"
+    resource_path = Wik.Page.resource_path(group_slug, slug)
 
     case Wik.ResourceLockServer.lock(resource_path, user.id) do
       :ok ->

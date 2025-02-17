@@ -7,6 +7,8 @@ defmodule Wik.Page do
   def file_path(group_slug, slug),
     do: Path.join(pages_dir(group_slug), "#{slug}.md")
 
+  def resource_path(group_slug, slug), do: "#{group_slug}/wiki/#{slug}"
+
   def load(group_slug, slug) do
     path = file_path(group_slug, slug)
 

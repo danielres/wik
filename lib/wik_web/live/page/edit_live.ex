@@ -3,45 +3,36 @@ defmodule WikWeb.Page.EditLive do
   alias Wik.{Page, ResourceLockServer}
   require Logger
 
+  defp page_path(group_slug, slug), do: ~p"/#{group_slug}/wiki/#{slug}"
+
   @impl true
   def mount(_params, session, socket) do
-    user = session["user"] || %{}
-
     {:ok,
      socket
-     |> assign(:user, user)
-     |> assign(:group_slug, nil)
-     |> assign(:slug, nil)
-     |> assign(:group_title, nil)
-     |> assign(:edit_content, nil)
+     |> assign(:user, session["user"])
      |> assign(:suggestions, []), layout: {WikWeb.Layouts, :fullscreen}}
   end
 
   @impl true
   def handle_params(%{"group_slug" => group_slug, "slug" => slug}, _uri, socket) do
-    # Assign group_title first, as it depends only on group_slug
-    group_title = Wik.get_group_title(group_slug)
+    props =
+      case Page.load(group_slug, slug) do
+        {:ok, {metadata, body}} ->
+          %{page_title: metadata["title"], metadata: metadata, edit_content: body}
 
-    socket =
+        :not_found ->
+          %{page_title: String.capitalize(slug), metadata: %{}, edit_content: ""}
+      end
+
+    {
+      :noreply,
       socket
+      |> assign(props)
       |> assign(:group_slug, group_slug)
       |> assign(:slug, slug)
-      |> assign(:group_title, group_title)
-      |> assign(:resource_path, "#{group_slug}/wiki/#{slug}")
-
-    case Page.load(group_slug, slug) do
-      {:ok, {metadata, content}} ->
-        socket =
-          socket
-          |> assign(:page_title, metadata["title"] || slug)
-          |> assign(metadata: metadata)
-          |> assign(edit_content: content)
-
-        {:noreply, socket}
-
-      :not_found ->
-        {:noreply, assign(socket, edit_content: "")}
-    end
+      |> assign(:group_title, Wik.get_group_title(group_slug))
+      |> assign(:resource_path, Page.resource_path(group_slug, slug))
+    }
   end
 
   @impl true
@@ -57,15 +48,26 @@ defmodule WikWeb.Page.EditLive do
   end
 
   @impl true
-  def handle_event("update_page", %{"content" => new_content}, socket) do
-    %{group_slug: group_slug, slug: slug, user: user, metadata: metadata} = socket.assigns
-    Page.save(group_slug, slug, new_content, metadata)
-    ResourceLockServer.unlock("#{group_slug}/wiki/#{slug}", user.id)
+  def handle_event("update_page", %{"content" => new_content, "metadata" => new_metadata}, socket) do
+    group_slug = socket.assigns.group_slug
+    slug = socket.assigns.slug
+    user = socket.assigns.user
 
+    metadata =
+      case Page.load(group_slug, slug) do
+        :not_found ->
+          %{title: String.capitalize(slug)}
+
+        {:ok, document} ->
+          {metadata, _body} = document
+          Map.merge(metadata, new_metadata)
+      end
+
+    Page.save(group_slug, slug, new_content, metadata)
+    ResourceLockServer.unlock(Page.resource_path(group_slug, slug), user.id)
     msg = {:page_updated, user, group_slug, slug, new_content}
     Phoenix.PubSub.broadcast(Wik.PubSub, "pages", msg)
-
-    {:noreply, push_navigate(socket, to: ~p"/#{group_slug}/wiki/#{slug}")}
+    {:noreply, push_navigate(socket, to: page_path(group_slug, slug))}
   end
 
   @impl true
@@ -73,8 +75,8 @@ defmodule WikWeb.Page.EditLive do
     group_slug = socket.assigns.group_slug
     slug = socket.assigns.slug
     user = socket.assigns.user
-    ResourceLockServer.unlock("#{group_slug}/wiki/#{slug}", user.id)
-    {:noreply, push_navigate(socket, to: ~p"/#{group_slug}/wiki/#{slug}")}
+    ResourceLockServer.unlock(Page.resource_path(group_slug, slug), user.id)
+    {:noreply, push_navigate(socket, to: page_path(group_slug, slug))}
   end
 
   @impl true
@@ -112,7 +114,6 @@ defmodule WikWeb.Page.EditLive do
 
       <form
         id="edit-form"
-        data-resource-path={"#{@group_slug}/wiki/#{@slug}"}
         data-user-id={@user.id}
         data-user-name={@user.username}
         phx-submit="update_page"
@@ -136,6 +137,7 @@ defmodule WikWeb.Page.EditLive do
             {suggestion}
           </li>
         </ul>
+        <input type="hidden" name="metadata[title]" value={@page_title} />
         <textarea
           phx-hook="ShowSuggestionsOnKeyup"
           id="edit-textarea"

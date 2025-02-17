@@ -18,32 +18,23 @@ defmodule WikWeb.Page.ShowLive do
 
   @impl true
   def handle_params(%{"group_slug" => group_slug, "slug" => slug}, _uri, socket) do
-    group_title = Wik.get_group_title(group_slug)
+    {page_title, content} =
+      case Page.load(group_slug, slug) do
+        {:ok, {metadata, body}} ->
+          {metadata["title"], Wiki.render(group_slug, body)}
 
-    case Page.load(group_slug, slug) do
-      {:ok, {metadata, content}} ->
-        rendered = Wiki.render(group_slug, content)
-        backlinks = Page.backlinks(group_slug, slug)
+        :not_found ->
+          {String.capitalize(slug), nil}
+      end
 
-        {:noreply,
-         socket
-         |> assign(:page_title, metadata["title"] || slug)
-         |> assign(:group_slug, group_slug)
-         |> assign(:slug, slug)
-         |> assign(:group_title, group_title)
-         |> assign(:content, rendered)
-         |> assign(:backlinks, backlinks)}
-
-      :not_found ->
-        {:noreply,
-         socket
-         |> assign(:page_title, slug)
-         |> assign(:group_slug, group_slug)
-         |> assign(:slug, slug)
-         |> assign(:group_title, group_title)
-         |> assign(:content, nil)
-         |> assign(:backlinks, [])}
-    end
+    {:noreply,
+     socket
+     |> assign(group_slug: group_slug)
+     |> assign(slug: slug)
+     |> assign(group_title: Wik.get_group_title(group_slug))
+     |> assign(:backlinks, Page.backlinks(group_slug, slug))
+     |> assign(:page_title, page_title)
+     |> assign(:content, content)}
   end
 
   @impl true
@@ -89,7 +80,7 @@ defmodule WikWeb.Page.ShowLive do
                     class="text-blue-600 hover:underline opacity-75 hover:opacity-100 leading-none block"
                     href={~p"/#{@group_slug}/wiki/#{slug}"}
                   >
-                    {metadata["title"] || slug}
+                    {metadata["title"]}
                   </a>
                 </li>
               <% end %>

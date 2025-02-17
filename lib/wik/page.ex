@@ -24,7 +24,7 @@ defmodule Wik.Page do
     File.write!(file_path(group_slug, slug), document)
   end
 
-  def backlinks(group_slug, current_page_slug) do
+  defmemo backlinks(group_slug, current_page_slug), expires_in: 15 * 1000 do
     pages_dir(group_slug)
     |> File.ls!()
     |> Enum.filter(&String.ends_with?(&1, ".md"))

@@ -13,10 +13,6 @@ defmodule WikWeb.Page.ShowLive do
     {:ok,
      socket
      |> assign(:user, user)
-     |> assign(:group_slug, nil)
-     |> assign(:slug, nil)
-     |> assign(:group_title, nil)
-     |> assign(:content, nil)
      |> assign(:backlinks, [])}
   end
 
@@ -25,12 +21,13 @@ defmodule WikWeb.Page.ShowLive do
     group_title = Wik.get_group_title(group_slug)
 
     case Page.load(group_slug, slug) do
-      {:ok, content} ->
+      {:ok, {metadata, content}} ->
         rendered = Wiki.render(group_slug, content)
         backlinks = Page.backlinks(group_slug, slug)
 
         {:noreply,
          socket
+         |> assign(:page_title, metadata["title"] || slug)
          |> assign(:group_slug, group_slug)
          |> assign(:slug, slug)
          |> assign(:group_title, group_title)
@@ -40,6 +37,7 @@ defmodule WikWeb.Page.ShowLive do
       :not_found ->
         {:noreply,
          socket
+         |> assign(:page_title, slug)
          |> assign(:group_slug, group_slug)
          |> assign(:slug, slug)
          |> assign(:group_title, group_title)
@@ -63,7 +61,7 @@ defmodule WikWeb.Page.ShowLive do
     ~H"""
     <div class="space-y-4">
       <div class="flex justify-between items-end">
-        <h1 class="text-xl text-slate-700">{@slug}</h1>
+        <h1 class="text-xl text-slate-700">{@page_title}</h1>
 
         <.link
           phx-hook="SetShortcut"

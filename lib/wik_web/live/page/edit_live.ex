@@ -30,8 +30,14 @@ defmodule WikWeb.Page.EditLive do
       |> assign(:resource_path, "#{group_slug}/wiki/#{slug}")
 
     case Page.load(group_slug, slug) do
-      {:ok, content} ->
-        {:noreply, assign(socket, edit_content: content)}
+      {:ok, {metadata, content}} ->
+        socket =
+          socket
+          |> assign(:page_title, metadata["title"] || slug)
+          |> assign(metadata: metadata)
+          |> assign(edit_content: content)
+
+        {:noreply, socket}
 
       :not_found ->
         {:noreply, assign(socket, edit_content: "")}
@@ -52,8 +58,8 @@ defmodule WikWeb.Page.EditLive do
 
   @impl true
   def handle_event("update_page", %{"content" => new_content}, socket) do
-    %{group_slug: group_slug, slug: slug, user: user} = socket.assigns
-    Page.save(group_slug, slug, new_content)
+    %{group_slug: group_slug, slug: slug, user: user, metadata: metadata} = socket.assigns
+    Page.save(group_slug, slug, new_content, metadata)
     ResourceLockServer.unlock("#{group_slug}/wiki/#{slug}", user.id)
 
     msg = {:page_updated, user, group_slug, slug, new_content}
@@ -85,7 +91,7 @@ defmodule WikWeb.Page.EditLive do
     ~H"""
     <div id="edit_live" class="space-y-4 grid grid-rows-[auto,1fr] max-w-2xl ">
       <div class="flex justify-between items-end">
-        <h1 class="text-xl text-slate-700">{@slug || "Untitled"}</h1>
+        <h1 class="text-xl text-slate-700">{@page_title}</h1>
         <div class="flex gap-4">
           <button phx-click="cancel_edit" tabindex="3" type="cancel" class="btn btn-secondary">
             Cancel

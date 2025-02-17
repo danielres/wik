@@ -1,5 +1,6 @@
 defmodule Wik.Page do
   use Memoize
+  alias Wik.Utils
 
   def pages_dir(group_slug), do: Path.join(Path.join("data", group_slug), "wiki")
 
@@ -10,36 +11,37 @@ defmodule Wik.Page do
     path = file_path(group_slug, slug)
 
     if File.exists?(path) do
-      {:ok, File.read!(path)}
+      document = FrontMatter.parse(File.read!(path))
+      {:ok, document}
     else
       :not_found
     end
   end
 
-  def save(group_slug, slug, content) do
+  def save(group_slug, slug, body, metadata \\ %{}) do
     File.mkdir_p!(pages_dir(group_slug))
-    File.write!(file_path(group_slug, slug), content)
+    document = FrontMatter.assemble(metadata, body)
+    File.write!(file_path(group_slug, slug), document)
   end
 
-  def backlinks(group_slug, current_slug) do
+  def backlinks(group_slug, current_page_slug) do
     pages_dir(group_slug)
     |> File.ls!()
     |> Enum.filter(&String.ends_with?(&1, ".md"))
     |> Enum.map(&Path.rootname/1)
-    |> Enum.filter(fn slug ->
-      # Skip the page itself (if desired)
-      if slug == current_slug do
+    |> Enum.filter(fn rootname ->
+      # Skip the page itself
+      if rootname == current_page_slug do
         false
       else
-        case load(group_slug, slug) do
-          {:ok, content} ->
+        case load(group_slug, rootname) do
+          {:ok, {metadata, body}} ->
             regex = ~r/\[\[([^\]]+)\]\]/
 
-            Regex.scan(regex, content)
+            Regex.scan(regex, body)
             |> Enum.any?(fn [_, link_text] ->
-              # Normalize the link text as in your Wiki.render/1 function.
-              normalized = link_text |> String.downcase() |> String.replace(" ", "-")
-              normalized == current_slug
+              slugified = Utils.slugify(link_text)
+              slugified == current_page_slug
             end)
 
           :not_found ->

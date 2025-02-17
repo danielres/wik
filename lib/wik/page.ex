@@ -1,4 +1,6 @@
 defmodule Wik.Page do
+  use Memoize
+
   def pages_dir(group_slug), do: Path.join(Path.join("data", group_slug), "wiki")
 
   def file_path(group_slug, slug),
@@ -48,7 +50,7 @@ defmodule Wik.Page do
     |> Enum.sort()
   end
 
-  def suggestions(group_slug, term) do
+  defmemo suggestions(group_slug, term), expires_in: 15 * 1000 do
     files = File.ls!(pages_dir(group_slug))
 
     root_names = files |> Enum.map(&Path.rootname/1)

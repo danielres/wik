@@ -21,6 +21,7 @@ defmodule Wik.Page do
   end
 
   def save(group_slug, slug, body, metadata \\ %{}) do
+    body = HtmlSanitizeEx.markdown_html(body)
     File.mkdir_p!(pages_dir(group_slug))
     document = FrontMatter.assemble(metadata, body)
     File.write!(file_path(group_slug, slug), document)

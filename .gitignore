@@ -41,3 +41,4 @@ npm-debug.log
 
 # CUSTOM
 .env
+.elixir_ls

@@ -17,7 +17,7 @@ defmodule WikWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  import WikWeb.Gettext
+  use Gettext, backend: WikWeb.Gettext
 
   @doc """
   Renders a modal.

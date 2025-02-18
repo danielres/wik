@@ -62,7 +62,8 @@ defmodule Wik.MixProject do
       {:earmark, "~> 1.4"},
       {:yaml_elixir, "~> 2.11"},
       {:memoize, "~> 1.4"},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:html_sanitize_ex, "~> 1.4"}
     ]
   end
 

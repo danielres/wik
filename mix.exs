@@ -63,7 +63,8 @@ defmodule Wik.MixProject do
       {:yaml_elixir, "~> 2.11"},
       {:memoize, "~> 1.4"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:html_sanitize_ex, "~> 1.4"}
+      {:html_sanitize_ex, "~> 1.4"},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 

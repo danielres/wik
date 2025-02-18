@@ -1,6 +1,6 @@
 let Hooks = {};
 
-Hooks.SetShortcut = {
+Hooks.ShortcutComponent = {
     mounted() {
         this.abortController = new AbortController();
         const { signal } = this.abortController;

@@ -4,17 +4,29 @@ Hooks.SetShortcut = {
     mounted() {
         this.abortController = new AbortController();
         const { signal } = this.abortController;
-
         const shortcutKey = this.el.getAttribute("phx-hook-shortcut-key");
-        const innerHtml = this.el.innerHTML;
+        const firstChild = this.el.querySelector(":first-child");
 
         document.addEventListener("keydown", (e) => {
-            if (e.key === "Control") this.el.innerHTML = "Ctrl + " + shortcutKey;
-            if (e.ctrlKey && e.key === shortcutKey) { e.preventDefault(); this.el.click(); };
+            if (e.key === "Alt") {
+                e.preventDefault();
+                const focusedElement = document.activeElement;
+                const isAleadyFocused = focusedElement === firstChild;
+                if (isAleadyFocused) return;
+                const hint = this.el.querySelector(".hint");
+                if (hint) hint.classList.remove("hidden");
+            }
+
+            if (e.altKey && e.key === shortcutKey) {
+                e.preventDefault();
+                firstChild.focus();
+                firstChild.click();
+            };
         }, { signal });
 
         document.addEventListener("keyup", (e) => {
-            if (e.key === "Control") this.el.innerHTML = innerHtml;
+            const hint = this.el.querySelector(".hint");
+            if (hint) hint.classList.add("hidden");
         }, { signal });
     },
     destroyed() { this.abortController.abort() }

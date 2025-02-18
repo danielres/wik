@@ -2,6 +2,7 @@ defmodule WikWeb.Page.ShowLive do
   use WikWeb, :live_view
 
   alias Wik.{Page, Wiki}
+  alias WikWeb.{Components}
   require Logger
 
   @impl true
@@ -54,16 +55,15 @@ defmodule WikWeb.Page.ShowLive do
       <div class="flex justify-between items-end">
         <h1 class="text-xl text-slate-700">{@page_title}</h1>
 
-        <.link
-          phx-hook="SetShortcut"
-          phx-hook-shortcut-key="e"
-          id="button-edit-page"
-          href={~p"/#{@group_slug}/wiki/#{@slug}/edit"}
-          class="btn btn-primary mt-4"
-          title="Ctrl+e"
-        >
-          Edit
-        </.link>
+        <Components.shortcut key="e">
+          <.link
+            href={~p"/#{@group_slug}/wiki/#{@slug}/edit"}
+            class="btn btn-primary mt-4"
+            title="Ctrl+e"
+          >
+            Edit
+          </.link>
+        </Components.shortcut>
       </div>
 
       <div>

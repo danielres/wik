@@ -1,6 +1,7 @@
 defmodule WikWeb.Page.EditLive do
   use WikWeb, :live_view
   alias Wik.{Page, ResourceLockServer}
+  alias WikWeb.{Components}
   require Logger
 
   defp page_path(group_slug, slug), do: ~p"/#{group_slug}/wiki/#{slug}"
@@ -95,34 +96,38 @@ defmodule WikWeb.Page.EditLive do
       class="space-y-4 grid grid-rows-[auto,1fr] max-w-2xl "
       id="edit-form"
       phx-submit="update_page"
+      phx-hook="Phoenix.FocusWrap"
     >
-      <div class="flex justify-between items-end">
+      <div class="flex justify-between items-end" tabindex="0">
         <h1 id="title" class=" text-slate-700 flex gap-2 [&_input]:rounded [&_input]:px-2">
-          <input
-            name="metadata[title]"
-            value={@page_title}
-            class="py-2 px-4 rounded bg-white/20 hover:bg-white/60 focus:bg-white/100 outline-none"
-          />
+          <Components.shortcut key="t">
+            <input
+              name="metadata[title]"
+              value={@page_title}
+              class="py-2 px-4 rounded bg-white/20 hover:bg-white/60 focus:bg-white/100 outline-none"
+              tabindex="4"
+              id="title-input"
+              phx-hook="SetShortcut"
+              phx-hook-shortcut-key="u"
+            />
+          </Components.shortcut>
         </h1>
         <div class="flex gap-4">
-          <button phx-click="cancel_edit" tabindex="3" type="cancel" class="btn btn-secondary">
-            Cancel
-          </button>
-          <button
-            phx-hook="SetShortcut"
-            phx-hook-shortcut-key="s"
-            id="button-save-edit"
-            tabindex="2"
-            form="edit-form"
-            type="submit"
-            class="btn btn-primary"
-          >
-            Save
-          </button>
+          <Components.shortcut key="c">
+            <button phx-click="cancel_edit" tabindex="3" type="cancel" class="btn btn-secondary">
+              Cancel
+            </button>
+          </Components.shortcut>
+
+          <Components.shortcut key="s">
+            <button tabindex="2" form="edit-form" type="submit" class="btn btn-primary">
+              Save
+            </button>
+          </Components.shortcut>
         </div>
       </div>
 
-      <div class="rounded  shadow grid grid-rows-[auto,1fr] opacity-60 hover:opacity-70 focus-within:opacity-100 hover:focus-within:opacity-100">
+      <div class="rounded shadow grid grid-rows-[auto,1fr] [&_ul]:opacity-60 [&_textarea]:opacity-60 [&:focus-within_ul]:opacity-100 [&:focus-within_textarea]:opacity-100 ">
         <ul
           class="flex overflow-x-auto bg-slate-100 rounded-t p-2 [&>li.active]:bg-blue-400"
           id="suggestions-list"
@@ -141,14 +146,16 @@ defmodule WikWeb.Page.EditLive do
             {suggestion}
           </li>
         </ul>
-        <textarea
-          phx-hook="ShowSuggestionsOnKeyup"
-          id="edit-textarea"
-          phx-mounted={JS.focus()}
-          tabindex="1"
-          name="content"
-          class="w-full border-t-0 bg-white focus:ring-0 rounded-b border-none pointer-events-auto "
-        ><%= @edit_content %></textarea>
+        <Components.shortcut key="b" class="grid">
+          <textarea
+            phx-hook="ShowSuggestionsOnKeyup"
+            id="edit-textarea"
+            phx-mounted={JS.focus()}
+            tabindex="1"
+            name="content"
+            class="w-full border-t-0 focus:ring-0 rounded-b border-none pointer-events-auto "
+          ><%= @edit_content %></textarea>
+        </Components.shortcut>
       </div>
     </form>
     """

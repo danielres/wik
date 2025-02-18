@@ -91,9 +91,19 @@ defmodule WikWeb.Page.EditLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div id="edit_live" class="space-y-4 grid grid-rows-[auto,1fr] max-w-2xl ">
+    <form
+      class="space-y-4 grid grid-rows-[auto,1fr] max-w-2xl "
+      id="edit-form"
+      phx-submit="update_page"
+    >
       <div class="flex justify-between items-end">
-        <h1 class="text-xl text-slate-700">{@page_title}</h1>
+        <h1 id="title" class=" text-slate-700 flex gap-2 [&_input]:rounded [&_input]:px-2">
+          <input
+            name="metadata[title]"
+            value={@page_title}
+            class="py-2 px-4 rounded bg-white/20 hover:bg-white/60 focus:bg-white/100 outline-none"
+          />
+        </h1>
         <div class="flex gap-4">
           <button phx-click="cancel_edit" tabindex="3" type="cancel" class="btn btn-secondary">
             Cancel
@@ -112,13 +122,7 @@ defmodule WikWeb.Page.EditLive do
         </div>
       </div>
 
-      <form
-        id="edit-form"
-        data-user-id={@user.id}
-        data-user-name={@user.username}
-        phx-submit="update_page"
-        class="focus-within:ring-2 rounded bg-white shadow grid grid-rows-[auto,1fr]"
-      >
+      <div class="rounded  shadow grid grid-rows-[auto,1fr] opacity-60 hover:opacity-70 focus-within:opacity-100 hover:focus-within:opacity-100">
         <ul
           class="flex overflow-x-auto bg-slate-100 rounded-t p-2 [&>li.active]:bg-blue-400"
           id="suggestions-list"
@@ -137,7 +141,6 @@ defmodule WikWeb.Page.EditLive do
             {suggestion}
           </li>
         </ul>
-        <input type="hidden" name="metadata[title]" value={@page_title} />
         <textarea
           phx-hook="ShowSuggestionsOnKeyup"
           id="edit-textarea"
@@ -146,8 +149,8 @@ defmodule WikWeb.Page.EditLive do
           name="content"
           class="w-full border-t-0 bg-white focus:ring-0 rounded-b border-none pointer-events-auto "
         ><%= @edit_content %></textarea>
-      </form>
-    </div>
+      </div>
+    </form>
     """
   end
 end

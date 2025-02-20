@@ -1,4 +1,8 @@
 defmodule Wik.Utils do
+  @moduledoc """
+  A module for various utility functions.
+  """
+
   def slugify(string) do
     string
     |> String.downcase()

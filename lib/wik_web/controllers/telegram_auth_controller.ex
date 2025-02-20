@@ -2,7 +2,7 @@ defmodule WikWeb.TelegramAuthController do
   use WikWeb, :controller
 
   # 86400 = 1 day in seconds
-  @login_ttl 86400
+  @login_ttl 86_400
 
   defp all_groups, do: Application.get_env(:wik, :all_groups, [])
   defp bot_token, do: Application.get_env(:wik, :bot_token)

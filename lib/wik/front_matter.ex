@@ -1,4 +1,9 @@
 defmodule FrontMatter do
+  @moduledoc """
+  Handles splitting markdown with front matter into body and metadata,
+  and reassembling them back into a single string.
+  """
+
   @front_matter_regex ~r/\A---\n(.*?)\n---\n(.*)\z/s
 
   def parse(content) when is_list(content) do
@@ -23,8 +28,6 @@ defmodule FrontMatter do
   end
 
   defp metadata_to_yaml(metadata) do
-    metadata
-    |> Enum.map(fn {key, value} -> "#{key}: #{value}" end)
-    |> Enum.join("\n")
+    Enum.map_join(metadata, "\n", fn {key, value} -> "#{key}: #{value}" end)
   end
 end

@@ -40,7 +40,7 @@ defmodule WikWeb.Page.ShowLive do
 
   @impl true
   def handle_info({:page_updated, _user, group_slug, slug, new_content}, socket) do
-    if(socket.assigns.group_slug == group_slug && socket.assigns.slug == slug) do
+    if socket.assigns.group_slug == group_slug && socket.assigns.slug == slug do
       rendered = Wiki.render(group_slug, new_content)
       {:noreply, socket |> assign(content: rendered)}
     else

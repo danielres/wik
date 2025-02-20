@@ -1,4 +1,8 @@
 defmodule WikWeb.Components do
+  @moduledoc """
+  Components for the WikWeb application.
+  """
+
   use Phoenix.Component
 
   # alias Phoenix.LiveView.JS

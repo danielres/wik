@@ -1,4 +1,9 @@
 defmodule Wik.Page do
+  @moduledoc """
+  This module provides functions for handling wiki pages, including loading,
+  saving, and constructing file paths for the pages.
+  """
+
   use Memoize
   alias Wik.Utils
 

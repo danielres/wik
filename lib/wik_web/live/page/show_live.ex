@@ -55,15 +55,18 @@ defmodule WikWeb.Page.ShowLive do
       <div class="flex justify-between items-end">
         <h1 class="text-xl text-slate-700">{@page_title}</h1>
 
-        <Components.shortcut key="e">
-          <.link
-            href={~p"/#{@group_slug}/wiki/#{@slug}/edit"}
-            class="btn btn-primary mt-4"
-            title="Ctrl+e"
-          >
-            Edit
-          </.link>
-        </Components.shortcut>
+        <div class="flex gap-2 ">
+          <Components.shortcut key="r">
+            <.link href={~p"/#{@group_slug}/wiki/#{@slug}/revisions"} class="btn btn-ghost">
+              Revisions
+            </.link>
+          </Components.shortcut>
+          <Components.shortcut key="e">
+            <.link href={~p"/#{@group_slug}/wiki/#{@slug}/edit"} class="btn btn-primary">
+              Edit
+            </.link>
+          </Components.shortcut>
+        </div>
       </div>
 
       <div>

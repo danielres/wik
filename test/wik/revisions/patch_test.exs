@@ -1,14 +1,13 @@
-defmodule Wik.Diffy.PatchTest do
+defmodule Wik.Revisions.PatchTest do
   @moduledoc """
-  Test module for diffy and the Wik.Diffy.Patch functionality.
+  Test module for diffy and the Wik.Revisions.Patch functionality.
   """
 
   use ExUnit.Case
   @tag timeout: :infinity
-  alias FrontMatter
-  alias Wik.Diffy.Patch
 
-  require IEx
+  alias FrontMatter
+  alias Wik.Revisions.Patch
 
   @prev """
   Roses are red,

@@ -64,7 +64,7 @@ defmodule WikWeb.Page.EditLive do
           Map.merge(metadata, new_metadata)
       end
 
-    Page.save(group_slug, slug, new_content, metadata)
+    Page.save(user.id, group_slug, slug, new_content, metadata)
     ResourceLockServer.unlock(Page.resource_path(group_slug, slug), user.id)
     msg = {:page_updated, user, group_slug, slug, new_content}
     Phoenix.PubSub.broadcast(Wik.PubSub, "pages", msg)
@@ -112,9 +112,9 @@ defmodule WikWeb.Page.EditLive do
             />
           </Components.shortcut>
         </h1>
-        <div class="flex gap-4">
+        <div class="flex gap-2">
           <Components.shortcut key="c">
-            <button phx-click="cancel_edit" tabindex="3" type="cancel" class="btn btn-secondary">
+            <button phx-click="cancel_edit" tabindex="3" type="cancel" class="btn btn-ghost">
               Cancel
             </button>
           </Components.shortcut>

@@ -35,6 +35,7 @@ defmodule WikWeb.Router do
     scope "/wiki" do
       get "/", PageController, :wiki_index
       live "/:slug", Page.ShowLive
+      live "/:slug/revisions", Page.Revisions.ShowLive
 
       live_session :default do
         pipe_through [:handle_resource_lock]

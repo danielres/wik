@@ -6,6 +6,8 @@ defmodule Wik.Page do
 
   use Memoize
   alias Wik.Utils
+  alias Wik.Revisions
+  alias Wik.Revisions.Patch
 
   def pages_dir(group_slug), do: Path.join(Path.join("data", group_slug), "wiki")
 
@@ -25,11 +27,52 @@ defmodule Wik.Page do
     end
   end
 
-  def save(group_slug, slug, body, metadata \\ %{}) do
+  def load_raw(group_slug, slug) do
+    path = file_path(group_slug, slug)
+
+    if File.exists?(path) do
+      File.read!(path)
+    else
+      ""
+    end
+  end
+
+  def load_revision(group_slug, slug, revision) do
+    resource_path = resource_path(group_slug, slug)
+    current_document = load_raw(group_slug, slug)
+    taken_revisions = Revisions.take(resource_path, revision)
+
+    {metadata, body} =
+      taken_revisions
+      |> Enum.map(& &1.patch)
+      |> Enum.map(&Patch.from_json/1)
+      |> Patch.apply(current_document)
+      |> FrontMatter.parse()
+
+    {metadata, body}
+  end
+
+  def save(user_id, group_slug, slug, body, metadata \\ %{}) do
+    metadata =
+      case metadata["created_at"] do
+        nil ->
+          metadata
+          |> Map.put("created_at", DateTime.to_string(DateTime.utc_now()))
+          |> Map.put("created_by", user_id)
+
+        _ ->
+          metadata
+      end
+      |> Map.put("updated_at", DateTime.to_string(DateTime.utc_now()))
+      |> Map.put("updated_by", user_id)
+
     body = HtmlSanitizeEx.markdown_html(body)
+    resource_path = Wik.Page.resource_path(group_slug, slug)
     File.mkdir_p!(pages_dir(group_slug))
-    document = FrontMatter.assemble(metadata, body)
-    File.write!(file_path(group_slug, slug), document)
+    previous_document = load_raw(group_slug, slug)
+    new_document = FrontMatter.assemble(metadata, body)
+    File.write!(file_path(group_slug, slug), new_document)
+    Wik.Revisions.append(user_id, resource_path, previous_document, new_document)
   end
 
   defmemo backlinks(group_slug, current_page_slug), expires_in: 15 * 1000 do

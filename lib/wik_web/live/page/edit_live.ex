@@ -98,20 +98,20 @@ defmodule WikWeb.Page.EditLive do
       phx-submit="update_page"
       phx-hook="Phoenix.FocusWrap"
     >
-      <div class="flex justify-between items-end" tabindex="0">
-        <h1 id="title" class=" text-slate-700 flex gap-2 [&_input]:rounded [&_input]:px-2">
+      <div class="flex justify-between items-end gap-2" tabindex="0">
+        <h1 id="title" class="text-slate-700 grow max-w-48">
           <Components.shortcut key="t">
-            <input
-              name="metadata[title]"
-              value={@page_title}
-              class="py-2 px-4 rounded bg-white/20 hover:bg-white/60 focus:bg-white/100 outline-none"
+            <div
+              contentEditable="true"
+              class="block py-2 px-4 rounded bg-white/20 hover:bg-white/60 focus:bg-white/100 outline-none"
               tabindex="4"
-              id="title-input"
-              phx-hook="SetShortcut"
-              phx-hook-shortcut-key="u"
-            />
+              onkeyup="document.getElementById('title-input').value = this.innerText"
+            >
+              {@page_title}
+            </div>
           </Components.shortcut>
         </h1>
+        <input id="title-input" type="hidden" name="metadata[title]" value={@page_title} />
         <div class="flex gap-2">
           <Components.shortcut key="c">
             <button phx-click="cancel_edit" tabindex="3" type="cancel" class="btn btn-ghost">

@@ -27,7 +27,7 @@
 <% else %>
   <div class="grid place-items-center h-[100vh]">
     <div>
-      <div :if={Mix.env() == :dev} class="text-center mb-4">
+      <div :if={show_dev_login?()} class="text-center mb-4">
         <.link class="btn btn-primary" href="/dev/auth">Login as test user</.link>
       </div>
       <script

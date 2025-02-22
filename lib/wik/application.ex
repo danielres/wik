@@ -4,6 +4,7 @@ defmodule Wik.Application do
   @moduledoc false
 
   use Application
+  @env Mix.env()
 
   @impl true
   def start(_type, _args) do
@@ -37,7 +38,6 @@ defmodule Wik.Application do
   end
 
   defp skip_migrations?() do
-    # By default, sqlite migrations are run when using a release
-    System.get_env("RELEASE_NAME") != nil
+    @env !== :prod
   end
 end

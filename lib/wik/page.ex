@@ -9,10 +9,25 @@ defmodule Wik.Page do
   alias Wik.Revisions
   alias Wik.Revisions.Patch
 
-  def pages_dir(group_slug), do: Path.join(Path.join("data", group_slug), "wiki")
+  require Logger
 
-  def file_path(group_slug, slug),
-    do: Path.join(pages_dir(group_slug), "#{slug}.md")
+  def wiki_dir(group_slug) do
+    files_dir = System.get_env("FILE_STORAGE_PATH") || "data"
+    group_dir = files_dir |> Path.join("groups") |> Path.join(group_slug)
+    wiki_dir = group_dir |> Path.join("wiki")
+
+    # TODO: move this to application start
+    if !File.exists?(wiki_dir) do
+      Logger.info("Creating #{wiki_dir}")
+      File.mkdir_p!(wiki_dir)
+    end
+
+    wiki_dir
+  end
+
+  def file_path(group_slug, slug) do
+    wiki_dir(group_slug) |> Path.join("#{slug}.md")
+  end
 
   def resource_path(group_slug, slug), do: "#{group_slug}/wiki/#{slug}"
 
@@ -68,7 +83,6 @@ defmodule Wik.Page do
 
     body = HtmlSanitizeEx.markdown_html(body)
     resource_path = Wik.Page.resource_path(group_slug, slug)
-    File.mkdir_p!(pages_dir(group_slug))
     previous_document = load_raw(group_slug, slug)
     new_document = FrontMatter.assemble(metadata, body)
     File.write!(file_path(group_slug, slug), new_document)
@@ -76,7 +90,7 @@ defmodule Wik.Page do
   end
 
   defmemo backlinks(group_slug, current_page_slug), expires_in: 15 * 1000 do
-    pages_dir(group_slug)
+    wiki_dir(group_slug)
     |> File.ls!()
     |> Enum.filter(&String.ends_with?(&1, ".md"))
     |> Enum.map(fn filename ->
@@ -109,7 +123,7 @@ defmodule Wik.Page do
   end
 
   defmemo suggestions(group_slug, term), expires_in: 15 * 1000 do
-    files = File.ls!(pages_dir(group_slug))
+    files = File.ls!(wiki_dir(group_slug))
 
     root_names = files |> Enum.map(&Path.rootname/1)
 

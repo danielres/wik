@@ -28,6 +28,23 @@ defmodule FrontMatter do
   end
 
   defp metadata_to_yaml(metadata) do
+    metadata = sanitize_metadata(metadata)
     Enum.map_join(metadata, "\n", fn {key, value} -> "#{key}: #{value}" end)
+  end
+
+  defp sanitize_metadata(metadata) do
+    Enum.reduce(metadata, %{}, fn {k, v}, acc ->
+      Map.put(acc, k, sanitize_metadata_value(v))
+    end)
+  end
+
+  defp sanitize_metadata_value(value) when is_binary(value) do
+    value
+    |> String.replace("\n", " ")
+    |> String.replace(": ", " - ")
+  end
+
+  defp sanitize_metadata_value(value) do
+    value
   end
 end

@@ -76,32 +76,37 @@ defmodule WikWeb.Page.Revisions.ShowLive do
   def render(assigns) do
     ~H"""
     <div class="space-y-4">
-      <div class="flex justify-between items-end">
-        <h1 class="text-xl text-slate-700 flex gap-4 items-end">
+      <div class="flex justify-between items-end gap-4">
+        <h1 class="text-xl text-slate-700 grid gap-2 items-end">
           {@page_title}
-          <span class="revisions badge badge-info">
-            Revision <span class="current">{@num_revisions - @index}</span>
-            <span class="separator">/</span>
-            <span class="total">{@num_revisions}</span>
-          </span>
         </h1>
 
-        <div class="flex gap-2 ">
-          <Components.shortcut key="b">
-            <.link href={~p"/#{@group_slug}/wiki/#{@slug}"} class="btn btn-ghost">
-              Back
-            </.link>
-          </Components.shortcut>
-          <Components.shortcut key="p">
-            <button phx-click="prev" class="btn btn-primary" disabled={@num_revisions - @index == 1}>
-              Prev
-            </button>
-          </Components.shortcut>
-          <Components.shortcut key="n">
-            <button phx-click="next" class="btn btn-primary" disabled={@index == 0}>
-              Next
-            </button>
-          </Components.shortcut>
+        <div class="space-y-2">
+          <div class="flex justify-end">
+            <div class="revisions badge badge-info">
+              Revision <span class="current">{@num_revisions - @index}</span>
+              <span class="separator">/</span>
+              <span class="total">{@num_revisions}</span>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <Components.shortcut key="b">
+              <.link href={~p"/#{@group_slug}/wiki/#{@slug}"} class="btn btn-ghost">
+                Back
+              </.link>
+            </Components.shortcut>
+            <Components.shortcut key="p">
+              <button phx-click="prev" class="btn btn-primary" disabled={@num_revisions - @index == 1}>
+                Prev
+              </button>
+            </Components.shortcut>
+            <Components.shortcut key="n">
+              <button phx-click="next" class="btn btn-primary" disabled={@index == 0}>
+                Next
+              </button>
+            </Components.shortcut>
+          </div>
         </div>
       </div>
 

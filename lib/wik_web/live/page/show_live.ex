@@ -51,7 +51,7 @@ defmodule WikWeb.Page.ShowLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="space-y-4">
+    <div class="space-y-4 grid grid-rows-[auto,1fr] ">
       <div class="flex justify-between items-end">
         <h1 class="text-xl text-slate-700">{@page_title}</h1>
 
@@ -69,7 +69,7 @@ defmodule WikWeb.Page.ShowLive do
         </div>
       </div>
 
-      <div>
+      <div class="grid ">
         <div tabindex="1" class="bg-slate-50 p-4 md:p-8 rounded shadow">
           <div
             :if={@backlinks && length(@backlinks) > 0}

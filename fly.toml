@@ -11,6 +11,7 @@ kill_signal = 'SIGTERM'
 
 [env]
   DATABASE_PATH = '/mnt/data/wik.prod.db'
+  FILE_STORAGE_PATH = '/mnt/data/files'
   PHX_HOST = 'wik.fly.dev'
   PORT = '8080'
 

@@ -10,13 +10,13 @@ kill_signal = 'SIGTERM'
 [build]
 
 [env]
-  DATABASE_PATH = '/mnt/name/name.db'
+  DATABASE_PATH = '/mnt/data/wik.prod.db'
   PHX_HOST = 'wik.fly.dev'
   PORT = '8080'
 
 [[mounts]]
-  source = 'name'
-  destination = '/mnt/name'
+  source = 'data'
+  destination = '/mnt/data'
   auto_extend_size_threshold = 80
   auto_extend_size_increment = '1GB'
   auto_extend_size_limit = '10GB'

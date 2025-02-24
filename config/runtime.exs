@@ -1,23 +1,13 @@
 import Config
 
+superuser_id = System.fetch_env!("SUPERUSER_ID")
 bot_token = System.fetch_env!("BOT_TOKEN")
 bot_username = System.fetch_env!("BOT_USERNAME")
 
-all_groups =
-  System.get_env("ALL_GROUPS", "")
-  |> String.split(",", trim: true)
-  |> Enum.map(fn group_str ->
-    case String.split(group_str, ":", parts: 3) do
-      [id, slug, title] -> %{id: id, slug: slug, title: title}
-      _ -> nil
-    end
-  end)
-  |> Enum.reject(&is_nil/1)
-
 config :wik,
+  superuser_id: superuser_id,
   bot_token: bot_token,
-  bot_username: bot_username,
-  all_groups: all_groups
+  bot_username: bot_username
 
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the

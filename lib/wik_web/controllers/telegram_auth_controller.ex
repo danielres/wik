@@ -4,7 +4,6 @@ defmodule WikWeb.TelegramAuthController do
   # 86400 = 1 day in seconds
   @login_ttl :timer.hours(24)
 
-  defp all_groups, do: Application.get_env(:wik, :all_groups, [])
   defp bot_token, do: Application.get_env(:wik, :bot_token)
 
   def callback(conn, params) do
@@ -70,9 +69,10 @@ defmodule WikWeb.TelegramAuthController do
   end
 
   defp get_or_create_user_from_telegram(params) do
-    # For each group in all_groups, check if the user is a member.
+    # For each group, check if the user is a member.
+    # TODO: find groups by id
     member_of =
-      Enum.filter(all_groups(), fn group ->
+      Enum.filter(Wik.Groups.list_groups(), fn group ->
         user_member_of?(group, params["id"])
       end)
 

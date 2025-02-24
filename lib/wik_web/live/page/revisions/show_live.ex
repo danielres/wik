@@ -37,7 +37,7 @@ defmodule WikWeb.Page.Revisions.ShowLive do
      socket
      |> assign(group_slug: group_slug)
      |> assign(slug: slug)
-     |> assign(group_title: Wik.get_group_title(group_slug))
+     |> assign(group_name: Wik.get_group_name(group_slug))
      |> assign(:backlinks, Page.backlinks(group_slug, slug))
      |> assign(:page_title, page_title)
      |> assign(:content, content)

@@ -31,7 +31,8 @@ defmodule WikWeb.Page.EditLive do
       |> assign(props)
       |> assign(:group_slug, group_slug)
       |> assign(:slug, slug)
-      |> assign(:group_title, Wik.get_group_title(group_slug))
+      # TODO: move get_group_name to Groups context
+      |> assign(:group_name, Wik.get_group_name(group_slug))
       |> assign(:resource_path, Page.resource_path(group_slug, slug))
     }
   end

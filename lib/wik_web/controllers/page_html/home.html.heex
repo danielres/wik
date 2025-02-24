@@ -20,7 +20,7 @@
   <ul class="space-y-2 max-w-64 text-center mx-auto my-16">
     <li :for={group <- user.member_of} value={group.id}>
       <a href={~p"/#{group.slug}"} class="btn btn-primary block">
-        {group.title}
+        {group.name}
       </a>
     </li>
   </ul>

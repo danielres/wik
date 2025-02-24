@@ -1,0 +1,48 @@
+<.header>
+  Listing Groups
+  <:actions>
+    <.link patch={~p"/admin/groups/new"}>
+      <.button>New Group</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="groups"
+  rows={@streams.groups}
+  row_click={fn {_id, group} -> JS.navigate(~p"/admin/groups/#{group}") end}
+>
+  <:col :let={{_id, group}} label="Id">{group.id}</:col>
+  <:col :let={{_id, group}} label="Slug">{group.slug}</:col>
+  <:col :let={{_id, group}} label="Name">{group.name}</:col>
+  <:action :let={{_id, group}}>
+    <div class="sr-only">
+      <.link navigate={~p"/admin/groups/#{group}"}>Show</.link>
+    </div>
+    <.link patch={~p"/admin/groups/#{group}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, group}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: group.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="group-modal"
+  show
+  on_cancel={JS.patch(~p"/admin/groups")}
+>
+  <.live_component
+    module={WikWeb.SuperAdmin.GroupLive.FormComponent}
+    id={@group.id || :new}
+    title={@page_title}
+    action={@live_action}
+    group={@group}
+    patch={~p"/admin/groups"}
+  />
+</.modal>

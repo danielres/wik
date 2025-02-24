@@ -27,6 +27,28 @@ defmodule WikWeb.Router do
     get "/", PageController, :home
   end
 
+  scope "/admin", WikWeb do
+    pipe_through [:browser, :ensure_superuser]
+
+    live "/", SuperAdminLive.Index
+
+    scope "/groups" do
+      live "/", SuperAdmin.GroupLive.Index, :index
+      live "/new", SuperAdmin.GroupLive.Index, :new
+      live "/:id/edit", SuperAdmin.GroupLive.Index, :edit
+      live "/:id", SuperAdmin.GroupLive.Show, :show
+      live "/:id/show/edit", SuperAdmin.GroupLive.Show, :edit
+    end
+
+    scope "/revisions" do
+      live "/", SuperAdmin.RevisionLive.Index, :index
+      live "/new", SuperAdmin.RevisionLive.Index, :new
+      live "/:id/edit", SuperAdmin.RevisionLive.Index, :edit
+      live "/:id", SuperAdmin.RevisionLive.Show, :show
+      live "/:id/show/edit", SuperAdmin.RevisionLive.Show, :edit
+    end
+  end
+
   scope "/:group_slug", WikWeb do
     pipe_through [:browser, :ensure_auth, :ensure_group_membership]
 
@@ -56,6 +78,20 @@ defmodule WikWeb.Router do
       # Enable LiveDashboard and Swoosh mailbox preview in development
       live_dashboard "/dashboard", metrics: WikWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
+
+  defp ensure_superuser(conn, _opts) do
+    user = Plug.Conn.get_session(conn, :user)
+    superuser_id = Application.get_env(:wik, :superuser_id)
+
+    if user && user.id == superuser_id do
+      conn
+    else
+      conn
+      |> Phoenix.Controller.put_flash(:error, "You must be a superuser to access this page.")
+      |> Phoenix.Controller.redirect(to: "/")
+      |> halt()
     end
   end
 

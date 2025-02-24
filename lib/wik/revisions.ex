@@ -45,4 +45,32 @@ defmodule Wik.Revisions do
     })
     |> Repo.insert()
   end
+
+  # CRUD -----------------
+
+  def list_revisions do
+    Repo.all(Revision)
+  end
+
+  def get_revision!(id), do: Repo.get!(Revision, id)
+
+  def create_revision(attrs \\ %{}) do
+    %Revision{}
+    |> Revision.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_revision(%Revision{} = revision, attrs) do
+    revision
+    |> Revision.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_revision(%Revision{} = revision) do
+    Repo.delete(revision)
+  end
+
+  def change_revision(%Revision{} = revision, attrs \\ %{}) do
+    Revision.changeset(revision, attrs)
+  end
 end

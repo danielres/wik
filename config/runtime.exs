@@ -1,6 +1,7 @@
 import Config
 
 bot_token = System.fetch_env!("BOT_TOKEN")
+bot_username = System.fetch_env!("BOT_USERNAME")
 
 all_groups =
   System.get_env("ALL_GROUPS", "")
@@ -15,6 +16,7 @@ all_groups =
 
 config :wik,
   bot_token: bot_token,
+  bot_username: bot_username,
   all_groups: all_groups
 
 # config/runtime.exs is executed for all environments, including

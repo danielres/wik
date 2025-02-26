@@ -11,7 +11,10 @@ defmodule WikWeb.TelegramAuthController do
     # e.g. %{"id" => "...", "first_name" => "...", "auth_date" => "...", "hash" => "..."}
 
     if valid_telegram_auth?(params) do
-      user = get_or_create_user_from_telegram(params)
+      user =
+        get_or_create_user_from_telegram(params)
+        |> Map.delete("hash")
+        |> Map.delete("auth_date")
 
       conn
       |> put_session(:user, user)

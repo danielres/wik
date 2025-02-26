@@ -70,10 +70,25 @@ defmodule WikWeb.TelegramAuthController do
 
   defp get_or_create_user_from_telegram(params) do
     # For each group, check if the user is a member.
-    # TODO: find groups by id
-    member_of =
-      Enum.filter(Wik.Groups.list_groups(), fn group ->
+
+    # TODO: optimize query
+
+    all_groups = Wik.Groups.list_groups()
+
+    filtered =
+      all_groups
+      |> Enum.filter(fn group ->
         user_member_of?(group, params["id"])
+      end)
+
+    serialized =
+      filtered
+      |> Enum.map(fn group ->
+        %{
+          id: group.id,
+          name: group.name,
+          slug: group.slug
+        }
       end)
 
     %{
@@ -84,7 +99,7 @@ defmodule WikWeb.TelegramAuthController do
       hash: params["hash"],
       username: params["username"],
       photo_url: params["photo_url"],
-      member_of: member_of
+      member_of: serialized
     }
   end
 

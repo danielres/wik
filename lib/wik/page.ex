@@ -8,6 +8,7 @@ defmodule Wik.Page do
   alias Wik.Utils
   alias Wik.Revisions
   alias Wik.Revisions.Patch
+  alias Wik.Markdown
 
   require Logger
 
@@ -54,16 +55,8 @@ defmodule Wik.Page do
   end
 
   def render(group_slug, content) do
-    content
-    |> replace_links(group_slug)
-    |> Earmark.as_html!(escape: false)
-  end
-
-  defp replace_links(content, group_slug) do
-    Regex.replace(~r/\[\[([^\]]+)\]\]/, content, fn _full, link_text ->
-      slug = Utils.slugify(link_text)
-      ~s([#{link_text}]\(/#{group_slug}/wiki/#{slug}\))
-    end)
+    base_path = "/#{group_slug}/wiki/"
+    content |> Markdown.parse(base_path)
   end
 
   def load_revision(group_slug, slug, revision) do

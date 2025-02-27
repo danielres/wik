@@ -2,7 +2,6 @@ defmodule WikWeb.Page.Revisions.ShowLive do
   use WikWeb, :live_view
 
   alias Wik.Page
-  alias Wik.Wiki
   alias WikWeb.Components
   alias Wik.Revisions
   # require Logger
@@ -24,7 +23,7 @@ defmodule WikWeb.Page.Revisions.ShowLive do
     {page_title, content} =
       case Page.load(group_slug, slug) do
         {:ok, {metadata, body}} ->
-          {metadata["title"], Wiki.render(group_slug, body)}
+          {metadata["title"], Page.render(group_slug, body)}
 
         :not_found ->
           {String.capitalize(slug), nil}
@@ -65,7 +64,7 @@ defmodule WikWeb.Page.Revisions.ShowLive do
        socket
        |> assign(
          index: index,
-         content: Wiki.render(group_slug, body),
+         content: Page.render(group_slug, body),
          page_title: metadata["title"]
        )}
     end

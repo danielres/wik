@@ -1,8 +1,8 @@
 defmodule WikWeb.Page.ShowLive do
   use WikWeb, :live_view
 
-  alias Wik.{Page, Wiki}
-  alias WikWeb.{Components}
+  alias Wik.Page
+  alias WikWeb.Components
   require Logger
 
   @impl true
@@ -22,7 +22,7 @@ defmodule WikWeb.Page.ShowLive do
     {page_title, content} =
       case Page.load(group_slug, slug) do
         {:ok, {metadata, body}} ->
-          {metadata["title"], Wiki.render(group_slug, body)}
+          {metadata["title"], Page.render(group_slug, body)}
 
         :not_found ->
           {String.capitalize(slug), nil}
@@ -41,7 +41,7 @@ defmodule WikWeb.Page.ShowLive do
   @impl true
   def handle_info({:page_updated, _user, group_slug, slug, new_content}, socket) do
     if socket.assigns.group_slug == group_slug && socket.assigns.slug == slug do
-      rendered = Wiki.render(group_slug, new_content)
+      rendered = Page.render(group_slug, new_content)
       {:noreply, socket |> assign(content: rendered)}
     else
       {:noreply, socket}

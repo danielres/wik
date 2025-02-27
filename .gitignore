@@ -42,3 +42,4 @@ npm-debug.log
 # CUSTOM
 .env
 .elixir_ls
+tmp_test_data

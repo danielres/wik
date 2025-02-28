@@ -1,6 +1,7 @@
 defmodule WikWeb.TelegramMiniappAuthController do
   use WikWeb, :controller
   require Logger
+  alias Wik.User
 
   @login_ttl :timer.hours(24)
 
@@ -23,7 +24,7 @@ defmodule WikWeb.TelegramMiniappAuthController do
       #   "username" => "danirez"
       # }
 
-      user = get_or_create_user_from_telegram(params)
+      user = User.get_or_create_from_telegram(params, bot_token())
 
       conn
       |> put_session(:user, user)
@@ -64,63 +65,6 @@ defmodule WikWeb.TelegramMiniappAuthController do
     else
       IO.puts("Invalid Telegram Mini App login: Hash mismatch.")
       false
-    end
-  end
-
-  defp get_or_create_user_from_telegram(params) do
-    dbg(params)
-    # For each group, check if the user is a member.
-
-    # TODO: optimize query
-
-    all_groups = Wik.Groups.list_groups()
-
-    filtered =
-      all_groups
-      |> Enum.filter(fn group ->
-        user_member_of?(group, params["id"])
-      end)
-
-    serialized =
-      filtered
-      |> Enum.map(fn group ->
-        %{
-          id: group.id,
-          name: group.name,
-          slug: group.slug
-        }
-      end)
-
-    %{
-      id: params["id"],
-      first_name: params["first_name"],
-      last_name: params["last_name"],
-      auth_date: params["auth_date"],
-      hash: params["hash"],
-      username: params["username"],
-      photo_url: params["photo_url"],
-      member_of: serialized
-    }
-  end
-
-  defp user_member_of?(group, user_id) do
-    url =
-      "https://api.telegram.org/bot#{bot_token()}/getChatMember?chat_id=#{group.id}&user_id=#{user_id}"
-
-    req = Finch.build(:get, url)
-
-    case Finch.request(req, WikWeb.Finch) do
-      {:ok, %{status: 200, body: body}} ->
-        case Jason.decode(body) do
-          {:ok, %{"ok" => true, "result" => %{"status" => status}}} ->
-            status in ["member", "administrator", "creator"]
-
-          _ ->
-            false
-        end
-
-      _ ->
-        false
     end
   end
 end

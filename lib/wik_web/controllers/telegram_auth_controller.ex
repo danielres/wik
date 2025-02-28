@@ -2,6 +2,7 @@ defmodule WikWeb.TelegramAuthController do
   use WikWeb, :controller
   alias Wik.User
   @login_ttl :timer.hours(24)
+  require Logger
 
   defp bot_token, do: Application.get_env(:wik, :bot_token)
 

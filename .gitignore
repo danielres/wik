@@ -43,3 +43,4 @@ npm-debug.log
 .env
 .elixir_ls
 tmp_test_data
+backups

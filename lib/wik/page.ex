@@ -14,7 +14,7 @@ defmodule Wik.Page do
 
   def wiki_dir(group_slug) do
     # TODO: move this to application config
-    files_dir = System.get_env("FILE_STORAGE_PATH") || "data"
+    files_dir = System.fetch_env!("FILE_STORAGE_PATH")
     group_dir = files_dir |> Path.join("groups") |> Path.join(group_slug)
     wiki_dir = group_dir |> Path.join("wiki")
 

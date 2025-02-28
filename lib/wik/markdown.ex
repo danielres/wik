@@ -29,17 +29,31 @@ defmodule Wik.Markdown do
   end
 
   defp transform_node({"a", [{"href", href}], children, meta} = node, base_path) do
-    if String.match?(href, ~r/^[a-zA-Z0-9 ]+$/) do
+    if external_href?(href) do
+      node
+    else
       slug = href |> Utils.slugify()
       {"a", [{"href", Path.join(base_path, slug)}], children, meta}
-    else
-      node
     end
   end
 
-  defp transform_node({"a", _attrs, _children, _meta} = node, _base_path),
-    do: node
+  defp transform_node({"a", _attrs, _children, _meta} = node, _base_path), do: node
 
-  defp transform_node(other, _base_path),
-    do: other
+  defp transform_node(other, _base_path), do: other
+
+  defp external_href?(href) do
+    String.starts_with?(href, [
+      "http",
+      "https",
+      "/",
+      "//",
+      "mailto:",
+      "tel:",
+      "ftp:",
+      "sftp:",
+      "git:",
+      "file:",
+      "data:"
+    ])
+  end
 end

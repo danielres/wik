@@ -1,7 +1,6 @@
 defmodule WikWeb.TelegramAuthController do
   use WikWeb, :controller
-
-  # 86400 = 1 day in seconds
+  alias Wik.User
   @login_ttl :timer.hours(24)
 
   defp bot_token, do: Application.get_env(:wik, :bot_token)
@@ -10,9 +9,9 @@ defmodule WikWeb.TelegramAuthController do
     # params is a map with Telegram authentication data:
     # e.g. %{"id" => "...", "first_name" => "...", "auth_date" => "...", "hash" => "..."}
 
-    if valid_telegram_auth?(params) do
+    if valid_telegram_auth?(params, false) do
       user =
-        get_or_create_user_from_telegram(params)
+        User.get_or_create_from_telegram(params, bot_token())
         |> Map.delete("hash")
         |> Map.delete("auth_date")
 
@@ -27,25 +26,53 @@ defmodule WikWeb.TelegramAuthController do
     end
   end
 
-  defp valid_telegram_auth?(params) do
+  def miniapp(conn, _params) do
+    with ["tma " <> init_data_raw] <- get_req_header(conn, "authorization"),
+         params <- URI.decode_query(init_data_raw),
+         true <- valid_telegram_auth?(params, true) do
+      {:ok, params} = JSON.decode(params["user"])
+
+      user = User.get_or_create_from_telegram(params, bot_token())
+
+      conn
+      |> put_session(:user, user)
+      |> put_flash(:info, "Welcome #{user.first_name} #{user.last_name} (#{user.username})!")
+      |> json(%{success: true})
+    else
+      _ ->
+        Logger.error("Invalid Telegram Mini App login")
+
+        conn
+        |> put_flash(:error, "Invalid Telegram login")
+        |> json(%{success: false, error: "Invalid Telegram login"})
+    end
+  end
+
+  defp valid_telegram_auth?(params, miniapp?) do
     # Get the received hash from params and remove it from the map.
-    check_hash = Map.get(params, "hash")
-    data = Map.delete(params, "hash")
+    check_hash = Map.get(params, "hash") |> String.downcase()
+
+    # Compute the secret key: SHA256(bot_token) in binary.
+    secret_key =
+      if miniapp? do
+        :crypto.mac(:hmac, :sha256, "WebAppData", bot_token())
+      else
+        :crypto.hash(:sha256, bot_token())
+      end
 
     # Create the data-check string.
     data_check_string =
-      data
+      params
+      |> Map.delete("hash")
       |> Enum.map(fn {k, v} -> "#{k}=#{v}" end)
       |> Enum.sort()
       |> Enum.join("\n")
-
-    # Compute the secret key: SHA256(bot_token) in binary.
-    secret_key = :crypto.hash(:sha256, bot_token())
 
     # Compute the HMAC-SHA256 of the data-check string with the secret key.
     computed_hash =
       :crypto.mac(:hmac, :sha256, secret_key, data_check_string)
       |> Base.encode16(case: :lower)
+      |> String.downcase()
 
     # Optionally, check that the authentication is not older than 24 hours.
     auth_date =
@@ -68,62 +95,6 @@ defmodule WikWeb.TelegramAuthController do
 
       true ->
         true
-    end
-  end
-
-  defp get_or_create_user_from_telegram(params) do
-    # For each group, check if the user is a member.
-
-    # TODO: optimize query
-
-    all_groups = Wik.Groups.list_groups()
-
-    filtered =
-      all_groups
-      |> Enum.filter(fn group ->
-        user_member_of?(group, params["id"])
-      end)
-
-    serialized =
-      filtered
-      |> Enum.map(fn group ->
-        %{
-          id: group.id,
-          name: group.name,
-          slug: group.slug
-        }
-      end)
-
-    %{
-      id: params["id"],
-      first_name: params["first_name"],
-      last_name: params["last_name"],
-      auth_date: params["auth_date"],
-      hash: params["hash"],
-      username: params["username"],
-      photo_url: params["photo_url"],
-      member_of: serialized
-    }
-  end
-
-  defp user_member_of?(group, user_id) do
-    url =
-      "https://api.telegram.org/bot#{bot_token()}/getChatMember?chat_id=#{group.id}&user_id=#{user_id}"
-
-    req = Finch.build(:get, url)
-
-    case Finch.request(req, WikWeb.Finch) do
-      {:ok, %{status: 200, body: body}} ->
-        case Jason.decode(body) do
-          {:ok, %{"ok" => true, "result" => %{"status" => status}}} ->
-            status in ["member", "administrator", "creator"]
-
-          _ ->
-            false
-        end
-
-      _ ->
-        false
     end
   end
 end

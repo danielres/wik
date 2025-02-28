@@ -21,6 +21,7 @@ defmodule WikWeb.Router do
   scope "/", WikWeb do
     pipe_through :browser
 
+    post "/auth/telegram/miniapp", TelegramAuthController, :miniapp
     get "/auth/telegram/callback", TelegramAuthController, :callback
     get "/auth/logout", SessionController, :logout
 
@@ -129,7 +130,9 @@ defmodule WikWeb.Router do
     slug = conn.params["slug"]
     resource_path = Wik.Page.resource_path(group_slug, slug)
 
-    case Wik.ResourceLockServer.lock(resource_path, user.id) do
+    userinfo = %{id: user.id, username: user.username}
+
+    case Wik.ResourceLockServer.lock(resource_path, userinfo) do
       :ok ->
         conn
 

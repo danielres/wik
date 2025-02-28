@@ -18,8 +18,8 @@ defmodule Wik.ResourceLockServer do
   Returns :ok if the resource is not locked,
   or {:error, reason} if it is locked.
   """
-  def lock(resource_path, user_id) do
-    GenServer.call(__MODULE__, {:lock, resource_path, user_id})
+  def lock(resource_path, userinfo) do
+    GenServer.call(__MODULE__, {:lock, resource_path, userinfo})
   end
 
   @doc """
@@ -35,7 +35,9 @@ defmodule Wik.ResourceLockServer do
     {:ok, state}
   end
 
-  def handle_call({:lock, resource, user_id}, _from, state) do
+  def handle_call({:lock, resource, userinfo}, _from, state) do
+    user_id = userinfo.id
+
     case Map.get(state, resource) do
       nil ->
         # Resource is not locked; lock it for this user.
@@ -43,14 +45,13 @@ defmodule Wik.ResourceLockServer do
         {:reply, :ok, new_state}
 
       lock_map ->
-        cond do
-          Map.has_key?(lock_map, user_id) ->
-            # The same user is already editing this resource.
-            {:reply, {:error, "You are already editing this resource in another tab."}, state}
-
-          true ->
-            # Some other user holds the lock.
-            {:reply, {:error, "This resource is currently being edited by someone else."}, state}
+        if Map.has_key?(lock_map, user_id) do
+          # The same user is already editing this resource.
+          {:reply, {:error, "You are already editing this resource in another tab."}, state}
+        else
+          # Some other user holds the lock.
+          {:reply, {:error, "This resource is currently being edited by #{userinfo.username}."},
+           state}
         end
     end
   end

@@ -27,8 +27,9 @@
 <% else %>
   <div class="grid place-items-center h-[100vh]">
     <div>
-      <div :if={show_dev_login?()} class="text-center mb-4">
-        <.link class="btn btn-primary" href="/dev/auth">Login as test user</.link>
+      <div :if={show_dev_login?()} class="text-center mb-4 space-y-2">
+        <.link class="btn btn-primary" href="/dev/auth?user=devuser1">Login as devuser1</.link>
+        <.link class="btn btn-primary" href="/dev/auth?user=devuser2">Login as devuser2</.link>
       </div>
       <script
         async

@@ -1,7 +1,8 @@
 defmodule WikWeb.Page.EditLive do
   use WikWeb, :live_view
-  alias Wik.{Page, ResourceLockServer}
-  alias WikWeb.{Components}
+  alias Wik.Page
+  alias Wik.ResourceLockServer
+  alias WikWeb.Components
   require Logger
 
   defp page_path(group_slug, slug), do: ~p"/#{group_slug}/wiki/#{slug}"

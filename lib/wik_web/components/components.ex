@@ -65,4 +65,18 @@ defmodule WikWeb.Components do
     </div>
     """
   end
+
+  def telegram_login_widget(assigns) do
+    ~H"""
+    <script
+      async
+      src="https://telegram.org/js/telegram-widget.js?22"
+      data-telegram-login={Application.get_env(:wik, :bot_username)}
+      data-size="large"
+      data-radius="3"
+      data-auth-url="/auth/telegram/callback"
+    >
+    </script>
+    """
+  end
 end

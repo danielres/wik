@@ -1,50 +1,36 @@
 <.flash_group flash={@flash} />
 
-<%= if @user && @user != %{} do %>
-  <div class="min-h-[100vh] grid grid-rows-[auto,1fr] pb-12 md:pb-0">
-    <header class="bg-slate-200 py-4 px-4">
-      <div class="mx-auto max-w-2xl flex justify-between items-end">
-        <h1 class="flex gap-2 items-center">
-          <a href={~p"/"} class="flex hero-home-mini text-slate-400 hover:text-slate-500">
-            Home
+<div class="min-h-[100vh] grid grid-rows-[auto,1fr] pb-12 md:pb-0">
+  <header class="bg-slate-200 py-4 px-4">
+    <div class="mx-auto max-w-2xl flex justify-between items-end">
+      <h1 class="flex gap-2 items-center">
+        <a href={~p"/"} class="flex hero-home-mini text-slate-400 hover:text-slate-500">
+          Home
+        </a>
+        <a
+          href={~p"/#{@group_slug}"}
+          class="flex text-slate-500 hover:text-slate-600"
+          style="font-variant: small-caps"
+        >
+          {@group_name}
+        </a>
+      </h1>
+
+      <div class="flex gap-4 items-center">
+        <div class="text-right">
+          <div class="text-sm">{@user.username}</div>
+
+          <a href={~p"/auth/logout"} class="text-slate-500 hover:underline block text-xs">
+            Logout
           </a>
-          <a
-            href={~p"/#{@group_slug}"}
-            class="flex text-slate-500 hover:text-slate-600"
-            style="font-variant: small-caps"
-          >
-            {@group_name}
-          </a>
-        </h1>
-
-        <div class="flex gap-4 items-center">
-          <div class="text-right">
-            <div class="text-sm">{@user.username}</div>
-
-            <a href={~p"/auth/logout"} class="text-slate-500 hover:underline block text-xs">
-              Logout
-            </a>
-          </div>
-
-          <img src={@user.photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
         </div>
-      </div>
-    </header>
 
-    <main class="py-8 sm:px-6 px-4 lg:px-8 grid max-w-2xl mx-auto w-full">
-      {@inner_content}
-    </main>
-  </div>
-<% else %>
-  <div class="grid place-items-center h-[100vh]">
-    <script
-      async
-      src="https://telegram.org/js/telegram-widget.js?22"
-      data-telegram-login={Application.get_env(:wik, :bot_username)}
-      data-size="large"
-      data-radius="3"
-      data-auth-url="/auth/telegram/callback"
-    >
-    </script>
-  </div>
-<% end %>
+        <img src={@user.photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
+      </div>
+    </div>
+  </header>
+
+  <main class="py-8 sm:px-6 px-4 lg:px-8 grid max-w-2xl mx-auto w-full">
+    {@inner_content}
+  </main>
+</div>

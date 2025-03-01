@@ -18,22 +18,22 @@ defmodule WikWeb.Page.ShowLive do
   end
 
   @impl true
-  def handle_params(%{"group_slug" => group_slug, "slug" => slug}, _uri, socket) do
+  def handle_params(%{"group_slug" => group_slug, "slug" => page_slug}, _uri, socket) do
     {page_title, content} =
-      case Page.load(group_slug, slug) do
-        {:ok, {metadata, body}} ->
-          {metadata["title"], Page.render(group_slug, body)}
+      case Page.load(group_slug, page_slug) do
+        {:ok, {_metadata, body}} ->
+          {page_slug, Page.render(group_slug, body)}
 
         :not_found ->
-          {String.capitalize(slug), nil}
+          {page_slug, nil}
       end
 
     {:noreply,
      socket
      |> assign(group_slug: group_slug)
-     |> assign(slug: slug)
+     |> assign(slug: page_slug)
      |> assign(group_name: Wik.get_group_name(group_slug))
-     |> assign(:backlinks, Page.backlinks(group_slug, slug))
+     |> assign(:backlinks, Page.backlinks(group_slug, page_slug))
      |> assign(:page_title, page_title)
      |> assign(:content, content)}
   end
@@ -53,7 +53,11 @@ defmodule WikWeb.Page.ShowLive do
     ~H"""
     <div class="space-y-4 grid grid-rows-[auto,1fr] ">
       <div class="flex justify-between items-end">
-        <h1 class="text-xl text-slate-700">{@page_title}</h1>
+        <h1 class="text-sm text-slate-600 flex gap-0.5 items-center">
+          <.link patch={~p"/#{@group_slug}/wiki"} class="opacity-60 hover:underline">wiki</.link>
+          <span class="text-xs">/</span>
+          <span class="">{@page_title}</span>
+        </h1>
 
         <div class="flex gap-2 ">
           <Components.shortcut key="r">

@@ -16,14 +16,14 @@ defmodule WikWeb.Page.EditLive do
   end
 
   @impl true
-  def handle_params(%{"group_slug" => group_slug, "slug" => slug}, _uri, socket) do
+  def handle_params(%{"group_slug" => group_slug, "slug" => page_slug}, _uri, socket) do
     props =
-      case Page.load(group_slug, slug) do
+      case Page.load(group_slug, page_slug) do
         {:ok, {metadata, body}} ->
-          %{page_title: metadata["title"], metadata: metadata, edit_content: body}
+          %{page_title: page_slug, metadata: metadata, edit_content: body}
 
         :not_found ->
-          %{page_title: String.capitalize(slug), metadata: %{}, edit_content: ""}
+          %{page_title: page_slug, metadata: %{}, edit_content: ""}
       end
 
     {
@@ -31,10 +31,10 @@ defmodule WikWeb.Page.EditLive do
       socket
       |> assign(props)
       |> assign(:group_slug, group_slug)
-      |> assign(:slug, slug)
+      |> assign(:slug, page_slug)
       # TODO: move get_group_name to Groups context
       |> assign(:group_name, Wik.get_group_name(group_slug))
-      |> assign(:resource_path, Page.resource_path(group_slug, slug))
+      |> assign(:resource_path, Page.resource_path(group_slug, page_slug))
     }
   end
 
@@ -51,7 +51,7 @@ defmodule WikWeb.Page.EditLive do
   end
 
   @impl true
-  def handle_event("update_page", %{"content" => new_content, "metadata" => new_metadata}, socket) do
+  def handle_event("update_page", %{"content" => new_content}, socket) do
     group_slug = socket.assigns.group_slug
     slug = socket.assigns.slug
     user = socket.assigns.user
@@ -59,11 +59,11 @@ defmodule WikWeb.Page.EditLive do
     metadata =
       case Page.load(group_slug, slug) do
         :not_found ->
-          %{title: String.capitalize(slug)}
+          %{title: slug}
 
         {:ok, document} ->
           {metadata, _body} = document
-          Map.merge(metadata, new_metadata)
+          metadata
       end
 
     Page.save(user.id, group_slug, slug, new_content, metadata)
@@ -101,19 +101,8 @@ defmodule WikWeb.Page.EditLive do
       phx-hook="Phoenix.FocusWrap"
     >
       <div class="flex justify-between items-end gap-2" tabindex="0">
-        <h1 id="title" class="text-slate-700 grow max-w-48">
-          <Components.shortcut key="t">
-            <div
-              contentEditable="true"
-              class="block py-2 px-4 rounded bg-white/20 hover:bg-white/60 focus:bg-white/100 outline-none"
-              tabindex="4"
-              onkeyup="document.getElementById('title-input').value = this.innerText"
-            >
-              {@page_title}
-            </div>
-          </Components.shortcut>
-        </h1>
-        <input id="title-input" type="hidden" name="metadata[title]" value={@page_title} />
+        <h1 class="text-xl text-slate-700">{@page_title}</h1>
+
         <div class="flex gap-2">
           <Components.shortcut key="c">
             <button phx-click="cancel_edit" tabindex="3" type="cancel" class="btn btn-ghost">

@@ -19,7 +19,7 @@ defmodule Wik.Groups.Group do
   def changeset(group, attrs) do
     group
     |> cast(attrs, [:id, :slug, :name])
-    |> unique_constraint(:slug)
     |> validate_required([:id, :slug, :name])
+    |> unique_constraint(:slug)
   end
 end

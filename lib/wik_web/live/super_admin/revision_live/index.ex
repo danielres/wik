@@ -2,15 +2,15 @@ defmodule WikWeb.SuperAdmin.RevisionLive.Index do
   use WikWeb, :live_view
 
   alias Wik.Revisions
-  alias Wik.Revisions.Revision
 
   @impl true
   def mount(_params, session, socket) do
-    user = session["user"]
-    socket = socket |> assign(:user, user)
+    socket =
+      socket
+      |> assign(:user, session["user"])
+      |> assign(:resource_paths, Revisions.list_distinct_resource_paths())
 
-    {:ok, stream(socket, :revisions, Revisions.list_revisions()),
-     layout: {WikWeb.Layouts, :admin}}
+    {:ok, stream(socket, :revisions, []), layout: {WikWeb.Layouts, :admin}}
   end
 
   @impl true
@@ -18,27 +18,19 @@ defmodule WikWeb.SuperAdmin.RevisionLive.Index do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    socket
-    |> assign(:page_title, "Edit Revision")
-    |> assign(:revision, Revisions.get_revision!(id))
-  end
+  # For index, check if a filter by resource_path was provided
+  defp apply_action(socket, :index, params) do
+    resource_path =
+      Map.get(params, "resource_path") || socket.assigns.resource_paths |> List.first()
 
-  defp apply_action(socket, :new, _params) do
-    socket
-    |> assign(:page_title, "New Revision")
-    |> assign(:revision, %Revision{})
-  end
+    revisions = Revisions.list_revisions_by_resource_path(resource_path)
 
-  defp apply_action(socket, :index, _params) do
     socket
     |> assign(:page_title, "Listing Revisions")
+    |> assign(:resource_path, resource_path)
     |> assign(:revision, nil)
-  end
-
-  @impl true
-  def handle_info({WikWeb.SuperAdmin.RevisionLive.FormComponent, {:saved, revision}}, socket) do
-    {:noreply, stream_insert(socket, :revisions, revision)}
+    |> assign(:filter, resource_path)
+    |> stream(:revisions, revisions)
   end
 
   @impl true

@@ -73,4 +73,17 @@ defmodule Wik.Revisions do
   def change_revision(%Revision{} = revision, attrs \\ %{}) do
     Revision.changeset(revision, attrs)
   end
+
+  # New function to list revisions filtered by resource_path
+  def list_revisions_by_resource_path(resource_path) do
+    from(r in Revision, where: r.resource_path == ^resource_path)
+    |> Repo.all()
+    |> Enum.sort(&(&1.id >= &2.id))
+  end
+
+  def list_distinct_resource_paths do
+    from(r in Revision, distinct: true, select: r.resource_path)
+    |> Repo.all()
+    |> Enum.sort()
+  end
 end

@@ -1,27 +1,25 @@
 <.header>
   Listing Revisions
-  <:actions>
-    <.link patch={~p"/admin/revisions/new"}>
-      <.button>New Revision</.button>
-    </.link>
-  </:actions>
+  <:actions></:actions>
 </.header>
 
-<.table
-  id="revisions"
-  rows={@streams.revisions}
-  row_click={fn {_id, revision} -> JS.navigate(~p"/admin/revisions/#{revision}") end}
->
+<select class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm">
+  <option
+    :for={path <- @resource_paths}
+    phx-click={JS.navigate(~p"/admin/revisions?resource_path=#{path}")}
+    value={path}
+    selected={@resource_path == path}
+  >
+    {path}
+  </option>
+</select>
+
+<.table id="revisions" rows={@streams.revisions}>
   <:col :let={{_id, revision}} label="Id">{revision.id}</:col>
   <:col :let={{_id, revision}} label="Resource Path">{revision.resource_path}</:col>
   <:col :let={{_id, revision}} label="Patch">{revision.patch}</:col>
   <:col :let={{_id, revision}} label="User id">{revision.user_id}</:col>
-  <:action :let={{_id, revision}}>
-    <div class="sr-only">
-      <.link navigate={~p"/admin/revisions/#{revision}"}>Show</.link>
-    </div>
-    <.link patch={~p"/admin/revisions/#{revision}/edit"}>Edit</.link>
-  </:action>
+  <:action :let={{_id, revision}}></:action>
   <:action :let={{id, revision}}>
     <.link
       phx-click={JS.push("delete", value: %{id: revision.id}) |> hide("##{id}")}
@@ -31,19 +29,3 @@
     </.link>
   </:action>
 </.table>
-
-<.modal
-  :if={@live_action in [:new, :edit]}
-  id="revision-modal"
-  show
-  on_cancel={JS.patch(~p"/admin/revisions")}
->
-  <.live_component
-    module={WikWeb.SuperAdmin.RevisionLive.FormComponent}
-    id={@revision.id || :new}
-    title={@page_title}
-    action={@live_action}
-    revision={@revision}
-    patch={~p"/admin/revisions"}
-  />
-</.modal>

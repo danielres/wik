@@ -37,4 +37,32 @@ defmodule WikWeb.Components do
     </div>
     """
   end
+
+  slot :inner_block, required: true
+
+  def prose(assigns) do
+    ~H"""
+    <div class="prose
+                prose-sm
+                max-w-none
+                prose-a:text-blue-600
+                prose-a:no-underline
+                hover:prose-a:underline
+                prose-headings:text-slate-600
+                text-pretty
+                prose-headings:text-balance
+                [&_strong]:text-slate-600
+                [&_h1]:text-2xl [&_h1]:font-normal
+                [&_h2]:text-xl [&_h2]:font-normal
+                [&_h2]:border-b [&_h2]:border-slate-500/40
+                [&_h2]:leading-snug [&_h2]:pb-2
+                [&_h3]:text-lg [&_h3]:font-normal
+                [&_h4]:text-base
+                [&_h5]:text-sm
+                [&_h6]:text-xs
+            ">
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
 end

@@ -111,9 +111,9 @@ defmodule WikWeb.Page.Revisions.ShowLive do
 
       <div>
         <div tabindex="1" class="bg-slate-50 p-4 md:p-8 rounded shadow">
-          <div class="min-h-64 prose prose-sm prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-headings:text-slate-600">
+          <Components.prose>
             {raw(@content)}
-          </div>
+          </Components.prose>
 
           <div class="clear-both"></div>
         </div>

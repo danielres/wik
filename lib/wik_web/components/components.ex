@@ -2,10 +2,8 @@ defmodule WikWeb.Components do
   @moduledoc """
   Components for the WikWeb application.
   """
-
   use Phoenix.Component
-
-  # alias Phoenix.LiveView.JS
+  use WikWeb, :live_view
 
   attr :key, :string, required: true
   attr :class, :string, default: nil
@@ -77,6 +75,32 @@ defmodule WikWeb.Components do
       data-auth-url="/auth/telegram/callback"
     >
     </script>
+    """
+  end
+
+  attr :groups, :list, required: true
+
+  def groups_list(assigns) do
+    groups = assigns[:groups]
+
+    ~H"""
+    <ul class="space-y-2  text-center mx-auto">
+      <li :for={group <- groups} value={group.id}>
+        <a href={~p"/#{group.slug}"} class="btn btn-primary block">
+          {group.name}
+        </a>
+      </li>
+    </ul>
+    """
+  end
+
+  attr(:user_photo_url, :string, required: true)
+
+  def avatar(assigns) do
+    ~H"""
+    <a href={~p"/me"}>
+      <img src={@user_photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
+    </a>
     """
   end
 end

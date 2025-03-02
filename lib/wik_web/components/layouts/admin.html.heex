@@ -1,6 +1,6 @@
 <.flash_group flash={@flash} />
 
-<.app_layout variant="warning">
+<Layouts.app_layout>
   <:header_left>
     <span class="flex text-white bg-pink-500 px-8 py-1 font-bold" style="font-variant: small-caps">
       Admin
@@ -8,7 +8,7 @@
   </:header_left>
 
   <:header_right>
-    <.avatar user_photo_url={@user.photo_url} />
+    <Components.avatar user_photo_url={@user.photo_url} />
   </:header_right>
 
   <:menu>
@@ -23,8 +23,8 @@
   </:menu>
 
   <:main>
-    <WikWeb.Layouts.card variant="card">
+    <Layouts.card>
       {@inner_content}
-    </WikWeb.Layouts.card>
+    </Layouts.card>
   </:main>
-</.app_layout>
+</Layouts.app_layout>

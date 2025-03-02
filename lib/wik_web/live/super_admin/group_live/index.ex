@@ -6,9 +6,10 @@ defmodule WikWeb.SuperAdmin.GroupLive.Index do
 
   @impl true
   def mount(_params, session, socket) do
-    user = session["user"]
-    socket = socket |> assign(:user, user)
-    {:ok, stream(socket, :groups, Groups.list_groups()), layout: {WikWeb.Layouts, :admin}}
+    {:ok,
+     socket
+     |> assign(:user, session["user"])
+     |> stream(:groups, Groups.list_groups()), layout: {WikWeb.Layouts, :admin}}
   end
 
   @impl true

@@ -55,6 +55,9 @@ defmodule WikWeb do
         layout: {WikWeb.Layouts, :app}
 
       unquote(html_helpers())
+
+      alias WikWeb.Layouts
+      alias WikWeb.Components
     end
   end
 
@@ -76,6 +79,9 @@ defmodule WikWeb do
 
       # Include general helpers for rendering HTML
       unquote(html_helpers())
+
+      alias WikWeb.Layouts
+      alias WikWeb.Components
     end
   end
 

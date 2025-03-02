@@ -2,7 +2,6 @@ defmodule WikWeb.Page.EditLive do
   use WikWeb, :live_view
   alias Wik.Page
   alias Wik.ResourceLockServer
-  alias WikWeb.Components
   require Logger
 
   defp page_path(group_slug, slug), do: ~p"/#{group_slug}/wiki/#{slug}"
@@ -101,7 +100,7 @@ defmodule WikWeb.Page.EditLive do
       phx-hook="Phoenix.FocusWrap"
     >
       <div class="flex justify-between items-end gap-2" tabindex="0">
-        <h1 class="text-xl text-slate-700">{@page_title}</h1>
+        <Layouts.page_slug group_slug={@group_slug} page_slug={@page_title} />
 
         <div class="flex gap-2">
           <Components.shortcut key="c">

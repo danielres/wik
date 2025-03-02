@@ -1,26 +1,21 @@
 <.flash_group flash={@flash} />
+
 <%= if user = Plug.Conn.get_session(@conn, :user) do %>
-  <WikWeb.Layouts.app_layout>
+  <Layouts.app_layout>
     <:header_left></:header_left>
 
     <:header_right>
-      <WikWeb.Layouts.avatar user_photo_url={user.photo_url} />
+      <Components.avatar user_photo_url={user.photo_url} />
     </:header_right>
 
     <:menu></:menu>
 
     <:main>
-      <WikWeb.Layouts.card variant="transparent">
-        <ul class="space-y-2 max-w-64 text-center mx-auto my-16">
-          <li :for={group <- user.member_of} value={group.id}>
-            <a href={~p"/#{group.slug}"} class="btn btn-primary block">
-              {group.name}
-            </a>
-          </li>
-        </ul>
-      </WikWeb.Layouts.card>
+      <div class="max-w-96 mx-auto w-full self-center">
+        <Components.groups_list groups={user.member_of} />
+      </div>
     </:main>
-  </WikWeb.Layouts.app_layout>
+  </Layouts.app_layout>
 <% else %>
   <div class="grid place-items-center h-[100vh]">
     <div>
@@ -28,7 +23,7 @@
         <.link class="btn btn-primary" href="/dev/auth?user=devuser1">Login as devuser1</.link>
         <.link class="btn btn-primary" href="/dev/auth?user=devuser2">Login as devuser2</.link>
       </div>
-      <WikWeb.Components.telegram_login_widget />
+      <Components.telegram_login_widget />
     </div>
   </div>
 <% end %>

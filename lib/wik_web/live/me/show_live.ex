@@ -11,11 +11,11 @@ defmodule WikWeb.Me.ShowLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <WikWeb.Layouts.app_layout>
+    <Layouts.app_layout>
       <:header_left></:header_left>
 
       <:header_right>
-        <WikWeb.Layouts.avatar user_photo_url={@user.photo_url} />
+        <Components.avatar user_photo_url={@user.photo_url} />
       </:header_right>
 
       <:menu>
@@ -29,32 +29,34 @@ defmodule WikWeb.Me.ShowLive do
       </:menu>
 
       <:main>
-        <WikWeb.Layouts.card variant="card">
-          <div class="grid grid-cols-2 gap-x-8 gap-y-2 [&_b]:text-right">
-            <div class="space-y-2">
-              <h3>Your groups</h3>
-              <ul class="space-y-2">
-                <li :for={group <- @user.member_of} class="">
-                  <a class="btn btn-primary" href={~p"/#{group.slug}"}>{group.name}</a>
-                </li>
-              </ul>
+        <Layouts.card>
+          <div class="grid md:grid-cols-2 gap-x-8 gap-y-8 ">
+            <div class="space-y-4 max-w-96 mx-auto w-full">
+              <h3 class="text-lg text-slate-500 font-bold text-center ">Your groups</h3>
+              <Components.groups_list groups={@user.member_of} />
             </div>
-            <div class="grid grid-cols-2 gap-x-4 ">
-              <b>Username:</b>
-              <div>{@user.username}</div>
-              <b>Picture:</b>
-              <img class="size-10 rounded-full" src={@user.photo_url} alt="user photo" />
-              <b>Firstname:</b>
-              <div>{@user.first_name}</div>
-              <b>Last name:</b>
-              <div>{@user.last_name}</div>
-              <b>Auth date:</b>
-              <div>{@user.auth_date}</div>
+
+            <hr class="md:hidden" />
+
+            <div class="space-y-4">
+              <h3 class="text-lg text-slate-500 font-bold text-center ">User data</h3>
+              <div class="grid grid-cols-2 gap-x-4 text-slate-500 space-y-2 items-end [&_b]:text-right">
+                <b>Picture:</b>
+                <img class="size-10 rounded-full" src={@user.photo_url} alt="user photo" />
+                <b>Username:</b>
+                <div>{@user.username}</div>
+                <b>Firstname:</b>
+                <div>{@user.first_name}</div>
+                <b>Last name:</b>
+                <div>{@user.last_name}</div>
+                <b>Auth date:</b>
+                <div>{@user.auth_date}</div>
+              </div>
             </div>
           </div>
-        </WikWeb.Layouts.card>
+        </Layouts.card>
       </:main>
-    </WikWeb.Layouts.app_layout>
+    </Layouts.app_layout>
     """
   end
 end

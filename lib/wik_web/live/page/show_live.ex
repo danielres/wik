@@ -2,7 +2,6 @@ defmodule WikWeb.Page.ShowLive do
   use WikWeb, :live_view
 
   alias Wik.Page
-  alias WikWeb.Components
   require Logger
 
   @impl true
@@ -51,7 +50,7 @@ defmodule WikWeb.Page.ShowLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <WikWeb.Layouts.app_layout>
+    <Layouts.app_layout>
       <:header_left>
         <a
           href={~p"/#{@group_slug}"}
@@ -63,22 +62,12 @@ defmodule WikWeb.Page.ShowLive do
       </:header_left>
 
       <:header_right>
-        <WikWeb.Layouts.avatar user_photo_url={@user.photo_url} />
+        <Components.avatar user_photo_url={@user.photo_url} />
       </:header_right>
 
       <:menu>
         <div class="flex justify-between items-end">
-          <div class="space-y-4 grid grid-rows-[auto,1fr] ">
-            <div class="flex justify-between items-end">
-              <h1 class="text-sm text-slate-600 flex gap-0.5 items-center">
-                <.link patch={~p"/#{@group_slug}/wiki"} class="opacity-60 hover:underline">
-                  wiki
-                </.link>
-                <span class="text-xs">/</span>
-                <span class="">{@page_title}</span>
-              </h1>
-            </div>
-          </div>
+          <Layouts.page_slug group_slug={@group_slug} page_slug={@page_title} />
 
           <div class="flex gap-2">
             <Components.shortcut key="r">
@@ -123,7 +112,7 @@ defmodule WikWeb.Page.ShowLive do
           </div>
         </div>
       </:main>
-    </WikWeb.Layouts.app_layout>
+    </Layouts.app_layout>
     """
   end
 end

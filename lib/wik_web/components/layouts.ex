@@ -26,7 +26,7 @@ defmodule WikWeb.Layouts do
     ~H"""
     <div class={ "#{ grid_rows } min-h-[100vh] grid pb-12 md:pb-0 gap-4" }>
       <header class="bg-slate-200 py-2 px-4">
-        <div class="mx-auto max-w-2xl flex justify-between items-end">
+        <div class="mx-auto max-w-screen-md flex justify-between items-end">
           <h1 class="flex gap-2 items-center">
             {render_slot(@header_left)}
           </h1>
@@ -37,12 +37,12 @@ defmodule WikWeb.Layouts do
       </header>
 
       <%= if @menu do %>
-        <div class=" grid max-w-2xl mx-auto w-full">
+        <div class="grid max-w-screen-md mx-auto w-full px-4 md:px-0">
           {render_slot(@menu)}
         </div>
       <% end %>
 
-      <main class="grid max-w-2xl mx-auto w-full">
+      <main class="grid max-w-screen-md mx-auto w-full">
         {render_slot(@main)}
       </main>
     </div>
@@ -56,7 +56,7 @@ defmodule WikWeb.Layouts do
     variant =
       if assigns[:variant] == "transparent",
         do: "",
-        else: "bg-white shadow rounded"
+        else: "bg-white shadow md:rounded"
 
     ~H"""
     <div class={ "py-6 sm:px-6 px-4 lg:px-8 #{variant}" }>
@@ -65,13 +65,18 @@ defmodule WikWeb.Layouts do
     """
   end
 
-  attr(:user_photo_url, :string, required: true)
+  attr(:group_slug, :string, required: true)
+  attr(:page_slug, :string, required: true)
 
-  def avatar(assigns) do
+  def page_slug(assigns) do
     ~H"""
-    <a href={~p"/me"}>
-      <img src={@user_photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
-    </a>
+    <div class="text-sm text-slate-600 flex gap-0.5 items-center">
+      <.link patch={~p"/#{@group_slug}/wiki"} class="opacity-60 hover:underline">
+        wiki
+      </.link>
+      <span class="text-xs">/</span>
+      <span class="">{@page_slug}</span>
+    </div>
     """
   end
 end

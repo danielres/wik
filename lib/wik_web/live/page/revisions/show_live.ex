@@ -2,15 +2,11 @@ defmodule WikWeb.Page.Revisions.ShowLive do
   use WikWeb, :live_view
 
   alias Wik.Page
-  alias WikWeb.Components
   alias Wik.Revisions
-  # require Logger
 
   @impl true
   def mount(_params, session, socket) do
     user = session["user"] || %{}
-
-    # Phoenix.PubSub.subscribe(Wik.PubSub, "pages")
 
     {:ok,
      socket
@@ -74,7 +70,7 @@ defmodule WikWeb.Page.Revisions.ShowLive do
   @spec render(any()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
-    <div class="space-y-4">
+    <div class="space-y-4 max-w-screen-md mx-auto">
       <div class="flex justify-between items-end gap-4">
         <h1 class="text-xl text-slate-700 grid gap-2 items-end">
           {@page_title}

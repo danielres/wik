@@ -1,29 +1,26 @@
 <.flash_group flash={@flash} />
-
 <%= if user = Plug.Conn.get_session(@conn, :user) do %>
-  <header class="bg-slate-200 py-4">
-    <div class="mx-auto max-w-2xl flex justify-end px-4">
-      <div class="flex gap-4 items-center">
-        <div class="text-right">
-          <div class="text-sm">{user.username}</div>
+  <WikWeb.Layouts.app_layout>
+    <:header_left></:header_left>
 
-          <a href={~p"/auth/logout"} class="text-slate-500 hover:underline block text-xs">
-            Logout
-          </a>
-        </div>
+    <:header_right>
+      <WikWeb.Layouts.avatar user_photo_url={user.photo_url} />
+    </:header_right>
 
-        <img src={user.photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
-      </div>
-    </div>
-  </header>
+    <:menu></:menu>
 
-  <ul class="space-y-2 max-w-64 text-center mx-auto my-16">
-    <li :for={group <- user.member_of} value={group.id}>
-      <a href={~p"/#{group.slug}"} class="btn btn-primary block">
-        {group.name}
-      </a>
-    </li>
-  </ul>
+    <:main>
+      <WikWeb.Layouts.card variant="transparent">
+        <ul class="space-y-2 max-w-64 text-center mx-auto my-16">
+          <li :for={group <- user.member_of} value={group.id}>
+            <a href={~p"/#{group.slug}"} class="btn btn-primary block">
+              {group.name}
+            </a>
+          </li>
+        </ul>
+      </WikWeb.Layouts.card>
+    </:main>
+  </WikWeb.Layouts.app_layout>
 <% else %>
   <div class="grid place-items-center h-[100vh]">
     <div>

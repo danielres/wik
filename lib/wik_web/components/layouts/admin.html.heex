@@ -1,45 +1,30 @@
 <.flash_group flash={@flash} />
 
-<div class="min-h-[100vh] grid grid-rows-[auto,1fr] pb-12 md:pb-0">
-  <header class="bg-slate-200 py-4 px-4">
-    <div class="mx-auto max-w-7xl flex justify-between items-end">
-      <h1 class="flex gap-2 items-center">
-        <a href={~p"/"} class="flex hero-home-mini text-slate-400 hover:text-slate-500">
-          Home
-        </a>
-        <span class="flex text-slate-500 hover:text-slate-600" style="font-variant: small-caps">
-          Admin
-        </span>
-      </h1>
+<.app_layout variant="warning">
+  <:header_left>
+    <span class="flex text-white bg-pink-500 px-8 py-1 font-bold" style="font-variant: small-caps">
+      Admin
+    </span>
+  </:header_left>
 
-      <div class="flex gap-4 items-center">
-        <div class="text-right">
-          <div class="text-sm">{@user.username}</div>
+  <:header_right>
+    <.avatar user_photo_url={@user.photo_url} />
+  </:header_right>
 
-          <a href={~p"/auth/logout"} class="text-slate-500 hover:underline block text-xs">
-            Logout
-          </a>
-        </div>
+  <:menu>
+    <ul class="flex gap-2 items-center">
+      <li>
+        <.link class="btn btn-primary" navigate={~p"/admin/groups"}> Groups </.link>
+      </li>
+      <li>
+        <.link class="btn btn-primary" navigate={~p"/admin/revisions"}> Revisions </.link>
+      </li>
+    </ul>
+  </:menu>
 
-        <img src={@user.photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
-      </div>
-    </div>
-  </header>
-
-  <div class="px-4 mt-4 max-w-7xl mx-auto w-full space-y-4">
-    <div>
-      <ul class="flex gap-2 items-center">
-        <li>
-          <.link class="btn btn-primary" navigate={~p"/admin/groups"}> Groups </.link>
-        </li>
-        <li>
-          <.link class="btn btn-primary" navigate={~p"/admin/revisions"}> Revisions </.link>
-        </li>
-      </ul>
-    </div>
-
-    <main class="py-8 sm:px-6 px-4 bg-white shadow rounded">
+  <:main>
+    <WikWeb.Layouts.card variant="card">
       {@inner_content}
-    </main>
-  </div>
-</div>
+    </WikWeb.Layouts.card>
+  </:main>
+</.app_layout>

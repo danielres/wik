@@ -18,16 +18,6 @@ defmodule WikWeb.Router do
     get "/pages_suggestions", PageController, :suggestions
   end
 
-  scope "/", WikWeb do
-    pipe_through :browser
-
-    post "/auth/telegram/miniapp", TelegramAuthController, :miniapp
-    get "/auth/telegram/callback", TelegramAuthController, :callback
-    get "/auth/logout", SessionController, :logout
-
-    get "/", PageController, :home
-  end
-
   scope "/admin", WikWeb do
     pipe_through [:browser, :ensure_superuser]
 
@@ -37,32 +27,43 @@ defmodule WikWeb.Router do
       live "/", SuperAdmin.GroupLive.Index, :index
       live "/new", SuperAdmin.GroupLive.Index, :new
       live "/:id/edit", SuperAdmin.GroupLive.Index, :edit
-      live "/:id", SuperAdmin.GroupLive.Show, :show
       live "/:id/show/edit", SuperAdmin.GroupLive.Show, :edit
     end
 
-    scope "/revisions" do
-      live "/", SuperAdmin.RevisionLive.Index, :index
-      live "/new", SuperAdmin.RevisionLive.Index, :new
-      live "/:id/edit", SuperAdmin.RevisionLive.Index, :edit
-      live "/:id", SuperAdmin.RevisionLive.Show, :show
-      live "/:id/show/edit", SuperAdmin.RevisionLive.Show, :edit
+    live "/revisions", SuperAdmin.RevisionLive.Index, :index
+  end
+
+  scope "/", WikWeb do
+    pipe_through :browser
+
+    get "/", PageController, :home
+
+    scope "/auth" do
+      post "/telegram/miniapp", TelegramAuthController, :miniapp
+      get "/telegram/callback", TelegramAuthController, :callback
+      get "/logout", SessionController, :logout
     end
   end
 
-  scope "/:group_slug", WikWeb do
-    pipe_through [:browser, :ensure_auth, :ensure_group_membership]
+  scope "/", WikWeb do
+    pipe_through [:browser, :ensure_auth]
 
-    get "/", PageController, :group_index
+    live "/me", Me.ShowLive
 
-    scope "/wiki" do
-      get "/", PageController, :wiki_index
-      live "/:slug", Page.ShowLive
-      live "/:slug/revisions", Page.Revisions.ShowLive
+    scope "/:group_slug" do
+      pipe_through [:ensure_group_membership]
 
-      live_session :default do
-        pipe_through [:handle_resource_lock]
-        live "/:slug/edit", Page.EditLive
+      get "/", PageController, :group_index
+
+      scope "/wiki" do
+        get "/", PageController, :wiki_index
+        live "/:slug", Page.ShowLive
+        live "/:slug/revisions", Page.Revisions.ShowLive
+
+        live_session :default do
+          pipe_through [:handle_resource_lock]
+          live "/:slug/edit", Page.EditLive
+        end
       end
     end
   end

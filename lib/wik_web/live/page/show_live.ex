@@ -51,55 +51,79 @@ defmodule WikWeb.Page.ShowLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="space-y-4 grid grid-rows-[auto,1fr] ">
-      <div class="flex justify-between items-end">
-        <h1 class="text-sm text-slate-600 flex gap-0.5 items-center">
-          <.link patch={~p"/#{@group_slug}/wiki"} class="opacity-60 hover:underline">wiki</.link>
-          <span class="text-xs">/</span>
-          <span class="">{@page_title}</span>
-        </h1>
+    <WikWeb.Layouts.app_layout>
+      <:header_left>
+        <a
+          href={~p"/#{@group_slug}"}
+          class="flex text-slate-500 hover:text-slate-600"
+          style="font-variant: small-caps"
+        >
+          {@group_name}
+        </a>
+      </:header_left>
 
-        <div class="flex gap-2 ">
-          <Components.shortcut key="r">
-            <.link href={~p"/#{@group_slug}/wiki/#{@slug}/revisions"} class="btn btn-ghost">
-              Revisions
-            </.link>
-          </Components.shortcut>
-          <Components.shortcut key="e">
-            <.link href={~p"/#{@group_slug}/wiki/#{@slug}/edit"} class="btn btn-primary">
-              Edit
-            </.link>
-          </Components.shortcut>
-        </div>
-      </div>
+      <:header_right>
+        <WikWeb.Layouts.avatar user_photo_url={@user.photo_url} />
+      </:header_right>
 
-      <div class="grid ">
-        <div tabindex="1" class="bg-slate-50 p-4 md:p-8 rounded shadow">
-          <div
-            :if={@backlinks && length(@backlinks) > 0}
-            class="float-right bg-white border p-6 py-5 rounded space-y-2 ml-8 mb-8 max-w-52 overflow-hidden"
-          >
-            <h2 class="text-xs font-semibold text-slate-500">Backlinks</h2>
-            <ul class="text-sm space-y-2">
-              <%= for {slug, metadata} <- @backlinks do %>
-                <li>
-                  <a
-                    class="text-blue-600 hover:underline opacity-75 hover:opacity-100 leading-none block"
-                    href={~p"/#{@group_slug}/wiki/#{slug}"}
-                  >
-                    {metadata["title"]}
-                  </a>
-                </li>
-              <% end %>
-            </ul>
+      <:menu>
+        <div class="flex justify-between items-end">
+          <div class="space-y-4 grid grid-rows-[auto,1fr] ">
+            <div class="flex justify-between items-end">
+              <h1 class="text-sm text-slate-600 flex gap-0.5 items-center">
+                <.link patch={~p"/#{@group_slug}/wiki"} class="opacity-60 hover:underline">
+                  wiki
+                </.link>
+                <span class="text-xs">/</span>
+                <span class="">{@page_title}</span>
+              </h1>
+            </div>
           </div>
-          <Components.prose>
-            {raw(@content)}
-          </Components.prose>
-          <div class="clear-both"></div>
+
+          <div class="flex gap-2">
+            <Components.shortcut key="r">
+              <.link href={~p"/#{@group_slug}/wiki/#{@slug}/revisions"} class="btn btn-ghost">
+                Revisions
+              </.link>
+            </Components.shortcut>
+            <Components.shortcut key="e">
+              <.link href={~p"/#{@group_slug}/wiki/#{@slug}/edit"} class="btn btn-primary">
+                Edit
+              </.link>
+            </Components.shortcut>
+          </div>
         </div>
-      </div>
-    </div>
+      </:menu>
+
+      <:main>
+        <div class="grid ">
+          <div tabindex="1" class="bg-slate-50 p-4 md:p-8 rounded shadow">
+            <div
+              :if={@backlinks && length(@backlinks) > 0}
+              class="float-right bg-white border p-6 py-5 rounded space-y-2 ml-8 mb-8 max-w-52 overflow-hidden"
+            >
+              <h2 class="text-xs font-semibold text-slate-500">Backlinks</h2>
+              <ul class="text-sm space-y-2">
+                <%= for {slug, metadata} <- @backlinks do %>
+                  <li>
+                    <a
+                      class="text-blue-600 hover:underline opacity-75 hover:opacity-100 leading-none block"
+                      href={~p"/#{@group_slug}/wiki/#{slug}"}
+                    >
+                      {metadata["title"]}
+                    </a>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+            <Components.prose>
+              {raw(@content)}
+            </Components.prose>
+            <div class="clear-both"></div>
+          </div>
+        </div>
+      </:main>
+    </WikWeb.Layouts.app_layout>
     """
   end
 end

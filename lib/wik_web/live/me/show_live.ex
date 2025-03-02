@@ -2,10 +2,14 @@ defmodule WikWeb.Me.ShowLive do
   use WikWeb, :live_view
 
   @impl true
+
   def mount(_params, session, socket) do
+    superuser? = session["user"].id == Application.get_env(:wik, :superuser_id)
+
     {:ok,
      socket
-     |> assign(:user, session["user"]), layout: {WikWeb.Layouts, :root}}
+     |> assign(:user, session["user"])
+     |> assign(superuser?: superuser?), layout: {WikWeb.Layouts, :root}}
   end
 
   @impl true
@@ -20,8 +24,13 @@ defmodule WikWeb.Me.ShowLive do
 
       <:menu>
         <ul class="flex gap-2 items-center justify-end">
+          <li :if={@superuser?}>
+            <.link navigate={~p"/admin"} class="btn bg-pink-600 text-white font-bold">
+              Admin
+            </.link>
+          </li>
           <li>
-            <.link navigate={~p"/auth/logout"} class="btn btn-primary float-right">
+            <.link navigate={~p"/auth/logout"} class="btn btn-primary">
               Logout
             </.link>
           </li>

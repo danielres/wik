@@ -37,6 +37,7 @@ defmodule WikWeb.SessionController do
 
     conn
     |> put_session(:user, user)
-    |> redirect(to: "/")
+    |> configure_session(renew: true)
+    |> redirect(to: get_session(conn, :redirect_after_login) || "/")
   end
 end

@@ -14,6 +14,10 @@ defmodule WikWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :ensure_auth do
+    plug WikWeb.Plugs.EnsureAuth
+  end
+
   scope "/api", WikWeb do
     get "/pages_suggestions", PageController, :suggestions
   end
@@ -36,8 +40,6 @@ defmodule WikWeb.Router do
   scope "/", WikWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
-
     scope "/auth" do
       post "/telegram/miniapp", TelegramAuthController, :miniapp
       get "/telegram/callback", TelegramAuthController, :callback
@@ -48,6 +50,7 @@ defmodule WikWeb.Router do
   scope "/", WikWeb do
     pipe_through [:browser, :ensure_auth]
 
+    get "/", PageController, :root_index
     live "/me", Me.ShowLive
 
     scope "/:group_slug" do
@@ -92,19 +95,6 @@ defmodule WikWeb.Router do
     else
       conn
       |> Phoenix.Controller.put_flash(:error, "You must be a superuser to access this page.")
-      |> Phoenix.Controller.redirect(to: "/")
-      |> halt()
-    end
-  end
-
-  defp ensure_auth(conn, _opts) do
-    user = Plug.Conn.get_session(conn, :user)
-
-    if user do
-      conn |> assign(:user, user)
-    else
-      conn
-      |> Phoenix.Controller.put_flash(:error, "You must be logged in to access this page.")
       |> Phoenix.Controller.redirect(to: "/")
       |> halt()
     end

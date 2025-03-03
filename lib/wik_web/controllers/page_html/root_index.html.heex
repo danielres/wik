@@ -1,0 +1,17 @@
+<.flash_group flash={@flash} />
+
+<Layouts.app_layout>
+  <:header_left></:header_left>
+
+  <:header_right>
+    <Components.avatar user_photo_url={@user.photo_url} />
+  </:header_right>
+
+  <:menu></:menu>
+
+  <:main>
+    <div class="max-w-96 mx-auto w-full self-center">
+      <Components.groups_list groups={@user.member_of} />
+    </div>
+  </:main>
+</Layouts.app_layout>

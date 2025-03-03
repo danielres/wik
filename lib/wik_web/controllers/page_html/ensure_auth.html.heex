@@ -1,0 +1,18 @@
+<.flash_group flash={@flash} />
+
+<div class="grid place-items-center h-[100vh]">
+  <div class="space-y-2">
+    <.link :if={show_dev_login?()} class="btn btn-primary" href="/dev/auth?user=devuser1">
+      Log in as devuser1
+      <div class="text-xs font-normal ">
+        (superadmin)
+      </div>
+    </.link>
+
+    <.link :if={show_dev_login?()} class="btn btn-primary" href="/dev/auth?user=devuser2">
+      Log in as devuser2
+    </.link>
+
+    <Components.telegram_login_widget />
+  </div>
+</div>

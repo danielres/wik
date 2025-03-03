@@ -17,22 +17,22 @@ defmodule WikWeb.SuperAdmin.GroupLive.Index do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
+  defp apply_action(socket, :index, _params) do
+    socket
+    |> assign(:page_title, "Listing Groups | Admin")
+    |> assign(:group, nil)
+  end
+
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
-    |> assign(:page_title, "Edit Group")
+    |> assign(:page_title, "Edit Group | Admin")
     |> assign(:group, Groups.get_group!(id))
   end
 
   defp apply_action(socket, :new, _params) do
     socket
-    |> assign(:page_title, "New Group")
+    |> assign(:page_title, "New Group | Admin")
     |> assign(:group, %Group{})
-  end
-
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Listing Groups")
-    |> assign(:group, nil)
   end
 
   @impl true

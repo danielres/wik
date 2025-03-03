@@ -26,7 +26,7 @@ defmodule WikWeb.SuperAdmin.RevisionLive.Index do
     revisions = Revisions.list_revisions_by_resource_path(resource_path)
 
     socket
-    |> assign(:page_title, "Listing Revisions")
+    |> assign(:page_title, "Listing Revisions | Admin")
     |> assign(:resource_path, resource_path)
     |> assign(:revision, nil)
     |> assign(:filter, resource_path)

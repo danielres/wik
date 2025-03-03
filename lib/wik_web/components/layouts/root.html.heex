@@ -7,13 +7,15 @@
       content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
     />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <.live_title suffix={" | #{assigns[:group_name]}"}>
-      {assigns[:page_title]}
-    </.live_title>
+
+    <.live_title>Wik</.live_title>
+
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
   </head>
+
   <body class="from-slate-400 to-slate-200 bg-gradient-to-b min-h-[100vh]">
     {@inner_content}
   </body>

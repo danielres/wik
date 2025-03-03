@@ -5,20 +5,25 @@ defmodule WikWeb.Page.ShowLive do
   require Logger
 
   @impl true
-  def mount(_params, session, socket) do
-    user = session["user"] || %{}
-
+  def mount(%{"group_slug" => group_slug, "slug" => page_slug}, session, socket) do
     Phoenix.PubSub.subscribe(Wik.PubSub, "pages")
+
+    user = session["user"]
+    group_name = Wik.get_group_name(group_slug)
 
     {:ok,
      socket
      |> assign(:user, user)
-     |> assign(:backlinks, [])}
+     |> assign(:page_slug, page_slug)
+     |> assign(:page_title, "#{page_slug} | #{group_name}")
+     |> assign(:backlinks, Page.backlinks(group_slug, page_slug))
+     |> assign(:group_slug, group_slug)
+     |> assign(:group_name, Wik.get_group_name(group_slug))}
   end
 
   @impl true
   def handle_params(%{"group_slug" => group_slug, "slug" => page_slug}, _uri, socket) do
-    {page_title, content} =
+    {_page_title, content} =
       case Page.load(group_slug, page_slug) do
         {:ok, {_metadata, body}} ->
           {page_slug, Page.render(group_slug, body)}
@@ -29,11 +34,6 @@ defmodule WikWeb.Page.ShowLive do
 
     {:noreply,
      socket
-     |> assign(group_slug: group_slug)
-     |> assign(slug: page_slug)
-     |> assign(group_name: Wik.get_group_name(group_slug))
-     |> assign(:backlinks, Page.backlinks(group_slug, page_slug))
-     |> assign(:page_title, page_title)
      |> assign(:content, content)}
   end
 
@@ -67,16 +67,17 @@ defmodule WikWeb.Page.ShowLive do
 
       <:menu>
         <div class="flex justify-between items-end">
-          <Layouts.page_slug group_slug={@group_slug} page_slug={@page_title} />
+          <Layouts.page_slug group_slug={@group_slug} page_slug={@page_slug} />
 
           <div class="flex gap-2">
             <Components.shortcut key="r">
-              <.link href={~p"/#{@group_slug}/wiki/#{@slug}/revisions"} class="btn btn-ghost">
+              <.link href={~p"/#{@group_slug}/wiki/#{@page_slug}/revisions"} class="btn btn-ghost">
                 Revisions
               </.link>
             </Components.shortcut>
+
             <Components.shortcut key="e">
-              <.link href={~p"/#{@group_slug}/wiki/#{@slug}/edit"} class="btn btn-primary">
+              <.link href={~p"/#{@group_slug}/wiki/#{@page_slug}/edit"} class="btn btn-primary">
                 Edit
               </.link>
             </Components.shortcut>
@@ -92,6 +93,7 @@ defmodule WikWeb.Page.ShowLive do
               class="float-right bg-white border p-6 py-5 rounded space-y-2 ml-8 mb-8 max-w-52 overflow-hidden"
             >
               <h2 class="text-xs font-semibold text-slate-500">Backlinks</h2>
+
               <ul class="text-sm space-y-2">
                 <%= for {slug, metadata} <- @backlinks do %>
                   <li>
@@ -105,9 +107,9 @@ defmodule WikWeb.Page.ShowLive do
                 <% end %>
               </ul>
             </div>
-            <Components.prose>
-              {raw(@content)}
-            </Components.prose>
+
+            <Components.prose>{raw(@content)}</Components.prose>
+
             <div class="clear-both"></div>
           </div>
         </div>

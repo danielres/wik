@@ -1,0 +1,10 @@
+#html_differ-diff {
+    del {
+        @apply bg-red-200 text-red-800 opacity-40 hover:opacity-100;
+        text-decoration: initial;
+    }
+
+    ins {
+        @apply bg-green-200 text-green-800 no-underline;
+    }
+}

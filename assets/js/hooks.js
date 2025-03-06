@@ -1,5 +1,17 @@
 let Hooks = {};
 
+Hooks.HtmlDiffer = {
+    mounted() { this.execute() },
+    updated() { this.execute() },
+    execute() {
+        const original = document.getElementById("html_differ-original")
+        const revised = document.getElementById("html_differ-revised")
+        const diff = document.getElementById("html_differ-diff")
+        if (!(original && revised && diff)) return;
+        diff.innerHTML = window.differ(original.innerHTML, revised.innerHTML)
+    },
+}
+
 Hooks.ShortcutComponent = {
     mounted() {
         this.abortController = new AbortController();

@@ -2,6 +2,9 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@import "./html_differ.css";
+
+/* This file is for your main application CSS */
 
 .btn {
     @apply block py-2 px-4 rounded opacity-60 hover:opacity-100;
@@ -30,5 +33,3 @@
 .badge-info {
     @apply bg-blue-500;
 }
-
-/* This file is for your main application CSS */

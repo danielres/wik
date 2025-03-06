@@ -1,110 +1,80 @@
 defmodule Wik.Revisions.PatchTest do
   @moduledoc """
-  Test module for diffy and the Wik.Revisions.Patch functionality.
+  Test cases for Wik.Revisions.Patch module.
   """
 
   use ExUnit.Case
-  @tag timeout: :infinity
-
-  alias FrontMatter
   alias Wik.Revisions.Patch
 
-  @prev """
-  Roses are red,
-  Violets are blue,
-  Sugar is sweet,
-  And so are you.
+  @orignial """
+  Hello from \n the **other** [[side]]
+  * one
+  * two
   """
 
-  @next """
-  Rases are green,
-  Reds are violets
-  Violets are blue,
-  And so are you.
-  Sugar is sweet,
-  🤯
+  @revised """
+  Hi from **a different** side
+  * otw
+  * oo
   """
 
-  test "diffy" do
-    diffs = :diffy.diff(@prev, @next)
+  @final """
+  Goodbye from the distant **side**
+  """
 
-    assert diffs == [
-             equal: "R",
-             delete: "o",
-             insert: "a",
-             equal: "ses are ",
-             insert: "g",
-             equal: "re",
-             insert: "en,\nRe",
-             equal: "d",
-             insert: "s are violets",
-             delete: ",",
-             equal: "\nViolets are blue,\n",
-             insert: "And so are you.\n",
-             equal: "Sugar is sweet,\n",
-             insert: "🤯",
-             delete: "And so are you.",
-             equal: "\n"
-           ]
+  test "make/2 + apply/2" do
+    patch = Patch.make(@orignial, @revised)
+    {:ok, patched} = Patch.apply(patch, @orignial)
+    assert patched == @revised
+  end
 
-    html = :diffy.pretty_html(diffs)
+  test "apply many" do
+    patch1 = Patch.make(@orignial, @revised)
+    patch2 = Patch.make(@revised, @final)
+    patches = [patch1, patch2]
+    {:ok, patched} = Patch.apply(patches, @orignial)
+    assert patched == @final
+  end
 
-    assert html ==
-             [
-               ["<span>>", "R", "</span>"],
-               ["<del style='background:#ffe6e6;'>", "o", "</del>"],
-               ["<ins style='background:#e6ffe6;'>", "a", "</ins>"],
-               ["<span>>", "ses are ", "</span>"],
-               ["<ins style='background:#e6ffe6;'>", "g", "</ins>"],
-               ["<span>>", "re", "</span>"],
-               ["<ins style='background:#e6ffe6;'>", "en,\nRe", "</ins>"],
-               ["<span>>", "d", "</span>"],
-               ["<ins style='background:#e6ffe6;'>", "s are violets", "</ins>"],
-               ["<del style='background:#ffe6e6;'>", ",", "</del>"],
-               ["<span>>", "\nViolets are blue,\n", "</span>"],
-               ["<ins style='background:#e6ffe6;'>", "And so are you.\n", "</ins>"],
-               ["<span>>", "Sugar is sweet,\n", "</span>"],
-               ["<ins style='background:#e6ffe6;'>", "🤯", "</ins>"],
-               ["<del style='background:#ffe6e6;'>", "And so are you.", "</del>"],
-               ["<span>>", "\n", "</span>"]
-             ]
+  test "revert/2" do
+    patch = Patch.make(@orignial, @revised)
+    {:ok, reverted} = Patch.revert(patch, @revised)
+    assert reverted == @orignial
+  end
 
-    destination_text = :diffy.destination_text(diffs)
+  test "revert many" do
+    patch1 = Patch.make(@orignial, @revised)
+    patch2 = Patch.make(@revised, @final)
+    patches = [patch2, patch1]
+    {:ok, patched} = Patch.revert(patches, @final)
+    assert patched == @orignial
+  end
 
-    assert destination_text ==
-             "Rases are green,\nReds are violets\nViolets are blue,\nAnd so are you.\nSugar is sweet,\n🤯\n"
+  test "to_json/1" do
+    patch = Patch.make(@orignial, @revised)
+    json = Patch.to_json(patch)
 
-    source_text = :diffy.source_text(diffs)
+    expected =
+      ~s(["e","H","d","ello","i","i","s",6,"d","\\n the ","s",2,"d","oth","i","a diff","s",2,"i","ent","s",3,"d","[[","s",4,"d","]]","s",4,"d","ne","i","tw","s",3,"d","tw","i","o","s",2])
 
-    assert source_text == "Roses are red,\nViolets are blue,\nSugar is sweet,\nAnd so are you.\n"
+    assert json == expected
+  end
 
-    patch = :diffy_simple_patch.make_patch(diffs)
+  test "from_json" do
+    patch = Patch.make(@orignial, @revised)
+    json = Patch.to_json(patch)
+    from_json = Patch.from_json(json)
 
-    assert patch == [
-             copy: 1,
-             skip: 1,
-             insert: "a",
-             copy: 8,
-             insert: "g",
-             copy: 2,
-             insert: "en,\nRe",
-             copy: 1,
-             insert: "s are violets",
-             skip: 1,
-             copy: 19,
-             insert: "And so are you.\n",
-             copy: 16,
-             insert: "🤯",
-             skip: 15,
-             copy: 1
-           ]
+    assert from_json == patch
+  end
 
-    serialized = Patch.to_json(patch)
+  test "to_html" do
+    expected =
+      "H<del>ello</del><ins>i</ins>llo fr<del>\n the </del>om<del>oth</del><ins>a diff</ins> *<ins>ent</ins>her<del>[[</del>** [<del>]]</del>[sid<del>ne</del><ins>tw</ins>]\n*<del>tw</del><ins>o</ins>on"
 
-    assert serialized ==
-             "[[\"copy\",1],[\"skip\",1],[\"insert\",\"a\"],[\"copy\",8],[\"insert\",\"g\"],[\"copy\",2],[\"insert\",\"en,\\nRe\"],[\"copy\",1],[\"insert\",\"s are violets\"],[\"skip\",1],[\"copy\",19],[\"insert\",\"And so are you.\\n\"],[\"copy\",16],[\"insert\",\"🤯\"],[\"skip\",15],[\"copy\",1]]"
+    patch = Patch.make(@orignial, @revised)
+    html = Patch.to_html(patch, @revised)
 
-    deserialized = Patch.from_json(serialized)
-    assert deserialized == patch
+    assert html == expected
   end
 end

@@ -8,9 +8,9 @@ defmodule Wik.PageTest do
 
   @group "testgroup"
   @slug "testpage"
-  @metadata %{"title" => "Test Page"}
   @body "Hello, this is a test. [[Link]]"
-  @document FrontMatter.assemble(@metadata, @body)
+  @rendered "<p>\nHello, this is a test. <a href=\"/testgroup/wiki/link\">Link</a></p>\n"
+  @document @body
 
   setup_all do
     # Set FILE_STORAGE_PATH to a temporary directory for testing.
@@ -40,13 +40,11 @@ defmodule Wik.PageTest do
     if File.exists?(file_path), do: File.rm!(file_path)
 
     user_id = "testuser"
-    Page.save(user_id, @group, @slug, @body, @metadata)
-
+    Page.upsert(user_id, @group, @slug, @body)
     assert File.exists?(file_path)
 
-    {:ok, {loaded_metadata, loaded_body}} = Page.load(@group, @slug)
-    assert loaded_body =~ "Hello, this is a test."
-    assert loaded_metadata["title"] == "Test Page"
+    body = Page.load(@group, @slug)
+    assert body =~ "Hello, this is a test."
   end
 
   test "load_raw/2 returns the raw document", %{wiki_dir: _} do
@@ -54,6 +52,13 @@ defmodule Wik.PageTest do
     File.write!(file_path, @document)
     content = Page.load_raw(@group, @slug)
     assert content == @document
+  end
+
+  test "load_rendered/2 returns the rendered document", %{wiki_dir: _} do
+    file_path = Page.file_path(@group, @slug)
+    File.write!(file_path, @document)
+    content = Page.load_rendered(@group, @slug)
+    assert content == @rendered
   end
 
   test "render/2 replaces wiki links with HTML links", %{wiki_dir: _} do
@@ -66,20 +71,9 @@ defmodule Wik.PageTest do
   end
 
   test "suggestions/2 returns matching page names", %{wiki_dir: wiki_dir} do
-    File.write!(
-      Path.join(wiki_dir, "apple.md"),
-      FrontMatter.assemble(%{"title" => "Apple"}, "Apple content")
-    )
-
-    File.write!(
-      Path.join(wiki_dir, "banana.md"),
-      FrontMatter.assemble(%{"title" => "Banana"}, "Banana content")
-    )
-
-    File.write!(
-      Path.join(wiki_dir, "cherry.md"),
-      FrontMatter.assemble(%{"title" => "Cherry"}, "Cherry content")
-    )
+    File.write!(Path.join(wiki_dir, "apple.md"), "Apple content")
+    File.write!(Path.join(wiki_dir, "banana.md"), "Banana content")
+    File.write!(Path.join(wiki_dir, "cherry.md"), "Cherry content")
 
     suggestions = Page.suggestions(@group, "app")
     assert "apple" in suggestions
@@ -90,14 +84,28 @@ defmodule Wik.PageTest do
   test "backlinks/2 returns pages linking to the current page", %{wiki_dir: wiki_dir} do
     # Create a file that contains a markdown link to the test page.
     link_content = "This page links to [[TestPage]] in a sentence."
-
-    File.write!(
-      Path.join(wiki_dir, "other.md"),
-      FrontMatter.assemble(%{"title" => "Other"}, link_content)
-    )
+    File.write!(Path.join(wiki_dir, "other.md"), link_content)
 
     backlinks = Page.backlinks(@group, @slug)
     # Expect to find at least one backlink.
     assert backlinks != []
+  end
+
+  test "load_at/3 returns the document at the specified revision", %{wiki_dir: _} do
+    group_slug = "some_group"
+    {:ok, %{after: v1}} = Page.upsert("testuser", group_slug, @slug, "v1")
+    {:ok, %{after: v2}} = Page.upsert("testuser", group_slug, @slug, "v2")
+    {:ok, %{after: v3}} = Page.upsert("testuser", group_slug, @slug, "v3")
+    latest = Page.load(group_slug, @slug)
+    assert latest == v3
+
+    {:ok, loaded_at_0} = Page.load_at(group_slug, @slug, 0)
+    assert loaded_at_0 == ""
+
+    res = Page.load_at(group_slug, @slug, 2)
+    assert res == {:ok, v2}
+
+    res = Page.load_at(group_slug, @slug, -2)
+    assert res == {:ok, v1}
   end
 end

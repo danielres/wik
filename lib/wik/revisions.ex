@@ -19,6 +19,22 @@ defmodule Wik.Revisions do
   end
 
   def take(resource_path, n) do
+    cond do
+      n > 0 ->
+        Repo.all(
+          from(r in Revision,
+            order_by: [asc: r.id],
+            limit: ^n,
+            where: [resource_path: ^resource_path]
+          )
+        )
+
+      n < 0 ->
+        take_latest(resource_path, abs(n))
+    end
+  end
+
+  defp take_latest(resource_path, n) do
     Repo.all(
       from(r in Revision,
         order_by: [desc: r.id],
@@ -28,20 +44,18 @@ defmodule Wik.Revisions do
     )
   end
 
-  def append(user_id, resource_path, previous_document, new_document)
+  def append(user_id, resource_path, previous_document \\ "", new_document)
       when is_binary(resource_path) do
-    serialized_patch =
-      if previous_document do
-        diffs = :diffy.diff(new_document, previous_document)
-        patch = :diffy_simple_patch.make_patch(diffs)
-        Wik.Revisions.Patch.to_json(patch)
-      end
+    patch_as_json =
+      previous_document
+      |> Wik.Revisions.Patch.make(new_document)
+      |> Wik.Revisions.Patch.to_json()
 
     %Revision{}
     |> Revision.changeset(%{
       resource_path: resource_path,
       user_id: user_id,
-      patch: serialized_patch
+      patch: patch_as_json
     })
     |> Repo.insert()
   end

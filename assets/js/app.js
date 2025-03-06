@@ -24,6 +24,9 @@ import topbar from "../vendor/topbar"
 import Hooks from "./hooks"
 import miniappSeamlessAuth from "./miniapp_seamless_auth"
 
+import differ from "../vendor/htmldiffer"
+window.differ = differ
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,

@@ -2,36 +2,30 @@ defmodule WikWeb.Page.EditLive do
   use WikWeb, :live_view
   alias Wik.Page
   alias Wik.ResourceLockServer
+  alias WikWeb.Page.ShowLive
   require Logger
 
-  defp page_path(group_slug, slug), do: ~p"/#{group_slug}/wiki/#{slug}"
+  def make_route(group_slug, slug), do: ~p"/#{group_slug}/wiki/#{slug}/edit"
 
   @impl true
   def mount(_params, session, socket) do
-    {:ok,
-     socket
-     |> assign(:user, session["user"])
-     |> assign(:suggestions, []), layout: {WikWeb.Layouts, :fullscreen}}
+    socket =
+      socket
+      |> assign(:user, session["user"])
+      |> assign(:suggestions, [])
+
+    {:ok, socket, layout: {WikWeb.Layouts, :fullscreen}}
   end
 
   @impl true
   def handle_params(%{"group_slug" => group_slug, "slug" => page_slug}, _uri, socket) do
-    props =
-      case Page.load(group_slug, page_slug) do
-        {:ok, {metadata, body}} ->
-          %{page_title: page_slug, metadata: metadata, edit_content: body}
-
-        :not_found ->
-          %{page_title: page_slug, metadata: %{}, edit_content: ""}
-      end
-
     {
       :noreply,
       socket
-      |> assign(props)
+      |> assign(:edit_content, Page.load(group_slug, page_slug))
       |> assign(:group_slug, group_slug)
+      # TODO: rename :slug to :page_slug, move assigns to mount
       |> assign(:slug, page_slug)
-      # TODO: move get_group_name to Groups context
       |> assign(:group_name, Wik.get_group_name(group_slug))
       |> assign(:resource_path, Page.resource_path(group_slug, page_slug))
     }
@@ -55,21 +49,11 @@ defmodule WikWeb.Page.EditLive do
     slug = socket.assigns.slug
     user = socket.assigns.user
 
-    metadata =
-      case Page.load(group_slug, slug) do
-        :not_found ->
-          %{title: slug}
-
-        {:ok, document} ->
-          {metadata, _body} = document
-          metadata
-      end
-
-    Page.save(user.id, group_slug, slug, new_content, metadata)
+    Page.upsert(user.id, group_slug, slug, new_content)
     ResourceLockServer.unlock(Page.resource_path(group_slug, slug), user.id)
     msg = {:page_updated, user, group_slug, slug, new_content}
     Phoenix.PubSub.broadcast(Wik.PubSub, "pages", msg)
-    {:noreply, push_navigate(socket, to: page_path(group_slug, slug))}
+    {:noreply, push_navigate(socket, to: ShowLive.make_route(group_slug, slug))}
   end
 
   @impl true
@@ -78,7 +62,7 @@ defmodule WikWeb.Page.EditLive do
     slug = socket.assigns.slug
     user = socket.assigns.user
     ResourceLockServer.unlock(Page.resource_path(group_slug, slug), user.id)
-    {:noreply, push_navigate(socket, to: page_path(group_slug, slug))}
+    {:noreply, push_navigate(socket, to: ShowLive.make_route(group_slug, slug))}
   end
 
   @impl true
@@ -100,7 +84,7 @@ defmodule WikWeb.Page.EditLive do
       phx-hook="Phoenix.FocusWrap"
     >
       <div class="flex justify-between items-end gap-2" tabindex="0">
-        <Layouts.page_slug group_slug={@group_slug} page_slug={@page_title} />
+        <Layouts.page_slug group_slug={@group_slug} page_slug={@slug} />
 
         <div class="flex gap-2">
           <Components.shortcut key="c">
@@ -110,7 +94,13 @@ defmodule WikWeb.Page.EditLive do
           </Components.shortcut>
 
           <Components.shortcut key="s">
-            <button tabindex="2" form="edit-form" type="submit" class="btn btn-primary">
+            <button
+              tabindex="2"
+              form="edit-form"
+              type="submit"
+              class="btn btn-primary"
+              data-test-id="action-save"
+            >
               Save
             </button>
           </Components.shortcut>
@@ -143,7 +133,8 @@ defmodule WikWeb.Page.EditLive do
             phx-mounted={JS.focus()}
             tabindex="1"
             name="content"
-            class="w-full border-t-0 focus:ring-0 rounded-b border-none pointer-events-auto "
+            class="w-full border-t-0 focus:ring-0 rounded-b border-none pointer-events-auto"
+            data-test-id="field-edit"
           ><%= @edit_content %></textarea>
         </Components.shortcut>
       </div>

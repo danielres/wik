@@ -4,6 +4,8 @@ defmodule WikWeb.Page.ShowLive do
   alias Wik.Page
   require Logger
 
+  def make_route(group_slug, slug), do: ~p"/#{group_slug}/wiki/#{slug}"
+
   @impl true
   def mount(%{"group_slug" => group_slug, "slug" => page_slug}, session, socket) do
     Phoenix.PubSub.subscribe(Wik.PubSub, "pages")
@@ -23,18 +25,9 @@ defmodule WikWeb.Page.ShowLive do
 
   @impl true
   def handle_params(%{"group_slug" => group_slug, "slug" => page_slug}, _uri, socket) do
-    {_page_title, content} =
-      case Page.load(group_slug, page_slug) do
-        {:ok, {_metadata, body}} ->
-          {page_slug, Page.render(group_slug, body)}
-
-        :not_found ->
-          {page_slug, nil}
-      end
-
     {:noreply,
      socket
-     |> assign(:content, content)}
+     |> assign(:content, Page.load_rendered(group_slug, page_slug))}
   end
 
   @impl true
@@ -95,13 +88,13 @@ defmodule WikWeb.Page.ShowLive do
               <h2 class="text-xs font-semibold text-slate-500">Backlinks</h2>
 
               <ul class="text-sm space-y-2">
-                <%= for {slug, metadata} <- @backlinks do %>
+                <%= for slug <- @backlinks do %>
                   <li>
                     <a
                       class="text-blue-600 hover:underline opacity-75 hover:opacity-100 leading-none block"
                       href={~p"/#{@group_slug}/wiki/#{slug}"}
                     >
-                      {metadata["title"]}
+                      {slug}
                     </a>
                   </li>
                 <% end %>

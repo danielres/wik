@@ -6,9 +6,9 @@ defmodule Wik.Page do
 
   use Memoize
   alias Wik.Utils
-  alias Wik.Revisions
   alias Wik.Revisions.Patch
   alias Wik.Markdown
+  alias Wik.Page
 
   require Logger
 
@@ -35,13 +35,12 @@ defmodule Wik.Page do
 
   def load(group_slug, slug) do
     path = file_path(group_slug, slug)
+    if File.exists?(path), do: File.read!(path), else: ""
+  end
 
-    if File.exists?(path) do
-      document = FrontMatter.parse(File.read!(path))
-      {:ok, document}
-    else
-      :not_found
-    end
+  def load_rendered(group_slug, page_slug) do
+    body = load(group_slug, page_slug)
+    render(group_slug, body)
   end
 
   def load_raw(group_slug, slug) do
@@ -59,74 +58,59 @@ defmodule Wik.Page do
     content |> Markdown.parse(base_path)
   end
 
-  def load_revision(group_slug, slug, revision) do
-    resource_path = resource_path(group_slug, slug)
-    current_document = load_raw(group_slug, slug)
-    taken_revisions = Revisions.take(resource_path, revision)
+  def load_at(group_slug, page_slug, index) do
+    cond do
+      index == 0 ->
+        {:ok, ""}
 
-    {metadata, body} =
-      taken_revisions
-      |> Enum.map(& &1.patch)
-      |> Enum.map(&Patch.from_json/1)
-      |> Patch.apply(current_document)
-      |> FrontMatter.parse()
+      index < 0 ->
+        current_page = Page.load_raw(group_slug, page_slug)
 
-    {metadata, body}
+        Patch.take(group_slug, page_slug, index)
+        |> Patch.revert(current_page)
+
+      index > 0 ->
+        Patch.take(group_slug, page_slug, index)
+        |> Patch.apply("")
+    end
   end
 
-  def save(user_id, group_slug, slug, body, metadata \\ %{}) do
-    metadata =
-      case metadata["created_at"] do
-        nil ->
-          metadata
-          |> Map.put("created_at", DateTime.to_string(DateTime.utc_now()))
-          |> Map.put("created_by", user_id)
-
-        _ ->
-          metadata
-      end
-      |> Map.put("updated_at", DateTime.to_string(DateTime.utc_now()))
-      |> Map.put("updated_by", user_id)
-
+  # TODO: rename to create_or_update
+  def upsert(user_id, group_slug, slug, body) do
     body = HtmlSanitizeEx.markdown_html(body)
-    resource_path = Wik.Page.resource_path(group_slug, slug)
-    previous_document = load_raw(group_slug, slug)
-    new_document = FrontMatter.assemble(metadata, body)
-    File.write!(file_path(group_slug, slug), new_document)
-    Wik.Revisions.append(user_id, resource_path, previous_document, new_document)
+    resource_path = Page.resource_path(group_slug, slug)
+    before = Page.load_raw(group_slug, slug)
+    new = body
+    File.write!(Page.file_path(group_slug, slug), new)
+    {:ok, %{patch: patch}} = Wik.Revisions.append(user_id, resource_path, before, new)
+    {:ok, %{before: before, after: new, patch: Patch.from_json(patch)}}
   end
 
-  defmemo backlinks(group_slug, current_page_slug), expires_in: 15 * 1000 do
+  defmemo backlinks(group_slug, current_page_slug), expires_in: :timer.seconds(15) do
     wiki_dir(group_slug)
     |> File.ls!()
     |> Enum.filter(&String.ends_with?(&1, ".md"))
     |> Enum.map(fn filename ->
       rootname = Path.rootname(filename)
-      # Skip the page itself
-      if rootname != current_page_slug do
-        case load(group_slug, rootname) do
-          {:ok, {metadata, body}} ->
-            regex = ~r/\[\[([^\]]+)\]\]/
-
-            if Regex.scan(regex, body)
-               |> Enum.any?(fn [_, link_text] ->
-                 slugified = Utils.slugify(link_text)
-                 slugified == current_page_slug
-               end) do
-              {rootname, metadata}
-            else
-              nil
-            end
-
-          :not_found ->
-            nil
-        end
-      else
+      # Skip the current page
+      if rootname == current_page_slug do
         nil
+      else
+        body = load(group_slug, rootname)
+        wikilink_regex = ~r/\[\[([^\]]+)\]\]/
+
+        if Regex.scan(wikilink_regex, body)
+           |> Enum.any?(fn [_, link_text] ->
+             Utils.slugify(link_text) == current_page_slug
+           end) do
+          rootname
+        else
+          nil
+        end
       end
     end)
     |> Enum.reject(&is_nil/1)
-    |> Enum.sort_by(fn {slug, _metadata} -> slug end)
+    |> Enum.sort()
   end
 
   defmemo suggestions(group_slug, term), expires_in: 15 * 1000 do

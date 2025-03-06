@@ -7,14 +7,15 @@ defmodule Wik.GroupsFixtures do
   @doc """
   Generate a group.
   """
+
   def group_fixture(attrs \\ %{}) do
     {:ok, group} =
       attrs
       |> Enum.into(%{
-        id: "some id",
-        name: "some name",
-        owner: "some owner",
-        slug: "some slug"
+        id: "testgroup_id",
+        name: "Test Group",
+        slug: "test-group",
+        owner: "_"
       })
       |> Wik.Groups.create_group()
 

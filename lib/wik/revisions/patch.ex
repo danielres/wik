@@ -1,18 +1,86 @@
 defmodule Wik.Revisions.Patch do
   @moduledoc """
-  Utilities for working with diffy patches.
+  Utilities for working with patches.
   """
-  def to_json(diff) when is_list(diff) do
-    data = Enum.map(diff, fn {k, v} -> [Atom.to_string(k), v] end)
-    JSON.encode!(data)
+  alias Wik.Revisions
+  alias Wik.Revisions.Patch
+  alias Wik.Page
+
+  def make(original, revised) do
+    diff = Differ.diff(original, revised)
+    optimized = Differ.optimize(diff, 2)
+    optimized
   end
 
-  def from_json(json_string) when is_binary(json_string) do
-    case JSON.decode(json_string) do
-      {:ok, data} ->
-        Enum.map(data, fn
-          [key, value] -> {String.to_atom(key), value}
-          other -> other
+  def apply(patches, original) when is_list(patches) do
+    case patches do
+      [first | _] when is_list(first) ->
+        Enum.reduce(patches, {:ok, original}, fn patch, {:ok, acc} ->
+          Differ.patch(acc, patch)
+        end)
+
+      _ ->
+        Differ.patch(original, patches)
+    end
+  end
+
+  # TODO: make resource-type agnostic (pass resource_path as argument)
+  def take(group_slug, page_slug, index) do
+    resource_path = Page.resource_path(group_slug, page_slug)
+
+    cond do
+      index == 0 ->
+        {:error, "Index must be greater or smaller than 0"}
+
+      index < 0 ->
+        Revisions.take(resource_path, index)
+        |> Enum.map(& &1.patch)
+        |> Enum.map(&Patch.from_json(&1))
+
+      index > 0 ->
+        Revisions.take(resource_path, index)
+        |> Enum.map(& &1.patch)
+        |> Enum.map(&Patch.from_json(&1))
+    end
+  end
+
+  def revert(patches, revised) when is_list(patches) do
+    case patches do
+      [first | _] when is_list(first) ->
+        Enum.reduce(patches, {:ok, revised}, fn patch, {:ok, acc} ->
+          Differ.revert(acc, patch)
+        end)
+
+      _ ->
+        Differ.revert(revised, patches)
+    end
+  end
+
+  def to_json(patch) when is_list(patch) do
+    patch
+    |> Enum.flat_map(fn {k, v} ->
+      [convert_key(k), v]
+    end)
+    |> JSON.encode!()
+  end
+
+  def to_html(patch, revised) do
+    Differ.explain(revised, patch, fn {op, val} ->
+      case op do
+        :del -> "<del>#{val}</del>"
+        :ins -> "<ins>#{val}</ins>"
+        _ -> val
+      end
+    end)
+  end
+
+  def from_json(json) when is_binary(json) do
+    case JSON.decode(json) do
+      {:ok, data} when is_list(data) ->
+        data
+        |> Enum.chunk_every(2)
+        |> Enum.map(fn [k, v] ->
+          {convert_key(k), v}
         end)
 
       {:error, reason} ->
@@ -20,31 +88,12 @@ defmodule Wik.Revisions.Patch do
     end
   end
 
-  def apply(patches, source) when is_list(patches) do
-    Enum.reduce(patches, source, fn patch, acc ->
-      apply_single_patch(acc, patch)
-    end)
-  end
-
-  defp apply_single_patch(source, patch) when is_binary(source) and is_list(patch) do
-    flat_patch = List.flatten(patch)
-    do_apply_patch(source, flat_patch, 0, "")
-  end
-
-  defp do_apply_patch(source, [], pos, acc) do
-    acc <> String.slice(source, pos, String.length(source) - pos)
-  end
-
-  defp do_apply_patch(source, [{:copy, n} | rest], pos, acc) when is_integer(n) do
-    segment = String.slice(source, pos, n)
-    do_apply_patch(source, rest, pos + n, acc <> segment)
-  end
-
-  defp do_apply_patch(source, [{:skip, n} | rest], pos, acc) when is_integer(n) do
-    do_apply_patch(source, rest, pos + n, acc)
-  end
-
-  defp do_apply_patch(source, [{:insert, text} | rest], pos, acc) when is_binary(text) do
-    do_apply_patch(source, rest, pos, acc <> text)
-  end
+  defp convert_key("e"), do: :eq
+  defp convert_key("d"), do: :del
+  defp convert_key("s"), do: :skip
+  defp convert_key("i"), do: :ins
+  defp convert_key(:eq), do: "e"
+  defp convert_key(:del), do: "d"
+  defp convert_key(:skip), do: "s"
+  defp convert_key(:ins), do: "i"
 end

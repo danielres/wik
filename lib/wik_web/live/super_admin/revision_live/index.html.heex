@@ -19,7 +19,6 @@
   <:col :let={{_id, revision}} label="Resource Path">{revision.resource_path}</:col>
   <:col :let={{_id, revision}} label="Patch">{revision.patch}</:col>
   <:col :let={{_id, revision}} label="User id">{revision.user_id}</:col>
-  <:action :let={{_id, revision}}></:action>
   <:action :let={{id, revision}}>
     <.link
       phx-click={JS.push("delete", value: %{id: revision.id}) |> hide("##{id}")}

@@ -81,11 +81,9 @@ defmodule WikWeb.Components do
   attr :groups, :list, required: true
 
   def groups_list(assigns) do
-    groups = assigns[:groups]
-
     ~H"""
     <ul class="space-y-2  text-center mx-auto">
-      <li :for={group <- groups} value={group.id}>
+      <li :for={group <- @groups} value={group.id}>
         <a href={~p"/#{group.slug}"} class="btn btn-primary block">
           {group.name}
         </a>

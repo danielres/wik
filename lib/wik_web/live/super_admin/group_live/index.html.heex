@@ -11,12 +11,6 @@
   <:col :let={{_id, group}} label="Id">{group.id}</:col>
   <:col :let={{_id, group}} label="Slug">{group.slug}</:col>
   <:col :let={{_id, group}} label="Name">{group.name}</:col>
-  <:action :let={{_id, group}}>
-    <div class="sr-only">
-      <.link navigate={~p"/admin/groups/#{group}"}>Show</.link>
-    </div>
-    <.link patch={~p"/admin/groups/#{group}/edit"}>Edit</.link>
-  </:action>
   <:action :let={{id, group}}>
     <.link
       phx-click={JS.push("delete", value: %{id: group.id}) |> hide("##{id}")}

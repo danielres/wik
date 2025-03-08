@@ -151,7 +151,7 @@ defmodule WikWeb.Page.Revisions.ShowLive do
                     |> JS.toggle_class("bg-slate-300")
                   }
                 >
-                  <div class="hero-magnifying-glass">
+                  <div class="hero-hashtag">
                     Show source
                   </div>
                 </button>

@@ -27,7 +27,7 @@
 }
 
 .badge {
-    @apply inline-block px-2 py-1 text-xs font-semibold leading-none text-white bg-slate-500 rounded-full;
+    @apply inline-block px-2 py-1 font-semibold leading-none text-white bg-slate-500 rounded-full;
 }
 
 .badge-info {

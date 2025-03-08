@@ -91,7 +91,6 @@ defmodule WikWeb.Page.EditLive do
           >
             <.link
               title="Back"
-              data-confirm="Are you sure you want to cancel your changes?"
               phx-click={JS.push("cancel_edit")}
               class="hero-arrow-left-mini"
               title="Cancel changes and return to the page"
@@ -107,7 +106,6 @@ defmodule WikWeb.Page.EditLive do
             <.link
               phx-click="cancel_edit"
               tabindex="3"
-              data-confirm="Are you sure you want to cancel your changes?"
               type="cancel"
               class="block p-2 rounded-full bg-slate-200 opacity-30 hover:opacity-75"
               title="Cancel changes and return to the page"

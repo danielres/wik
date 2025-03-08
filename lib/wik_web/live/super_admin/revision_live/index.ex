@@ -3,6 +3,8 @@ defmodule WikWeb.SuperAdmin.RevisionLive.Index do
 
   alias Wik.Revisions
 
+  def make_route(), do: ~p"/admin/revisions"
+
   @impl true
   def mount(_params, session, socket) do
     socket =
@@ -31,6 +33,11 @@ defmodule WikWeb.SuperAdmin.RevisionLive.Index do
     |> assign(:revision, nil)
     |> assign(:filter, resource_path)
     |> stream(:revisions, revisions)
+  end
+
+  def handle_event("delete_all_by_resource_path", %{"resource_path" => resource_path}, socket) do
+    Revisions.delete_all_by_resource_path(resource_path)
+    {:noreply, socket |> push_navigate(to: make_route())}
   end
 
   @impl true

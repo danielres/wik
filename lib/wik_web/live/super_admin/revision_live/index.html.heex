@@ -3,16 +3,26 @@
   <:actions></:actions>
 </.header>
 
-<select class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm">
-  <option
-    :for={path <- @resource_paths}
-    phx-click={JS.navigate(~p"/admin/revisions?resource_path=#{path}")}
-    value={path}
-    selected={@resource_path == path}
+<div class="flex gap-2">
+  <select class="block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm">
+    <option
+      :for={path <- @resource_paths}
+      phx-click={JS.navigate(~p"/admin/revisions?resource_path=#{path}")}
+      value={path}
+      selected={@resource_path == path}
+    >
+      {path}
+    </option>
+  </select>
+
+  <.button
+    data-confirm="Are you sure?"
+    phx-click={JS.push("delete_all_by_resource_path", value: %{resource_path: @resource_path})}
+    class="whitespace-nowrap"
   >
-    {path}
-  </option>
-</select>
+    Delete all
+  </.button>
+</div>
 
 <.table id="revisions" rows={@streams.revisions}>
   <:col :let={{_id, revision}} label="Id">{revision.id}</:col>

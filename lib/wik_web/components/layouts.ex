@@ -71,9 +71,7 @@ defmodule WikWeb.Layouts do
         wiki
       </.link>
       <span class="text-xs">/</span>
-      <.link patch={~p"/#{@group_slug}/wiki/#{@page_slug}"} class="hover:underline">
-        {@page_slug}
-      </.link>
+      <span class="">{@page_slug}</span>
     </div>
     """
   end

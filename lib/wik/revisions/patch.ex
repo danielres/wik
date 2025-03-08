@@ -7,20 +7,19 @@ defmodule Wik.Revisions.Patch do
   alias Wik.Page
 
   def make(original, revised) do
-    diff = Differ.diff(original, revised)
-    optimized = Differ.optimize(diff, 2)
-    optimized
+    diff = HSDiff.diff(original, revised)
+    HSDiff.optimize(diff)
   end
 
-  def apply(patches, original) when is_list(patches) do
+  def apply(patches, original) do
     case patches do
       [first | _] when is_list(first) ->
-        Enum.reduce(patches, {:ok, original}, fn patch, {:ok, acc} ->
-          Differ.patch(acc, patch)
+        Enum.reduce(patches, original, fn patch, acc ->
+          HSDiff.patch(acc, patch)
         end)
 
       _ ->
-        Differ.patch(original, patches)
+        HSDiff.patch(original, patches)
     end
   end
 
@@ -29,13 +28,8 @@ defmodule Wik.Revisions.Patch do
     resource_path = Page.resource_path(group_slug, page_slug)
 
     cond do
-      index == 0 ->
+      index <= 0 ->
         {:error, "Index must be greater or smaller than 0"}
-
-      index < 0 ->
-        Revisions.take(resource_path, index)
-        |> Enum.map(& &1.patch)
-        |> Enum.map(&Patch.from_json(&1))
 
       index > 0 ->
         Revisions.take(resource_path, index)
@@ -44,17 +38,17 @@ defmodule Wik.Revisions.Patch do
     end
   end
 
-  def revert(patches, revised) when is_list(patches) do
-    case patches do
-      [first | _] when is_list(first) ->
-        Enum.reduce(patches, {:ok, revised}, fn patch, {:ok, acc} ->
-          Differ.revert(acc, patch)
-        end)
+  # def revert(patches, revised) when is_list(patches) do
+  #   case patches do
+  #     [first | _] when is_list(first) ->
+  #       Enum.reduce(patches, {:ok, revised}, fn patch, {:ok, acc} ->
+  #         Differ.revert(acc, patch)
+  #       end)
 
-      _ ->
-        Differ.revert(revised, patches)
-    end
-  end
+  #     _ ->
+  #       Differ.revert(revised, patches)
+  #   end
+  # end
 
   def to_json(patch) when is_list(patch) do
     patch
@@ -62,16 +56,6 @@ defmodule Wik.Revisions.Patch do
       [convert_key(k), v]
     end)
     |> JSON.encode!()
-  end
-
-  def to_html(patch, revised) do
-    Differ.explain(revised, patch, fn {op, val} ->
-      case op do
-        :del -> "<del>#{val}</del>"
-        :ins -> "<ins>#{val}</ins>"
-        _ -> val
-      end
-    end)
   end
 
   def from_json(json) when is_binary(json) do

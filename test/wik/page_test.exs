@@ -104,8 +104,5 @@ defmodule Wik.PageTest do
 
     res = Page.load_at(group_slug, @slug, 2)
     assert res == {:ok, v2}
-
-    res = Page.load_at(group_slug, @slug, -2)
-    assert res == {:ok, v1}
   end
 end

@@ -80,14 +80,28 @@ defmodule WikWeb.Page.Revisions.ShowLive do
 
       <:menu>
         <div class="flex justify-between items-end">
-          <Layouts.page_slug group_slug={@group_slug} page_slug={@page_slug} />
+          <div class="flex gap-4 ">
+            <Components.shortcut
+              key="b"
+              class="flex items-center bg-slate-300 rounded-full px-1 py-1 opacity-50 hover:opacity-100"
+            >
+              <.link
+                title="Back"
+                href={~p"/#{@group_slug}/wiki/#{@page_slug}"}
+                class="hero-arrow-left-mini"
+              >
+                Back
+              </.link>
+            </Components.shortcut>
+            <Layouts.page_slug group_slug={@group_slug} page_slug={@page_slug} />
+          </div>
 
           <div class="badge badge-info">
-            <div class="flex gap-2 items-center py-1 px-2">
+            <div class="flex gap-1 items-center py-1 px-0.5">
               <Components.shortcut key="p">
                 <button
                   phx-click="prev"
-                  class="btn hero-arrow-left disabled:opacity-0"
+                  class="btn hero-chevron-left disabled:opacity-0"
                   disabled={@num_revisions == 0 || @index == 1}
                   data-test-id="action-prev"
                   title="Previous version"
@@ -97,7 +111,7 @@ defmodule WikWeb.Page.Revisions.ShowLive do
               </Components.shortcut>
 
               <div class="flex justify-end">
-                <div data-test-id="revisions-counter">
+                <div data-test-id="revisions-counter" class="text-sm">
                   Version
                   <span data-test-id="index">
                     {@index}
@@ -110,7 +124,7 @@ defmodule WikWeb.Page.Revisions.ShowLive do
               <Components.shortcut key="n">
                 <button
                   phx-click="next"
-                  class="btn hero-arrow-right disabled:opacity-0"
+                  class="btn hero-chevron-right disabled:opacity-0"
                   disabled={@num_revisions == 0 || @index == @num_revisions}
                   data-test-id="action-next"
                   title="Next version"

@@ -23,8 +23,6 @@ Hooks.ShortcutComponent = {
             if (e.key === "Alt") {
                 e.preventDefault();
                 const focusedElement = document.activeElement;
-                const isAleadyFocused = focusedElement === firstChild;
-                if (isAleadyFocused) return;
                 const hint = this.el.querySelector(".hint");
                 if (hint) hint.classList.remove("hidden");
             }

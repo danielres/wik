@@ -66,7 +66,7 @@ defmodule WikWeb.Layouts do
 
   def page_slug(assigns) do
     ~H"""
-    <div class="text-sm text-slate-600 flex gap-0.5 items-center">
+    <div class="text-sm text-slate-600">
       <.link patch={~p"/#{@group_slug}/wiki"} class="opacity-60 hover:underline">
         wiki
       </.link>

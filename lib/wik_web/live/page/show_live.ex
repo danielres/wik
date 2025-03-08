@@ -62,16 +62,24 @@ defmodule WikWeb.Page.ShowLive do
         <div class="flex justify-between items-end">
           <Layouts.page_slug group_slug={@group_slug} page_slug={@page_slug} />
 
-          <div class="flex gap-2">
-            <Components.shortcut key="r">
-              <.link href={~p"/#{@group_slug}/wiki/#{@page_slug}/revisions"} class="btn btn-ghost">
-                Revisions
+          <div class="flex gap-3">
+            <Components.shortcut key="h">
+              <.link
+                href={~p"/#{@group_slug}/wiki/#{@page_slug}/revisions"}
+                class="block p-2 rounded-full bg-slate-200 opacity-30"
+                title="History"
+              >
+                <i class="hero-clock">History</i>
               </.link>
             </Components.shortcut>
 
             <Components.shortcut key="e">
-              <.link href={~p"/#{@group_slug}/wiki/#{@page_slug}/edit"} class="btn btn-primary">
-                Edit
+              <.link
+                href={~p"/#{@group_slug}/wiki/#{@page_slug}/edit"}
+                class="block p-2 rounded-full bg-slate-200/75 hover:bg-slate-200"
+                title="Edit page"
+              >
+                <i class="hero-pencil-solid text-slate-600">Edit</i>
               </.link>
             </Components.shortcut>
           </div>
@@ -80,7 +88,7 @@ defmodule WikWeb.Page.ShowLive do
 
       <:main>
         <div class="grid ">
-          <div tabindex="1" class="bg-slate-50 p-4 md:p-8 rounded shadow">
+          <Layouts.card tabindex="1" class="">
             <div
               :if={@backlinks && length(@backlinks) > 0}
               class="float-right bg-white border p-6 py-5 rounded space-y-2 ml-8 mb-8 max-w-52 overflow-hidden"
@@ -104,7 +112,7 @@ defmodule WikWeb.Page.ShowLive do
             <Components.prose>{raw(@content)}</Components.prose>
 
             <div class="clear-both"></div>
-          </div>
+          </Layouts.card>
         </div>
       </:main>
     </Layouts.app_layout>

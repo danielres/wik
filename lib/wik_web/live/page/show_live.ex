@@ -66,7 +66,7 @@ defmodule WikWeb.Page.ShowLive do
             <Components.shortcut key="h">
               <.link
                 href={~p"/#{@group_slug}/wiki/#{@page_slug}/revisions"}
-                class="block p-2 rounded-full bg-slate-200 opacity-30"
+                class="block p-2 rounded-full bg-slate-200 opacity-30 hover:opacity-75"
                 title="History"
               >
                 <i class="hero-clock">History</i>

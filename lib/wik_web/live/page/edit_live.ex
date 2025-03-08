@@ -84,13 +84,36 @@ defmodule WikWeb.Page.EditLive do
       phx-hook="Phoenix.FocusWrap"
     >
       <div class="flex justify-between items-end gap-2" tabindex="0">
-        <Layouts.page_slug group_slug={@group_slug} page_slug={@slug} />
+        <div class="flex gap-4 ">
+          <Components.shortcut
+            key="b"
+            class="flex items-center bg-slate-300 rounded-full px-1 py-1 opacity-50 hover:opacity-100"
+          >
+            <.link
+              title="Back"
+              data-confirm="Are you sure you want to cancel your changes?"
+              phx-click={JS.push("cancel_edit")}
+              class="hero-arrow-left-mini"
+              title="Cancel changes and return to the page"
+            >
+              Back
+            </.link>
+          </Components.shortcut>
+          <Layouts.page_slug group_slug={@group_slug} page_slug={@slug} />
+        </div>
 
         <div class="flex gap-2">
           <Components.shortcut key="c">
-            <button phx-click="cancel_edit" tabindex="3" type="cancel" class="btn btn-ghost">
-              Cancel
-            </button>
+            <.link
+              phx-click="cancel_edit"
+              tabindex="3"
+              data-confirm="Are you sure you want to cancel your changes?"
+              type="cancel"
+              class="block p-2 rounded-full bg-slate-200 opacity-30 hover:opacity-75"
+              title="Cancel changes and return to the page"
+            >
+              <i class="hero-x-mark text-slate-600">Cancel</i>
+            </.link>
           </Components.shortcut>
 
           <Components.shortcut key="s">
@@ -98,10 +121,11 @@ defmodule WikWeb.Page.EditLive do
               tabindex="2"
               form="edit-form"
               type="submit"
-              class="btn btn-primary"
+              class="block p-2 rounded-full bg-slate-200/75 hover:bg-slate-200"
               data-test-id="action-save"
+              title="Save changes"
             >
-              Save
+              <i class="hero-check-solid text-slate-600">Save</i>
             </button>
           </Components.shortcut>
         </div>

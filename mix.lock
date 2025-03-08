@@ -24,6 +24,7 @@
   "heroicons": {:git, "https://github.com/tailwindlabs/heroicons.git", "88ab3a0d790e6a47404cba02800a6b25d2afae50", [tag: "v2.1.1", sparse: "optimized", depth: 1]},
   "hpax": {:hex, :hpax, "1.0.2", "762df951b0c399ff67cc57c3995ec3cf46d696e41f0bba17da0518d94acd4aac", [:mix], [], "hexpm", "2f09b4c1074e0abd846747329eaa26d535be0eb3d189fa69d812bfb8bfefd32f"},
   "html_sanitize_ex": {:hex, :html_sanitize_ex, "1.4.3", "67b3d9fa8691b727317e0cc96b9b3093be00ee45419ffb221cdeee88e75d1360", [:mix], [{:mochiweb, "~> 2.15 or ~> 3.1", [hex: :mochiweb, repo: "hexpm", optional: false]}], "hexpm", "87748d3c4afe949c7c6eb7150c958c2bcba43fc5b2a02686af30e636b74bccb7"},
+  "hunt_szymanski_diff": {:git, "https://github.com/danielres/hunt_szymanski_diff.git", "313f5914d1a5173acb07b5f114caad8aa4a9cedf", [branch: "main"]},
   "jason": {:hex, :jason, "1.4.4", "b9226785a9aa77b6857ca22832cffa5d5011a667207eb2a0ad56adb5db443b8a", [:mix], [{:decimal, "~> 1.0 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "c5eb0cab91f094599f94d55bc63409236a8ec69a21a67814529e8d5f6cc90b3b"},
   "memoize": {:hex, :memoize, "1.4.3", "ead4ba248291acbaecbfe7e68ed762d329dd9c29c727020c7393dda4060c4471", [:mix], [], "hexpm", "a75176b84b9ce92faaf567c82fcbc584ef95727e0827cb38606b0a197f7e47ef"},
   "mime": {:hex, :mime, "2.0.6", "8f18486773d9b15f95f4f4f1e39b710045fa1de891fada4516559967276e4dc2", [:mix], [], "hexpm", "c9945363a6b26d747389aac3643f8e0e09d30499a138ad64fe8fd1d13d9b153e"},

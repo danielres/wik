@@ -18,13 +18,11 @@ defmodule WikWeb.Layouts do
   slot(:menu)
 
   def app_layout(assigns) do
-    grid_rows =
-      if assigns[:menu],
-        do: "grid-rows-[auto,auto,1fr]",
-        else: "grid-rows-[auto,1fr]"
+    class = if assigns[:menu], do: "grid-rows-[auto,auto,1fr]", else: "grid-rows-[auto,1fr]"
+    assigns = assigns |> assign(:class, class)
 
     ~H"""
-    <div class={ "#{ grid_rows } min-h-[100vh] grid pb-12 md:pb-0 gap-4" }>
+    <div class={ "#{ @class } min-h-[100vh] grid pb-12 md:pb-0 gap-4" }>
       <header class="bg-slate-200 py-2 px-4">
         <div class="mx-auto max-w-screen-md flex justify-between items-end">
           <h1 class="flex gap-2 items-center">
@@ -53,13 +51,11 @@ defmodule WikWeb.Layouts do
   slot :inner_block, required: true
 
   def card(assigns) do
-    variant =
-      if assigns[:variant] == "transparent",
-        do: "",
-        else: "bg-white shadow md:rounded"
+    class = if assigns[:variant] == "transparent", do: "", else: "bg-white shadow md:rounded"
+    assigns = assigns |> assign(:class, class)
 
     ~H"""
-    <div class={ "py-6 sm:px-6 px-4 lg:px-8 #{variant}" }>
+    <div class={ "py-6 sm:px-6 px-4 lg:px-8 #{@class}" }>
       {render_slot(@inner_block)}
     </div>
     """

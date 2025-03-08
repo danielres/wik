@@ -59,19 +59,14 @@ defmodule Wik.Page do
   end
 
   def load_at(group_slug, page_slug, index) do
-    cond do
-      index == 0 ->
-        {:ok, ""}
-
-      index < 0 ->
-        current_page = Page.load_raw(group_slug, page_slug)
-
-        Patch.take(group_slug, page_slug, index)
-        |> Patch.revert(current_page)
-
-      index > 0 ->
+    if index > 0 do
+      patched =
         Patch.take(group_slug, page_slug, index)
         |> Patch.apply("")
+
+      {:ok, patched}
+    else
+      {:ok, ""}
     end
   end
 

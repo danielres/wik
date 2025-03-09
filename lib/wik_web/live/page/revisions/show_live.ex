@@ -40,6 +40,8 @@ defmodule WikWeb.Page.Revisions.ShowLive do
 
     {:ok, raw} = Page.load_at(group_slug, page_slug, index)
     current_html = Page.render(group_slug, raw)
+
+    # TODO: trim markdown when saving instead
     current_markdown = raw |> String.trim()
 
     {:noreply,
@@ -140,11 +142,10 @@ defmodule WikWeb.Page.Revisions.ShowLive do
       <:main>
         <div class="grid">
           <div tabindex="1" class="bg-slate-50 p-4 md:p-8 rounded shadow relative">
-            <div class="absolute top-2 right-2">
+            <div class="absolute top-3 right-3 ">
               <Components.toggle_source_button phx-click={
                 JS.toggle(to: "#html_differ-diff")
                 |> JS.toggle(to: "#markdown-source")
-                |> JS.toggle_class("bg-slate-300")
               } />
             </div>
             <Components.prose>

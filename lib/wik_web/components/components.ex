@@ -59,6 +59,7 @@ defmodule WikWeb.Components do
                 [&_h4]:text-base
                 [&_h5]:text-sm
                 [&_h6]:text-xs
+                [&_pre]:whitespace-pre-wrap
             ">
       {render_slot(@inner_block)}
     </div>

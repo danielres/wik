@@ -141,23 +141,12 @@ defmodule WikWeb.Page.Revisions.ShowLive do
         <div class="grid">
           <div tabindex="1" class="bg-slate-50 p-4 md:p-8 rounded shadow relative">
             <div class="absolute top-2 right-2">
-              <Components.shortcut key="s">
-                <button
-                  title="Show source"
-                  class="text-slate-700 rounded p-1.5 focus:outline-none"
-                  phx-click={
-                    JS.toggle(to: "#html_differ-diff")
-                    |> JS.toggle(to: "#markdown-source")
-                    |> JS.toggle_class("bg-slate-300")
-                  }
-                >
-                  <div class="hero-hashtag">
-                    Show source
-                  </div>
-                </button>
-              </Components.shortcut>
+              <Components.toggle_source_button phx-click={
+                JS.toggle(to: "#html_differ-diff")
+                |> JS.toggle(to: "#markdown-source")
+                |> JS.toggle_class("bg-slate-300")
+              } />
             </div>
-
             <Components.prose>
               <div id="html_differ" phx-hook="HtmlDiffer">
                 <div class="hidden font-mono whitespace-pre-line" id="markdown-source">

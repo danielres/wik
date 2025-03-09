@@ -36,6 +36,7 @@ defmodule WikWeb.Components do
     """
   end
 
+  attr :class, :string, default: nil
   slot :inner_block, required: true
 
   def prose(assigns) do
@@ -99,6 +100,28 @@ defmodule WikWeb.Components do
     <a href={~p"/me"}>
       <img src={@user_photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
     </a>
+    """
+  end
+
+  attr(:"phx-click", :any, default: nil)
+
+  def toggle_source_button(assigns) do
+    ~H"""
+    <Components.shortcut key="v">
+      <button
+        title="Toggle source"
+        class="text-slate-700 rounded p-1.5 focus:outline-none"
+        phx-click={
+          JS.toggle(to: "#html_differ-diff")
+          |> JS.toggle(to: "#markdown-source")
+          |> JS.toggle_class("bg-slate-300")
+        }
+      >
+        <i class="hero-hashtag">
+          Show source
+        </i>
+      </button>
+    </Components.shortcut>
     """
   end
 end

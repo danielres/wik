@@ -117,9 +117,14 @@ defmodule WikWeb.Page.ShowLive do
               {@markdown}
             </div>
           </Layouts.card>
-
-          <Layouts.card tabindex="2" variant="transparent" class="grid gap-2 bg-slate-100 sm:hidden">
+          <Layouts.card
+            :if={length(@backlinks) > 0}
+            tabindex="2"
+            variant="transparent"
+            class="grid gap-2 bg-slate-100 sm:hidden"
+          >
             <h2 class="text-sm  text-slate-600">Backlinks</h2>
+
             <Components.backlinks_list
               class="grid grid-cols-2 gap-y-2 gap-x-4"
               group_slug={@group_slug}

@@ -25,9 +25,11 @@ defmodule WikWeb.Page.ShowLive do
 
   @impl true
   def handle_params(%{"group_slug" => group_slug, "slug" => page_slug}, _uri, socket) do
-    {:noreply,
-     socket
-     |> assign(:content, Page.load_rendered(group_slug, page_slug))}
+    # TODO: trim markdown when saving instead
+    markdown = Page.load(group_slug, page_slug) |> String.trim()
+    rendered = Page.render(group_slug, markdown)
+    socket = socket |> assign(:content, rendered) |> assign(:markdown, markdown)
+    {:noreply, socket}
   end
 
   @impl true
@@ -87,16 +89,42 @@ defmodule WikWeb.Page.ShowLive do
       </:menu>
 
       <:main>
-        <div class="grid ">
-          <Layouts.card tabindex="1">
-            <Components.backlinks_widget
+        <div class="grid grid-rows-[1fr_auto] gap-4">
+          <Layouts.card tabindex="1" class="">
+            <div class="float-right md:bg-slate-50 pl-8 pb-12 -mr-2 relative">
+              <div class="absolute right-0 -top-3 sm:-right-3">
+                <Components.toggle_source_button phx-click={
+                  JS.toggle(to: "#source-markdown")
+                  |> JS.toggle(to: "#content-html")
+                  |> JS.toggle(to: "#backlinks-widget")
+                } />
+              </div>
+              <Components.backlinks_widget
+                class=""
+                id="backlinks-widget"
+                group_slug={@group_slug}
+                backlinks_slugs={@backlinks}
+              />
+            </div>
+
+            <div id="content-html" class="">
+              <Components.prose>{raw(@content)}</Components.prose>
+
+              <div class="clear-both"></div>
+            </div>
+
+            <div id="source-markdown" class="hidden font-mono whitespace-pre-line">
+              {@markdown}
+            </div>
+          </Layouts.card>
+
+          <Layouts.card tabindex="2" variant="transparent" class="grid gap-2 bg-slate-100 sm:hidden">
+            <h2 class="text-sm  text-slate-600">Backlinks</h2>
+            <Components.backlinks_list
+              class="grid grid-cols-2 gap-y-2 gap-x-4"
               group_slug={@group_slug}
               backlinks_slugs={@backlinks}
-              class="float-right"
             />
-            <Components.prose>{raw(@content)}</Components.prose>
-
-            <div class="clear-both"></div>
           </Layouts.card>
         </div>
       </:main>

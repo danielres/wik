@@ -124,4 +124,50 @@ defmodule WikWeb.Components do
     </Components.shortcut>
     """
   end
+
+  attr(:group_slug, :string, required: true)
+  attr(:backlinks_slugs, :list, default: [])
+
+  def backlinks_list(assigns) do
+    ~H"""
+    <ul class="text-sm space-y-2">
+      <%= for slug <- @backlinks_slugs do %>
+        <li>
+          <a
+            class="text-blue-600 hover:underline opacity-75 hover:opacity-100 leading-none block"
+            href={~p"/#{@group_slug}/wiki/#{slug}"}
+          >
+            {slug}
+          </a>
+        </li>
+      <% end %>
+    </ul>
+    """
+  end
+
+  attr(:group_slug, :string, required: true)
+  attr(:backlinks_slugs, :list, default: [])
+  attr(:class, :string, default: nil)
+
+  def backlinks_widget(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        :class,
+        """
+        bg-white border rounded
+        max-w-52 overflow-hidden
+        space-y-2
+        p-6 py-5
+        #{assigns.class}
+        """
+      )
+
+    ~H"""
+    <div :if={length(@backlinks_slugs) > 0} class={@class}>
+      <h2 class="text-xs font-semibold text-slate-500">Backlinks</h2>
+      <Components.backlinks_list group_slug={@group_slug} backlinks_slugs={@backlinks_slugs} />
+    </div>
+    """
+  end
 end

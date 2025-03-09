@@ -88,27 +88,12 @@ defmodule WikWeb.Page.ShowLive do
 
       <:main>
         <div class="grid ">
-          <Layouts.card tabindex="1" class="">
-            <div
-              :if={@backlinks && length(@backlinks) > 0}
-              class="float-right bg-white border p-6 py-5 rounded space-y-2 ml-8 mb-8 max-w-52 overflow-hidden"
-            >
-              <h2 class="text-xs font-semibold text-slate-500">Backlinks</h2>
-
-              <ul class="text-sm space-y-2">
-                <%= for slug <- @backlinks do %>
-                  <li>
-                    <a
-                      class="text-blue-600 hover:underline opacity-75 hover:opacity-100 leading-none block"
-                      href={~p"/#{@group_slug}/wiki/#{slug}"}
-                    >
-                      {slug}
-                    </a>
-                  </li>
-                <% end %>
-              </ul>
-            </div>
-
+          <Layouts.card tabindex="1">
+            <Components.backlinks_widget
+              group_slug={@group_slug}
+              backlinks_slugs={@backlinks}
+              class="float-right"
+            />
             <Components.prose>{raw(@content)}</Components.prose>
 
             <div class="clear-both"></div>

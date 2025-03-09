@@ -154,6 +154,7 @@ defmodule WikWeb.Components do
   attr(:group_slug, :string, required: true)
   attr(:backlinks_slugs, :list, default: [])
   attr(:class, :string, default: nil)
+  attr :rest, :global
 
   def backlinks_widget(assigns) do
     assigns =
@@ -161,18 +162,23 @@ defmodule WikWeb.Components do
       |> assign(
         :class,
         """
-        bg-white border rounded
-        max-w-52 overflow-hidden
-        space-y-2
-        p-6 py-5
+        w-48 overflow-hidden
+        p-6
+        bg-white shadow
+        rounded hidden sm:block
         #{assigns.class}
         """
       )
 
     ~H"""
-    <div :if={length(@backlinks_slugs) > 0} class={@class}>
-      <h2 class="text-xs font-semibold text-slate-500">Backlinks</h2>
-      <Components.backlinks_list group_slug={@group_slug} backlinks_slugs={@backlinks_slugs} />
+    <div :if={length(@backlinks_slugs) > 0} class={@class} {@rest}>
+      <h2 class="text-sm font-semibold text-slate-500">Backlinks</h2>
+
+      <Components.backlinks_list
+        class="inline-flex flex-wrap gap-y-2 gap-x-4"
+        group_slug={@group_slug}
+        backlinks_slugs={@backlinks_slugs}
+      />
     </div>
     """
   end

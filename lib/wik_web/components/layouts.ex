@@ -48,15 +48,16 @@ defmodule WikWeb.Layouts do
   end
 
   attr :variant, :string, default: "card", values: ["card", "transparent"]
-  slot :inner_block, required: true
   attr :rest, :global
+  attr :class, :string, default: ""
+  slot :inner_block, required: true
 
   def card(assigns) do
-    class = if assigns[:variant] == "transparent", do: "", else: "bg-white shadow md:rounded"
-    assigns = assigns |> assign(:class, class)
+    variant = if assigns[:variant] == "transparent", do: "", else: "bg-slate-50 shadow md:rounded"
+    assigns = assigns |> assign(:class, variant <> " " <> assigns[:class])
 
     ~H"""
-    <div class={ "py-6 sm:px-6 px-4 lg:px-8 #{@class}" } {@rest}>
+    <div class={ "py-6 sm:px-6 px-4 lg:px-8 #{@class}" }>
       {render_slot(@inner_block)}
     </div>
     """

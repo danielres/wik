@@ -132,10 +132,11 @@ defmodule WikWeb.Components do
 
   attr(:group_slug, :string, required: true)
   attr(:backlinks_slugs, :list, default: [])
+  attr :class, :string, default: ""
 
   def backlinks_list(assigns) do
     ~H"""
-    <ul class="text-sm space-y-2">
+    <ul class={"text-sm #{@class}"}>
       <%= for slug <- @backlinks_slugs do %>
         <li>
           <a

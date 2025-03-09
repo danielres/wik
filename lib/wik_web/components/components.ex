@@ -104,19 +104,23 @@ defmodule WikWeb.Components do
     """
   end
 
-  attr(:"phx-click", :any, default: nil)
+  attr :class, :string, default: ""
+  attr :rest, :global
 
   def toggle_source_button(assigns) do
     ~H"""
     <Components.shortcut key="v">
       <button
         title="Toggle source"
-        class="text-slate-700 rounded p-1.5 focus:outline-none"
+        class={ "text-slate-500 hover:text-slate-600 rounded p-1.5 focus:outline-none bg-white shadow-md #{@class}" }
         phx-click={
-          JS.toggle(to: "#html_differ-diff")
-          |> JS.toggle(to: "#markdown-source")
+          @rest[:"phx-click"]
+          |> JS.toggle_class("shadow-md")
+          |> JS.toggle_class("shadow-inner")
+          |> JS.toggle_class("bg-white")
           |> JS.toggle_class("bg-slate-300")
         }
+        {@rest}
       >
         <i class="hero-hashtag">
           Show source

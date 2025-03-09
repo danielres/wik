@@ -21,7 +21,7 @@ defmodule Wik.User do
       end)
 
     %{
-      id: params["id"],
+      id: "#{params["id"]}",
       first_name: params["first_name"],
       last_name: params["last_name"],
       auth_date: params["auth_date"],

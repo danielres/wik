@@ -78,7 +78,7 @@ defmodule WikWeb.Page.EditLive do
   def render(assigns) do
     ~H"""
     <form
-      class="space-y-4 grid grid-rows-[auto,1fr] max-w-2xl mx-auto w-full"
+      class="space-y-4 grid grid-rows-[auto,1fr] max-w-screen-md mx-auto w-full"
       id="edit-form"
       phx-submit="update_page"
       phx-hook="Phoenix.FocusWrap"

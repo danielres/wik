@@ -89,12 +89,7 @@ defmodule WikWeb.Page.EditLive do
             key="b"
             class="flex items-center bg-slate-300 rounded-full px-1 py-1 opacity-50 hover:opacity-100"
           >
-            <.link
-              title="Back"
-              phx-click={JS.push("cancel_edit")}
-              class="hero-arrow-left-mini"
-              title="Cancel changes and return to the page"
-            >
+            <.link title="Back" phx-click={JS.push("cancel_edit")} class="hero-arrow-left-mini">
               Back
             </.link>
           </Components.shortcut>

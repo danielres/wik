@@ -10,7 +10,7 @@ defmodule WikWeb.Me.ShowLive do
      socket
      |> assign(:page_title, "Your details | Wik")
      |> assign(:user, session["user"])
-     |> assign(superuser?: superuser?), layout: {WikWeb.Layouts, :root}}
+     |> assign(superuser?: superuser?)}
   end
 
   @impl true

@@ -1,5 +1,6 @@
 defmodule WikWeb.Page.EditLive do
   use WikWeb, :live_view
+  alias Wik.Groups
   alias Wik.Page
   alias Wik.ResourceLockServer
   alias WikWeb.Page.ShowLive
@@ -26,7 +27,7 @@ defmodule WikWeb.Page.EditLive do
       |> assign(:group_slug, group_slug)
       # TODO: rename :slug to :page_slug, move assigns to mount
       |> assign(:slug, page_slug)
-      |> assign(:group_name, Wik.get_group_name(group_slug))
+      |> assign(:group_name, Groups.get_group_name(group_slug))
       |> assign(:resource_path, Page.resource_path(group_slug, page_slug))
     }
   end

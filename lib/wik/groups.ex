@@ -37,4 +37,9 @@ defmodule Wik.Groups do
   def change_group(%Group{} = group, attrs \\ %{}) do
     Group.changeset(group, attrs)
   end
+
+  def get_group_name(group_slug) do
+    group = find_group_by_slug(group_slug)
+    group.name
+  end
 end

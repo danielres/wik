@@ -1,6 +1,7 @@
 defmodule WikWeb.Page.ShowLive do
   use WikWeb, :live_view
 
+  alias Wik.Groups
   alias Wik.Page
   require Logger
 
@@ -11,7 +12,7 @@ defmodule WikWeb.Page.ShowLive do
     Phoenix.PubSub.subscribe(Wik.PubSub, "pages")
 
     user = session["user"]
-    group_name = Wik.get_group_name(group_slug)
+    group_name = Groups.get_group_name(group_slug)
 
     {:ok,
      socket
@@ -20,7 +21,7 @@ defmodule WikWeb.Page.ShowLive do
      |> assign(:page_title, "#{page_slug} | #{group_name}")
      |> assign(:backlinks, Page.backlinks(group_slug, page_slug))
      |> assign(:group_slug, group_slug)
-     |> assign(:group_name, Wik.get_group_name(group_slug))}
+     |> assign(:group_name, group_name)}
   end
 
   @impl true

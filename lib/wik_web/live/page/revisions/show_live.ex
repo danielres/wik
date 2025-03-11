@@ -1,6 +1,7 @@
 defmodule WikWeb.Page.Revisions.ShowLive do
   use WikWeb, :live_view
 
+  alias Wik.Groups
   alias Wik.Page
   alias Wik.Revisions
 
@@ -21,7 +22,7 @@ defmodule WikWeb.Page.Revisions.ShowLive do
       |> assign(:num_revisions, num_revisions)
       |> assign(group_slug: group_slug)
       |> assign(page_slug: page_slug)
-      |> assign(:group_name, Wik.get_group_name(group_slug))
+      |> assign(:group_name, Groups.get_group_name(group_slug))
 
     if index do
       {:ok, socket |> assign(:index, index |> Integer.parse() |> elem(0))}

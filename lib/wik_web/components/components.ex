@@ -165,7 +165,7 @@ defmodule WikWeb.Components do
         w-48 overflow-hidden
         p-6
         bg-white shadow
-        rounded hidden sm:block
+        rounded absolute left-[-9999px] sm:static
         #{assigns.class}
         """
       )

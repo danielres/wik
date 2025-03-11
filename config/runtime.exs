@@ -1,13 +1,16 @@
 import Config
 
-superuser_id = System.fetch_env!("SUPERUSER_ID")
-bot_token = System.fetch_env!("BOT_TOKEN")
-bot_username = System.fetch_env!("BOT_USERNAME")
-
-config :wik,
-  superuser_id: superuser_id,
-  bot_token: bot_token,
-  bot_username: bot_username
+if config_env() == :test do
+  config :wik,
+    superuser_id: "TEST_superuser_id",
+    bot_token: "TEST_bot_token",
+    bot_username: "TEST_bot_username"
+else
+  config :wik,
+    superuser_id: System.fetch_env!("SUPERUSER_ID"),
+    bot_token: System.fetch_env!("BOT_TOKEN"),
+    bot_username: System.fetch_env!("BOT_USERNAME")
+end
 
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the

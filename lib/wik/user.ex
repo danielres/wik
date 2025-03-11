@@ -1,13 +1,15 @@
 defmodule Wik.User do
-  def get_or_create_from_telegram(params, bot_token) do
+  def get_or_create_from_telegram(params, bot_token, opts \\ []) do
+    # Inject a membership-checker function if provided; otherwise use the default.
+    membership_checker = Keyword.get(opts, :membership_checker, &user_member_of?/3)
+
     # For each group, check if the user is a member.
-    # TODO: optimize query
     all_groups = Wik.Groups.list_groups()
 
     filtered =
       all_groups
       |> Enum.filter(fn group ->
-        user_member_of?(group, params["id"], bot_token)
+        membership_checker.(group, params["id"], bot_token)
       end)
 
     serialized =

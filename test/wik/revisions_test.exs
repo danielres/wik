@@ -16,8 +16,8 @@ defmodule Wik.RevisionsTest do
   @doc5 "doc5"
 
   test "append/4 + count/1" do
-    rev1 = Revisions.append(@user_id, @resource_path, @doc1, @doc2)
-    rev2 = Revisions.append(@user_id, @resource_path, @doc2, @doc3)
+    _rev1 = Revisions.append(@user_id, @resource_path, @doc1, @doc2)
+    _rev2 = Revisions.append(@user_id, @resource_path, @doc2, @doc3)
     Revisions.append(@user_id, "another/path", @doc1, @doc2)
     assert Revisions.count(@resource_path) == 2
   end

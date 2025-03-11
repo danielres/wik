@@ -91,7 +91,7 @@ defmodule Wik.PageTest do
 
   test "load_at/3 returns the document at the specified revision", %{wiki_dir: _} do
     group_slug = "some_group"
-    {:ok, %{after: v1}} = Page.upsert("testuser", group_slug, @slug, "v1")
+    {:ok, %{after: _v1}} = Page.upsert("testuser", group_slug, @slug, "v1")
     {:ok, %{after: v2}} = Page.upsert("testuser", group_slug, @slug, "v2")
     {:ok, %{after: v3}} = Page.upsert("testuser", group_slug, @slug, "v3")
     latest = Page.load(group_slug, @slug)

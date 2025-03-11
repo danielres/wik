@@ -65,6 +65,7 @@ defmodule Wik.MixProject do
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:html_sanitize_ex, "~> 1.4"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:hunt_szymanski_diff,
        git: "https://github.com/danielres/hunt_szymanski_diff.git", branch: "main"}
     ]

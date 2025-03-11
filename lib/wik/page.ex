@@ -13,8 +13,7 @@ defmodule Wik.Page do
   require Logger
 
   def wiki_dir(group_slug) do
-    # TODO: move this to application config
-    files_dir = System.fetch_env!("FILE_STORAGE_PATH")
+    files_dir = Application.get_env(:wik, :files_storage_path)
     group_dir = files_dir |> Path.join("groups") |> Path.join(group_slug)
     wiki_dir = group_dir |> Path.join("wiki")
 

@@ -4,12 +4,14 @@ if config_env() == :test do
   config :wik,
     superuser_id: "TEST_superuser_id",
     bot_token: "TEST_bot_token",
-    bot_username: "TEST_bot_username"
+    bot_username: "TEST_bot_username",
+    files_storage_path: "data/files/test"
 else
   config :wik,
     superuser_id: System.fetch_env!("SUPERUSER_ID"),
     bot_token: System.fetch_env!("BOT_TOKEN"),
-    bot_username: System.fetch_env!("BOT_USERNAME")
+    bot_username: System.fetch_env!("BOT_USERNAME"),
+    files_storage_path: System.fetch_env!("FILE_STORAGE_PATH")
 end
 
 # config/runtime.exs is executed for all environments, including

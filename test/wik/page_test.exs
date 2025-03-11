@@ -13,19 +13,17 @@ defmodule Wik.PageTest do
   @document @body
 
   setup_all do
-    # Set FILE_STORAGE_PATH to a temporary directory for testing.
-    System.put_env("FILE_STORAGE_PATH", "tmp_test_data")
-    File.rm_rf!("tmp_test_data")
-    File.mkdir_p!("tmp_test_data")
-    :ok
+    test_data_dir = Application.get_env(:wik, :files_storage_path)
+    File.rm_rf!(test_data_dir)
+    File.mkdir_p!(test_data_dir)
+    {:ok, %{test_data_dir: test_data_dir}}
   end
 
-  setup do
+  setup %{test_data_dir: test_data_dir} do
     # Check out the database connection.
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Wik.Repo)
-
+    Ecto.Adapters.SQL.Sandbox.checkout(Wik.Repo)
     # Create the wiki directory for the group.
-    wiki_dir = Path.join(["tmp_test_data", "groups", @group, "wiki"])
+    wiki_dir = Path.join([test_data_dir, "groups", @group, "wiki"])
     File.mkdir_p!(wiki_dir)
     %{wiki_dir: wiki_dir}
   end

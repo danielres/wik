@@ -3,6 +3,7 @@
 @import "tailwindcss/utilities";
 
 @import "./html_differ.css";
+@import "./print.css";
 
 /* This file is for your main application CSS */
 

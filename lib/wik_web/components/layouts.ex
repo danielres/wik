@@ -23,7 +23,7 @@ defmodule WikWeb.Layouts do
 
     ~H"""
     <div class={ "#{ @class } min-h-[100vh] grid pb-12 md:pb-0 gap-4" }>
-      <header class="bg-slate-200 py-2 px-4">
+      <header class="bg-slate-200 py-2 px-4 print:hidden">
         <div class="mx-auto max-w-screen-md flex justify-between items-end">
           <h1 class="flex gap-2 items-center">
             {render_slot(@header_left)}
@@ -35,7 +35,7 @@ defmodule WikWeb.Layouts do
       </header>
 
       <%= if @menu do %>
-        <div class="grid max-w-screen-md mx-auto w-full px-4 md:px-0">
+        <div class="grid max-w-screen-md mx-auto w-full px-4 md:px-0 print:hidden">
           {render_slot(@menu)}
         </div>
       <% end %>

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+echo ""
+echo "= Running tests ================================================"
+echo ""
+mix test
+sleep 1
+
+echo ""
+echo "= Running test coveralls ======================================="
+echo ""
+mix coveralls.html
+sleep 3
+
+echo ""
+echo "= Running credo ================================================"
+echo ""
+mix credo
+sleep 0
+
+echo ""
+echo "= Running dialyzer ============================================="
+echo ""
+mix dialyzer --quiet-with-result
+echo ""
+echo ""
+
+echo "Code coverage: cover/excoveralls.html"

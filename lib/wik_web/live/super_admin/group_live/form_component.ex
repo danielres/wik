@@ -9,7 +9,6 @@ defmodule WikWeb.SuperAdmin.GroupLive.FormComponent do
     <div>
       <.header>
         {@title}
-        <:subtitle>Use this form to manage group records in your database.</:subtitle>
       </.header>
 
       <.simple_form
@@ -58,7 +57,7 @@ defmodule WikWeb.SuperAdmin.GroupLive.FormComponent do
         {:noreply,
          socket
          |> put_flash(:info, "Group updated successfully")
-         |> push_patch(to: socket.assigns.patch)}
+         |> push_navigate(to: ~p"/admin/groups")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
@@ -73,7 +72,7 @@ defmodule WikWeb.SuperAdmin.GroupLive.FormComponent do
         {:noreply,
          socket
          |> put_flash(:info, "Group created successfully")
-         |> push_patch(to: socket.assigns.patch)}
+         |> push_navigate(to: ~p"/admin/groups")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}

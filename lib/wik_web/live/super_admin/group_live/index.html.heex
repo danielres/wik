@@ -7,7 +7,11 @@
   </:actions>
 </.header>
 
-<.table id="groups" rows={@streams.groups}>
+<.table
+  id="groups"
+  rows={@streams.groups}
+  row_click={fn {_id, group} -> JS.navigate(~p"/admin/groups/#{group}/show/edit") end}
+>
   <:col :let={{_id, group}} label="Id">{group.id}</:col>
   <:col :let={{_id, group}} label="Slug">{group.slug}</:col>
   <:col :let={{_id, group}} label="Name">{group.name}</:col>

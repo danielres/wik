@@ -35,6 +35,8 @@ defmodule WikWeb.SessionController do
       member_of: serialized
     }
 
+    Wik.Users.persist_session_user(user)
+
     conn
     |> put_session(:user, user)
     |> configure_session(renew: true)

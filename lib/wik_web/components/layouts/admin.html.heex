@@ -8,16 +8,19 @@
   </:header_left>
 
   <:header_right>
-    <Components.avatar user_photo_url={@user.photo_url} />
+    <Components.avatar user_photo_url={@session_user.photo_url} />
   </:header_right>
 
   <:menu>
     <ul class="flex gap-2 items-center">
       <li>
-        <.link class="btn btn-primary" navigate={~p"/admin/groups"}> Groups </.link>
+        <.link class="btn btn-primary" navigate={~p"/admin/groups"}>Groups</.link>
       </li>
       <li>
-        <.link class="btn btn-primary" navigate={~p"/admin/revisions"}> Revisions </.link>
+        <.link class="btn btn-primary" navigate={~p"/admin/revisions"}>Revisions</.link>
+      </li>
+      <li>
+        <.link class="btn btn-primary" navigate={~p"/admin/users"}>Users</.link>
       </li>
     </ul>
   </:menu>

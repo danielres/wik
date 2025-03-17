@@ -9,7 +9,7 @@ defmodule WikWeb.SuperAdmin.RevisionLive.Index do
   def mount(_params, session, socket) do
     socket =
       socket
-      |> assign(:user, session["user"])
+      |> assign(:session_user, session["user"])
       |> assign(:resource_paths, Revisions.list_distinct_resource_paths())
 
     {:ok, stream(socket, :revisions, []), layout: {WikWeb.Layouts, :admin}}

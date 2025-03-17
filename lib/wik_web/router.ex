@@ -34,6 +34,15 @@ defmodule WikWeb.Router do
       live "/:id/show/edit", SuperAdmin.GroupLive.Show, :edit
     end
 
+    scope "/users" do
+      live "/", UserLive.Index, :index
+      live "/new", UserLive.Index, :new
+      live "/:id/edit", UserLive.Index, :edit
+
+      live "/:id", UserLive.Show, :show
+      live "/:id/show/edit", UserLive.Show, :edit
+    end
+
     live "/revisions", SuperAdmin.RevisionLive.Index, :index
   end
 

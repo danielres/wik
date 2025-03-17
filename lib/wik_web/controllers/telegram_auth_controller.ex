@@ -16,6 +16,8 @@ defmodule WikWeb.TelegramAuthController do
         |> Map.delete("hash")
         |> Map.delete("auth_date")
 
+      Wik.Users.persist_session_user(user)
+
       conn
       |> put_session(:user, user)
       |> configure_session(renew: true)
@@ -34,6 +36,7 @@ defmodule WikWeb.TelegramAuthController do
       {:ok, params} = JSON.decode(params["user"])
 
       user = User.get_or_create_from_telegram(params, bot_token())
+      Wik.Users.persist_session_user(user)
 
       conn
       |> put_session(:user, user)

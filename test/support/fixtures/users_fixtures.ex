@@ -23,4 +23,22 @@ defmodule Wik.UsersFixtures do
       member_of: []
     })
   end
+
+  @doc """
+  Generate a user.
+  """
+  def user_fixture(attrs \\ %{}) do
+    {:ok, user} =
+      attrs
+      |> Enum.into(%{
+        first_name: "some firstname",
+        last_name: "some lastname",
+        photo_url: "some photo_url",
+        telegram_id: "some telegram_id",
+        username: "some username"
+      })
+      |> Wik.Users.create_user()
+
+    user
+  end
 end

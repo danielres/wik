@@ -1,0 +1,72 @@
+<.header>
+  Listing Users
+  <:actions>
+    <%!-- <.link patch={~p"/admin/users/new"}> --%>
+    <%!--   <.button>New User</.button> --%>
+    <%!-- </.link> --%>
+  </:actions>
+</.header>
+
+<div class="grid grid-cols-[auto,1fr] gap-x-2 bg-amber-100 text-amber-700 p-4">
+  <i class="hero-exclamation-triangle"></i>
+  <ul class="text-sm ">
+    <li>These records are created + updated when users login with Telegram.</li>
+    <li>They're used for user id to username resolution, etc.</li>
+    <li>
+      There is no point in altering those records manually, these features are kept to ease manual testing in development.
+    </li>
+  </ul>
+</div>
+
+<.table
+  id="users"
+  rows={@streams.users}
+  row_click={fn {_id, user} -> JS.navigate(~p"/admin/users/#{user}") end}
+>
+  <:col :let={{_id, user}} label="Id">{user.id}</:col>
+  <:col :let={{_id, user}} label="TG id">{user.telegram_id}</:col>
+  <:col :let={{_id, user}} label="Username">{user.username}</:col>
+  <:col :let={{_id, user}} label="Firstname">{user.first_name}</:col>
+  <:col :let={{_id, user}} label="Lastname">{user.last_name}</:col>
+  <:col :let={{_id, user}} label="Photo url">
+    <Components.avatar user_photo_url={user.photo_url} />
+  </:col>
+  <:col :let={{_id, user}} label="Inserted">
+    {user.inserted_at |> Date.to_iso8601()}
+    {user.inserted_at |> DateTime.to_time()}
+  </:col>
+  <:col :let={{_id, user}} label="Updated">
+    {user.updated_at |> Date.to_iso8601()}
+    {user.updated_at |> DateTime.to_time()}
+  </:col>
+  <:action :let={{_id, user}}>
+    <div class="sr-only">
+      <.link navigate={~p"/admin/users/#{user}"}>Show</.link>
+    </div>
+    <.link patch={~p"/admin/users/#{user}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, user}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: user.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="user-modal"
+  show
+  on_cancel={JS.patch(~p"/admin/users")}
+>
+  <.live_component
+    module={WikWeb.UserLive.FormComponent}
+    id={@user.id || :new}
+    title={@page_title}
+    action={@live_action}
+    user={@user}
+    patch={~p"/admin/users"}
+  />
+</.modal>

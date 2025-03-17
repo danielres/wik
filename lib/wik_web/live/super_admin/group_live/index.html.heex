@@ -10,12 +10,16 @@
 <.table
   id="groups"
   rows={@streams.groups}
-  row_click={fn {_id, group} -> JS.navigate(~p"/admin/groups/#{group}/show/edit") end}
+  row_click={fn {_id, group} -> JS.navigate(~p"/admin/groups/#{group.id}/show/edit") end}
 >
   <:col :let={{_id, group}} label="Id">{group.id}</:col>
   <:col :let={{_id, group}} label="Slug">{group.slug}</:col>
   <:col :let={{_id, group}} label="Name">{group.name}</:col>
   <:action :let={{id, group}}>
+    <.link phx-click={JS.navigate(~p"/admin/groups/#{group.id}/show/edit")}>
+      Edit
+    </.link>
+    |
     <.link
       phx-click={JS.push("delete", value: %{id: group.id}) |> hide("##{id}")}
       data-confirm="Are you sure?"

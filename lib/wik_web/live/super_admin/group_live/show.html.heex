@@ -1,15 +1,9 @@
-<.modal
-  :if={@live_action == :edit}
-  id="group-modal"
-  show
-  on_cancel={JS.patch(~p"/admin/groups/#{@group}")}
->
+<.modal :if={@live_action == :edit} id="group-modal" show on_cancel={JS.patch(~p"/admin/groups/")}>
   <.live_component
     module={WikWeb.SuperAdmin.GroupLive.FormComponent}
     id={@group.id}
     title={@page_title}
     action={@live_action}
     group={@group}
-    patch={~p"/admin/groups/#{@group}"}
   />
 </.modal>

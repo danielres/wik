@@ -9,6 +9,22 @@ defmodule Wik.Markdown do
   alias Earmark.Transform
   alias Wik.Utils
 
+  def sanitize(markdown) do
+    sanitized =
+      markdown
+      |> HtmlSanitizeEx.markdown_html()
+      |> preserve_html_entities()
+
+    sanitized
+  end
+
+  defp preserve_html_entities(text) do
+    text
+    |> String.replace("&amp;", "&")
+    |> String.replace("&lt;", "<")
+    |> String.replace("&gt;", ">")
+  end
+
   @doc """
   Parses the given `markdown` string using Earmark,
   converting wiki links like [[Some Link]] into <a> tags.

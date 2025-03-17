@@ -3,6 +3,33 @@ defmodule Wik.MarkdownTest do
   alias Wik.Markdown
 
   @base_path "/base/path"
+  describe "sanitize/1" do
+    test "strips script tags" do
+      markdown = """
+      <script>alert('hello')</script>
+      """
+
+      sanitized = """
+      alert('hello')
+      """
+
+      assert markdown |> Markdown.sanitize() == sanitized
+    end
+
+    test "preserves select html entities as is" do
+      markdown = """
+      <script>alert("hello")</script>
+      < **bold** > coffee & croissants 
+      """
+
+      sanitized = """
+      alert("hello")
+      < **bold** > coffee & croissants 
+      """
+
+      assert markdown |> Markdown.sanitize() == sanitized
+    end
+  end
 
   describe "parse/2" do
     test "transforms wiki-style links" do

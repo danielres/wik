@@ -45,3 +45,4 @@ npm-debug.log
 tmp_test_data
 backups
 data
+.aider*

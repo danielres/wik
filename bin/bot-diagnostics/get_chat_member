@@ -1,0 +1,21 @@
+#!/bin/sh
+BOT_TOKEN=$BOT_TOKEN_WIKSPACEBOT
+
+# GROUP_CHAT_ID=$GROUP_CHAT_ID_WIK_TIPS
+GROUP_CHAT_ID=$GROUP_CHAT_ID_KB25CAMP
+
+USER_ID=$USER_ID_SOPHIA
+# USER_ID=$USER_ID_DANIREZ
+# USER_ID=$USER_ID_AKIRA
+# USER_ID=$USER_ID_MEKKINANA
+
+echo USER_ID: $USER_ID
+
+echo ""
+echo "GET CHAT MEMBER ----------------"
+
+# URL="https://api.telegram.org/bot$BOT_TOKEN/getChatMember?chat_id=$GROUP_CHAT_ID&user_id=458778600"
+URL="https://api.telegram.org/bot$BOT_TOKEN/getChatMember?chat_id=$GROUP_CHAT_ID&user_id=$USER_ID"
+echo URL: $URL
+
+curl -s $URL | jq .

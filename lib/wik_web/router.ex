@@ -117,8 +117,6 @@ defmodule WikWeb.Router do
 
     IO.inspect(user, label: "user")
     IO.inspect(group_slug, label: "group_slug")
-    IO.inspect(user.member_of, label: "user.member_of")
-    IO.inspect(membership?, label: "membership?")
 
     if membership? do
       conn

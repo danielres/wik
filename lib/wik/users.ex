@@ -10,7 +10,7 @@ defmodule Wik.Users do
 
   def persist_session_user(session_user) do
     session_user
-    |> Map.put(:telegram_id, session_user.id)
+    |> Map.put(:telegram_id, to_string(session_user.id))
     |> Map.delete(:id)
     |> create_or_update_user_by_telegram_id()
   end

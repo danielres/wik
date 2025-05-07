@@ -84,13 +84,39 @@ defmodule WikWeb.Components do
 
   def groups_list(assigns) do
     ~H"""
-    <ul class="space-y-2  text-center mx-auto">
-      <li :for={group <- @groups} value={group.id}>
-        <a href={~p"/#{group.slug}"} class="btn btn-primary block">
-          {group.name}
-        </a>
-      </li>
-    </ul>
+    <%= if Enum.empty?(@groups) do %>
+      <div class="space-y-4 bg-slate-100 rounded-lg p-6 text-slate-700">
+        <p>Ooops... can't see your groups?</p>
+        <p class="text-sm text-slate-500">
+          Telegram's auth sometimes works in mysterious ways, but there is an easy fix:
+        </p>
+        <ol class="list-decimal list-inside text-sm">
+          <li>
+            <span>Send a PM to</span>
+            <a
+              class="text-blue-600 hover:underline"
+              href={"https://t.me/" <> Application.get_env(:wik, :bot_username)}
+            >
+              @{Application.get_env(:wik, :bot_username)}
+            </a>
+          </li>
+          <li>
+            <.link navigate={~p"/auth/logout"} class="text-blue-600 hover:underline">Logout</.link>
+          </li>
+          <li>
+            Login
+          </li>
+        </ol>
+      </div>
+    <% else %>
+      <ul class="space-y-2 text-center mx-auto">
+        <li :for={group <- @groups} value={group.id}>
+          <a href={~p"/#{group.slug}"} class="btn btn-primary block">
+            {group.name}
+          </a>
+        </li>
+      </ul>
+    <% end %>
     """
   end
 

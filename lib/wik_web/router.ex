@@ -115,6 +115,11 @@ defmodule WikWeb.Router do
     group_slug = conn.params["group_slug"]
     membership? = Enum.any?(user.member_of, fn group -> group.slug == group_slug end)
 
+    IO.inspect(user, label: "user")
+    IO.inspect(group_slug, label: "group_slug")
+    IO.inspect(user.member_of, label: "user.member_of")
+    IO.inspect(membership?, label: "membership?")
+
     if membership? do
       conn
     else

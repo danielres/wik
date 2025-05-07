@@ -10,6 +10,7 @@ defmodule Wik.Users.User do
     field :first_name, :string
     field :last_name, :string
     field :photo_url, :string
+    field :last_seen, :utc_datetime
 
     timestamps(type: :utc_datetime)
   end
@@ -22,7 +23,8 @@ defmodule Wik.Users.User do
       :username,
       :first_name,
       :last_name,
-      :photo_url
+      :photo_url,
+      :last_seen
     ])
     |> unique_constraint(:telegram_id)
     |> validate_required([

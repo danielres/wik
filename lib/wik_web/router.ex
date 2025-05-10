@@ -16,6 +16,7 @@ defmodule WikWeb.Router do
 
   pipeline :ensure_auth do
     plug WikWeb.Plugs.EnsureAuth
+    plug WikWeb.Plugs.TrackUserPresence
   end
 
   scope "/api", WikWeb do
@@ -100,7 +101,7 @@ defmodule WikWeb.Router do
     user = Plug.Conn.get_session(conn, :user)
     superuser_id = Application.get_env(:wik, :superuser_id)
 
-    if user && user.id == superuser_id do
+    if user && user.telegram_id == superuser_id do
       conn
     else
       conn

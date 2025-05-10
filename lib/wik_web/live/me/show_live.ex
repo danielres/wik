@@ -4,7 +4,7 @@ defmodule WikWeb.Me.ShowLive do
   @impl true
 
   def mount(_params, session, socket) do
-    superuser? = session["user"].id == Application.get_env(:wik, :superuser_id)
+    superuser? = session["user"].telegram_id == Application.get_env(:wik, :superuser_id)
 
     {:ok,
      socket

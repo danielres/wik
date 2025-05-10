@@ -52,4 +52,48 @@ defmodule Wik.Telegram do
         true
     end
   end
+
+  def fetch_user_groups(telegram_user_id) do
+    # For each group, check if the user is a member.
+    all_groups = Wik.Groups.list_groups()
+
+    filtered =
+      all_groups
+      |> Enum.filter(fn group ->
+        user_member_of?(group, telegram_user_id, bot_token())
+      end)
+
+    serialized =
+      filtered
+      |> Enum.map(fn group ->
+        %{
+          id: group.id,
+          name: group.name,
+          slug: group.slug
+        }
+      end)
+
+    serialized
+  end
+
+  defp user_member_of?(group, telegram_user_id, bot_token) do
+    url =
+      "https://api.telegram.org/bot#{bot_token}/getChatMember?chat_id=#{group.id}&user_id=#{telegram_user_id}"
+
+    req = Finch.build(:get, url)
+
+    case Finch.request(req, WikWeb.Finch) do
+      {:ok, %{status: 200, body: body}} ->
+        case Jason.decode(body) do
+          {:ok, %{"ok" => true, "result" => %{"status" => status}}} ->
+            status in ["member", "administrator", "creator"]
+
+          _ ->
+            false
+        end
+
+      _ ->
+        false
+    end
+  end
 end

@@ -45,7 +45,7 @@ defmodule Wik.Markdown do
   end
 
   defp transform_node({"a", [{"href", href}], children, meta} = node, base_path) do
-    if external_href?(href) do
+    if Utils.Href.external?(href) do
       node
     else
       slug = href |> Utils.slugify()
@@ -55,21 +55,25 @@ defmodule Wik.Markdown do
 
   defp transform_node({"a", _attrs, _children, _meta} = node, _base_path), do: node
 
-  defp transform_node(other, _base_path), do: other
+  defp transform_node({"img", attrs, children, meta}, _base_path) do
+    src = attrs |> Enum.find(fn {key, _} -> key == "src" end) |> elem(1)
 
-  defp external_href?(href) do
-    String.starts_with?(href, [
-      "http",
-      "https",
-      "/",
-      "//",
-      "mailto:",
-      "tel:",
-      "ftp:",
-      "sftp:",
-      "git:",
-      "file:",
-      "data:"
-    ])
+    if Utils.Youtube.is_youtube_url?(src) do
+      # Simple YouTube embed transformation
+      youtube_id = Utils.Youtube.extract_youtube_id(src)
+
+      {"iframe",
+       [
+         {"src", "https://www.youtube.com/embed/#{youtube_id}"},
+         {"width", "560"},
+         {"height", "315"},
+         {"frameborder", "0"},
+         {"allowfullscreen", "true"}
+       ], [], meta}
+    else
+      {"img", attrs, children, meta}
+    end
   end
+
+  defp transform_node(other, _base_path), do: other
 end

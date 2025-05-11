@@ -80,5 +80,34 @@ defmodule Wik.Markdown do
     end
   end
 
+  defp transform_node({"ul", attrs, children, meta} = node, _base_path) do
+    all_youtube? =
+      Enum.all?(children, fn
+        {"li", _, li_children, _} ->
+          Enum.any?(li_children, fn
+            {"img", img_attrs, _, _} ->
+              src =
+                Enum.find_value(img_attrs, fn
+                  {"src", value} -> value
+                  _ -> nil
+                end)
+
+              Utils.Youtube.is_youtube_url?(src)
+
+            _ ->
+              false
+          end)
+
+        _ ->
+          false
+      end)
+
+    if all_youtube? do
+      {"ul", attrs ++ [{"class", "embeds embeds-youtube"}], children, meta}
+    else
+      node
+    end
+  end
+
   defp transform_node(other, _base_path), do: other
 end

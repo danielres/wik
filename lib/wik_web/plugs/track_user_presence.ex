@@ -9,7 +9,6 @@ defmodule WikWeb.Plugs.TrackUserPresence do
 
   def call(conn, _opts) do
     if user = conn.assigns[:user] do
-      dbg(user)
       Users.update_last_seen(user.id)
     end
 

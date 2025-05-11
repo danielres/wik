@@ -23,4 +23,26 @@ defmodule Wik.Utils.Youtube do
         ""
     end
   end
+
+  def extract_playlist_id(url) do
+    cond do
+      String.contains?(url, "list=") ->
+        url
+        |> String.split("list=")
+        |> Enum.at(1, "")
+        |> String.split("&")
+        |> List.first("")
+
+      true ->
+        nil
+    end
+  end
+
+  def build_embed_url(video_id, playlist_id) do
+    if playlist_id do
+      "https://www.youtube.com/embed/#{video_id}?list=#{playlist_id}&showinfo=1&controls=1&rel=1"
+    else
+      "https://www.youtube.com/embed/#{video_id}"
+    end
+  end
 end

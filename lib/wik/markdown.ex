@@ -59,12 +59,17 @@ defmodule Wik.Markdown do
     src = attrs |> Enum.find(fn {key, _} -> key == "src" end) |> elem(1)
 
     if Utils.Youtube.is_youtube_url?(src) do
-      # Simple YouTube embed transformation
-      youtube_id = Utils.Youtube.extract_youtube_id(src)
+      video_id = Utils.Youtube.extract_youtube_id(src)
+      playlist_id = Utils.Youtube.extract_playlist_id(src)
+      embed_url = Utils.Youtube.build_embed_url(video_id, playlist_id)
+
+      youtube_type_class =
+        if playlist_id, do: "embed-youtube-playlist", else: "embed-youtube-video"
 
       {"iframe",
        [
-         {"src", "https://www.youtube.com/embed/#{youtube_id}"},
+         {"class", "embed embed-youtube #{youtube_type_class}"},
+         {"src", embed_url},
          {"width", "560"},
          {"height", "315"},
          {"frameborder", "0"},

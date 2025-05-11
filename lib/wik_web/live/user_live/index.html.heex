@@ -39,6 +39,14 @@
     {user.updated_at |> Date.to_iso8601()}
     {user.updated_at |> DateTime.to_time()}
   </:col>
+  <:col :let={{_id, user}} label="Last seen">
+    <%= if user.last_seen do %>
+      <%= user.last_seen |> Date.to_iso8601() %>
+      <%= user.last_seen |> DateTime.to_time() %>
+    <% else %>
+      Never
+    <% end %>
+  </:col>
   <:action :let={{_id, user}}>
     <div class="sr-only">
       <.link navigate={~p"/admin/users/#{user}"}>Show</.link>

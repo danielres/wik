@@ -8,15 +8,22 @@ defmodule Wik.Users do
 
   alias Wik.Users.User
 
-  def persist_session_user(session_user) do
-    session_user
-    |> Map.put(:telegram_id, session_user.id)
-    |> Map.delete(:id)
-    |> create_or_update_user_by_telegram_id()
+  @doc """
+  Persists a session user to the database and returns the database user.
+  """
+
+  # def persist_session_user(session_user) do
+  #   session_user
+  #   |> create_or_update_user_by_telegram_id()
+  # end
+
+  def find_user_by_telegram_id(telegram_id) do
+    Repo.one(from u in User, where: u.telegram_id == ^telegram_id)
   end
 
-  defp create_or_update_user_by_telegram_id(user_data) do
-    case Repo.one(from u in User, where: u.telegram_id == ^user_data.telegram_id) do
+  def create_or_update_user_by_telegram_id(user_data) do
+    # case Repo.one(from u in User, where: u.telegram_id == ^user_data.telegram_id) do
+    case find_user_by_telegram_id(user_data.telegram_id) do
       nil ->
         create_user(user_data)
 
@@ -117,5 +124,33 @@ defmodule Wik.Users do
   """
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
+  end
+
+  @doc """
+  Updates a user's last_seen timestamp.
+  Only updates if the last update was more than "interval" seconds ago to reduce DB load.
+  """
+  def update_last_seen(%User{} = user) do
+    now = DateTime.utc_now()
+    interval = 60
+    time_elapsed = DateTime.diff(now, user.last_seen, :second)
+    update? = user.last_seen == nil || time_elapsed > interval
+
+    if update?, do: update_user(user, %{last_seen: now})
+  end
+
+  def update_last_seen(user_id) do
+    # Convert to string if it's not already
+    # user_id = to_string(user_id)
+
+    case Repo.get(User, user_id) do
+      nil ->
+        # User doesn't exist in the database
+        IO.warn("[Users.update_last_seen(user_id)] User with ID #{user_id} not found.")
+        {:error, :user_not_found}
+
+      user ->
+        update_last_seen(user)
+    end
   end
 end

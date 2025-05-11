@@ -14,9 +14,25 @@ defmodule WikWeb.Plugs.EnsureAuth do
     user = get_session(conn, :user)
 
     if user do
-      conn |> assign(:user, user)
+      normalized_user = normalize_user(user)
+      conn |> assign(:user, normalized_user)
     else
       handle_unauthenticated(conn)
+    end
+  end
+
+  # TODO: remove this after a few days, this is only needed temporarily following user refactor in #255b58ed
+  #
+  defp normalize_user(user) do
+    if Map.has_key?(user, :telegram_id) do
+      user
+    else
+      telegram_id = user.id
+      db_user = Wik.Users.find_user_by_telegram_id(telegram_id)
+
+      user
+      |> Map.put(:telegram_id, telegram_id)
+      |> Map.put(:id, db_user.id)
     end
   end
 

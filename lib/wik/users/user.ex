@@ -26,6 +26,7 @@ defmodule Wik.Users.User do
       :photo_url,
       :last_seen
     ])
+    |> update_change(:telegram_id, &to_string/1)
     |> unique_constraint(:telegram_id)
     |> validate_required([
       :telegram_id,

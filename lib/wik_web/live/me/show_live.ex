@@ -4,7 +4,10 @@ defmodule WikWeb.Me.ShowLive do
   @impl true
 
   def mount(_params, session, socket) do
-    superuser? = session["user"].id == Application.get_env(:wik, :superuser_id)
+    # TODO: remove this after a few days, this is only needed temporarily following user refactor in #255b58ed
+    telegram_id = session["user"] |> Map.get(:telegram_id, "")
+    superuser_id = Application.get_env(:wik, :superuser_id)
+    superuser? = telegram_id == superuser_id
 
     {:ok,
      socket

@@ -1,7 +1,9 @@
 defmodule Wik.Utils.Youtube do
-  def is_youtube_url?(url) do
+  def is_youtube_url?(url) when is_binary(url) do
     String.contains?(url, ["youtube.com", "youtu.be"])
   end
+
+  def is_youtube_url?(_url), do: false
 
   def extract_youtube_id(url) do
     cond do

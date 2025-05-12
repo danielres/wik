@@ -127,15 +127,16 @@ defmodule Wik.Users do
   end
 
   @doc """
-  Updates `last_seen` if it’s nil or more than `@update_interval` seconds old.
+  Updates `last_seen` if it’s nil or more than `update_interval` seconds old.
   Returns `{:ok, %User{}}` or `{:error, changeset}`.
   """
   def update_last_seen(%User{} = user) do
     now = DateTime.utc_now()
+    update_interval = 60
 
     update? =
       is_nil(user.last_seen) ||
-        DateTime.diff(now, user.last_seen, :second) > @update_interval
+        DateTime.diff(now, user.last_seen, :second) > update_interval
 
     if update? do
       update_user(user, %{last_seen: now})

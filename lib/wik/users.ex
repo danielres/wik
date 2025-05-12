@@ -127,16 +127,21 @@ defmodule Wik.Users do
   end
 
   @doc """
-  Updates a user's last_seen timestamp.
-  Only updates if the last update was more than "interval" seconds ago to reduce DB load.
+  Updates `last_seen` if it’s nil or more than `@update_interval` seconds old.
+  Returns `{:ok, %User{}}` or `{:error, changeset}`.
   """
   def update_last_seen(%User{} = user) do
     now = DateTime.utc_now()
-    interval = 60
-    time_elapsed = DateTime.diff(now, user.last_seen, :second)
-    update? = user.last_seen == nil || time_elapsed > interval
 
-    if update?, do: update_user(user, %{last_seen: now})
+    update? =
+      is_nil(user.last_seen) ||
+        DateTime.diff(now, user.last_seen, :second) > @update_interval
+
+    if update? do
+      update_user(user, %{last_seen: now})
+    else
+      {:ok, user}
+    end
   end
 
   def update_last_seen(user_id) do

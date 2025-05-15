@@ -27,10 +27,10 @@ defmodule Wik.Users.User do
       :last_seen
     ])
     |> update_change(:telegram_id, &to_string/1)
+    |> put_change(:photo_url, Map.get(attrs, :photo_url, ""))
     |> unique_constraint(:telegram_id)
     |> validate_required([
-      :telegram_id,
-      :photo_url
+      :telegram_id
     ])
   end
 end

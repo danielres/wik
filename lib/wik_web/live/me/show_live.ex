@@ -55,7 +55,7 @@ defmodule WikWeb.Me.ShowLive do
               <h3 class="text-lg text-slate-500 font-bold text-center ">User data</h3>
               <div class="grid grid-cols-2 gap-x-4 text-slate-500 space-y-2 items-end [&_b]:text-right">
                 <b>Picture:</b>
-                <%= if !@user.photo_url do %>
+                <%= if @user.photo_url do %>
                   <img class="size-10 rounded-full" src={@user.photo_url} alt="user photo" />
                 <% else %>
                   <span class="text-gray-500">

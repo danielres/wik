@@ -63,7 +63,7 @@ defmodule Wik.Markdown do
         Embeds.embed_google_calendar(meta, raw_opts, src)
 
       true ->
-        {"img", attrs, [], meta}
+        Embeds.embed_image(meta, raw_opts, src)
     end
   end
 

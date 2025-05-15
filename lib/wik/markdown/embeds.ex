@@ -1,6 +1,29 @@
 defmodule Wik.Markdown.Embeds do
   alias Wik.Utils
 
+  def embed_image(meta, raw_opts, src) do
+    opts_whitelist = ["width", "height", "border"]
+    {alt_text, opts} = parse_embed_alt_data(raw_opts, opts_whitelist)
+
+    style = []
+    style = if opts[:width], do: style ++ ["width: #{opts[:width]}px"], else: style
+    style = if opts[:height], do: style ++ ["height: #{opts[:height]}px"], else: style
+    style = if opts[:border], do: style ++ ["border: #{opts[:border]}px solid"], else: style
+    style_str = style |> Enum.join("; ")
+
+    {
+      "img",
+      [
+        {"alt", alt_text},
+        {"title", alt_text},
+        {"src", src},
+        {"style", style_str}
+      ],
+      nil,
+      nil
+    }
+  end
+
   def embed_youtube(meta, _raw_opts, src) do
     video_id = Utils.Youtube.extract_youtube_id(src)
     playlist_id = Utils.Youtube.extract_playlist_id(src)

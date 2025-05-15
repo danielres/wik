@@ -23,22 +23,22 @@ REMOTE_CMD="$REMOTE_MAKE_BACKUP_DIR && $REMOTE_MAKE_ARCHIVE"
 # Create local backup directory
 mkdir -p "$LOCAL_BACKUPS_DIR"
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to create local backup directory: $LOCAL_BACKUPS_DIR"
-    exit 1
+  echo "Error: Failed to create local backup directory: $LOCAL_BACKUPS_DIR"
+  exit 1
 fi
 
 # Create the compressed archive on the remote Fly.io VM
 fly ssh console -C "bash -c '$REMOTE_CMD'"
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to create archive on remote VM"
-    exit 1
+  echo "Error: Failed to create archive on remote VM"
+  exit 1
 fi
 
 # Download the compressed file to the local backup directory
 fly ssh sftp get "$REMOTE_ARCHIVE_PATH" "$LOCAL_ARCHIVE_PATH"
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to download archive from $REMOTE_ARCHIVE_PATH to $LOCAL_ARCHIVE_PATH"
-    exit 1
+  echo "Error: Failed to download archive from $REMOTE_ARCHIVE_PATH to $LOCAL_ARCHIVE_PATH"
+  exit 1
 fi
 echo ""
 echo "Backup completed:"
@@ -50,13 +50,14 @@ echo "Extracting archive..."
 mkdir -p $LOCAL_LATEST_BACKUP_DIR
 tar -xf "$LOCAL_ARCHIVE_PATH" -C "$LOCAL_LATEST_BACKUP_DIR"
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to extract archive to $LOCAL_LATEST_BACKUP_DIR"
-    exit 1
+  echo "Error: Failed to extract archive to $LOCAL_LATEST_BACKUP_DIR"
+  exit 1
 fi
 
 echo ""
 echo "Extraction completed:"
 echo "latest backup dir: $LOCAL_LATEST_BACKUP_DIR"
 cd $LOCAL_BACKUPS_DIR
+rm latest
 ln -s "$LOCAL_LATEST_BACKUP_DIR/mnt/data" latest
 echo "or: $LOCAL_BACKUPS_DIR/latest"

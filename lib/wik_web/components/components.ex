@@ -124,13 +124,13 @@ defmodule WikWeb.Components do
 
   def avatar(assigns) do
     ~H"""
-    <a href={~p"/me"}>
-      <%= if(@user_photo_url) do %>
+    <div class="flex justify-center">
+      <%= if(@user_photo_url && String.length(@user_photo_url) > 0) do %>
         <img src={@user_photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
       <% else %>
-        <i class="hero-user-solid text-slate-600"></i>
+        <i class="hero-user-solid text-slate-600 size-8 text-gray-400"></i>
       <% end %>
-    </a>
+    </div>
     """
   end
 

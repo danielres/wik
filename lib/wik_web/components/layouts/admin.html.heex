@@ -8,7 +8,9 @@
   </:header_left>
 
   <:header_right>
-    <Components.avatar user_photo_url={@session_user.photo_url} />
+    <a href={~p"/me"} class=" block">
+      <Components.avatar user_photo_url={@session_user.photo_url} />
+    </a>
   </:header_right>
 
   <:menu>

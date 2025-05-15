@@ -87,4 +87,74 @@ defmodule Wik.MarkdownTest do
       assert Markdown.parse(markdown, @base_path) == expected_html
     end
   end
+
+  describe "Custom embeds" do
+    test "Google Calendar embed - mode=month" do
+      markdown = """
+      ![mode=month](https://calendar.google.com/calendar/u/0?cid=CID)
+      """
+
+      expected_html = """
+      <p>
+        <div class="embed-wrapper embed-wrapper-google-calendar">
+          <iframe class="embed embed-google-calendar" src="https://calendar.google.com/calendar/embed?src=CID&mode=MONTH">
+          </iframe>
+        </div>
+      </p>
+      """
+
+      assert Markdown.parse(markdown, @base_path) == expected_html
+    end
+
+    test "Google Calendar embed - mode=schedule" do
+      markdown = """
+      ![mode=schedule](https://calendar.google.com/calendar/u/0?cid=CID)
+      """
+
+      expected_html = """
+      <p>
+        <div class="embed-wrapper embed-wrapper-google-calendar">
+          <iframe class="embed embed-google-calendar" src="https://calendar.google.com/calendar/embed?src=CID&mode=AGENDA">
+          </iframe>
+        </div>
+      </p>
+      """
+
+      assert Markdown.parse(markdown, @base_path) == expected_html
+    end
+
+    test "Youtube video embed" do
+      markdown = """
+      ![](https://youtu.be/VIDEO_ID)
+      """
+
+      expected_html = """
+      <p>
+        <div class="embed-wrapper embed-wrapper-youtube">
+          <iframe class="embed embed-youtube embed-youtube-video" src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen="true">
+          </iframe>
+        </div>
+      </p>
+      """
+
+      assert Markdown.parse(markdown, @base_path) == expected_html
+    end
+
+    test "Youtube playlist embed" do
+      markdown = """
+      ![](https://youtube.com/playlist?list=LIST_ID)
+      """
+
+      expected_html = """
+      <p>
+        <div class="embed-wrapper embed-wrapper-youtube">
+          <iframe class="embed embed-youtube embed-youtube-playlist" src="https://www.youtube.com/embed/?list=LIST_ID&showinfo=1&controls=1&rel=1" allowfullscreen="true">
+          </iframe>
+        </div>
+      </p>
+      """
+
+      assert Markdown.parse(markdown, @base_path) == expected_html
+    end
+  end
 end

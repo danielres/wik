@@ -8,7 +8,8 @@ defmodule Wik.Markdown.Embeds do
     style = []
     style = if opts[:width], do: style ++ ["width: #{opts[:width]}px"], else: style
     style = if opts[:height], do: style ++ ["height: #{opts[:height]}px"], else: style
-    style = if opts[:border], do: style ++ ["border: #{opts[:border]}px solid"], else: style
+    style = if opts[:border], do: style ++ ["border-width: #{opts[:border]}px"], else: style
+    style = if opts[:border], do: style ++ ["border-style: solid"], else: style
     style_str = style |> Enum.join("; ")
 
     {

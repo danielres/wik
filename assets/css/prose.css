@@ -1,3 +1,5 @@
 .prose p img {
+  @apply border-slate-800;
   display: inline-block;
+  border-radius: 3px;
 }

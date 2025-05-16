@@ -27,8 +27,8 @@ defmodule Wik.Markdown do
     |> String.replace("&gt;", ">")
   end
 
-  def to_html(markdown, base_path, embedded_pages \\ []) do
-    to_ast(markdown, base_path, embedded_pages)
+  def to_html(markdown, base_path, page_slug) do
+    to_ast(markdown, base_path, [page_slug])
     |> Enum.map_join("", &Transform.transform/1)
   end
 

@@ -61,7 +61,7 @@ defmodule Wik.PageTest do
 
   test "render/2 replaces wiki links with HTML links", %{wiki_dir: _} do
     # Render returns HTML.
-    rendered = Page.render(@group, @body)
+    rendered = Page.render(@group, @slug, @body)
     # For our input, Earmark produces something like:
     # "<p>\nHello, this is a test. <a href=\"/testgroup/wiki/link\">Link</a></p>\n"
     expected_link = ~s(<a href="/testgroup/wiki/link">Link</a>)

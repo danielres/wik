@@ -37,10 +37,10 @@ defmodule WikWeb.Page.Revisions.ShowLive do
     index = index |> Integer.parse() |> elem(0)
 
     {:ok, raw} = Page.load_at(group_slug, page_slug, index - 1)
-    previous_html = Page.render(group_slug, raw)
+    previous_html = Page.render(group_slug, page_slug, raw)
 
     {:ok, raw} = Page.load_at(group_slug, page_slug, index)
-    current_html = Page.render(group_slug, raw)
+    current_html = Page.render(group_slug, page_slug, raw)
 
     # TODO: trim markdown when saving instead
     current_markdown = raw |> String.trim()

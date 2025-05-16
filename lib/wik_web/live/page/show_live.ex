@@ -92,7 +92,7 @@ defmodule WikWeb.Page.ShowLive do
       <:main>
         <div class="grid grid-rows-[1fr_auto] gap-4">
           <Layouts.card tabindex="1" class="">
-            <div class="float-right md:bg-slate-50 pl-8 pb-12 -mr-2 relative print:hidden">
+            <div class="float-right -mr-4 -mt-2 relative print:hidden">
               <div class="absolute right-0 -top-3 sm:-right-3">
                 <Components.toggle_source_button phx-click={
                   JS.toggle(to: "#source-markdown")
@@ -114,7 +114,11 @@ defmodule WikWeb.Page.ShowLive do
               <div class="clear-both"></div>
             </div>
 
-            <div id="source-markdown" class="hidden font-mono whitespace-pre-line">
+            <div
+              id="source-markdown"
+              class="hidden font-mono whitespace-pre-line text-sm"
+              style="word-break: break-word"
+            >
               {@markdown}
             </div>
           </Layouts.card>

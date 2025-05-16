@@ -54,7 +54,7 @@ defmodule Wik.Page do
 
   def render(group_slug, content, embedded_pages) do
     base_path = "/#{group_slug}/wiki/"
-    content |> Markdown.parse(base_path, embedded_pages)
+    content |> Markdown.to_html(base_path, embedded_pages)
   end
 
   def load_at(group_slug, page_slug, index) do

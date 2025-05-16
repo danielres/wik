@@ -53,13 +53,13 @@ defmodule Wik.MarkdownTest do
         </ol>
         """
 
-      assert Markdown.parse(markdown, @base_path) == expected_html
+      assert Markdown.to_html(markdown, @base_path) == expected_html
     end
 
     test "leaves normal links untouched" do
       markdown = "This is a [Test Page](/test-page) link"
       expected_html = ~s(<p>\nThis is a <a href="/test-page">Test Page</a> link</p>\n)
-      assert Markdown.parse(markdown, @base_path) == expected_html
+      assert Markdown.to_html(markdown, @base_path) == expected_html
     end
 
     test "leaves pure links untouched" do
@@ -70,7 +70,7 @@ defmodule Wik.MarkdownTest do
       This is a pure link: <a href="https://example.com">https://example.com</a></p>
       """
 
-      assert Markdown.parse(markdown, @base_path) == expected_html
+      assert Markdown.to_html(markdown, @base_path) == expected_html
     end
 
     test "leaves wiki links within code blocks untouched" do
@@ -84,7 +84,7 @@ defmodule Wik.MarkdownTest do
       <pre><code class="markdown">A wiki link: [[Hello world]]</code></pre>
       """
 
-      assert Markdown.parse(markdown, @base_path) == expected_html
+      assert Markdown.to_html(markdown, @base_path) == expected_html
     end
   end
 
@@ -103,7 +103,7 @@ defmodule Wik.MarkdownTest do
       </p>
       """
 
-      assert Markdown.parse(markdown, @base_path) == expected_html
+      assert Markdown.to_html(markdown, @base_path) == expected_html
     end
 
     test "Google Calendar embed - mode=schedule" do
@@ -120,7 +120,7 @@ defmodule Wik.MarkdownTest do
       </p>
       """
 
-      assert Markdown.parse(markdown, @base_path) == expected_html
+      assert Markdown.to_html(markdown, @base_path) == expected_html
     end
 
     test "Youtube video embed" do
@@ -137,7 +137,7 @@ defmodule Wik.MarkdownTest do
       </p>
       """
 
-      assert Markdown.parse(markdown, @base_path) == expected_html
+      assert Markdown.to_html(markdown, @base_path) == expected_html
     end
 
     test "Youtube playlist embed" do
@@ -154,7 +154,7 @@ defmodule Wik.MarkdownTest do
       </p>
       """
 
-      assert Markdown.parse(markdown, @base_path) == expected_html
+      assert Markdown.to_html(markdown, @base_path) == expected_html
     end
   end
 end

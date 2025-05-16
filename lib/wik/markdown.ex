@@ -9,6 +9,7 @@ defmodule Wik.Markdown do
   alias Earmark.Transform
   alias Wik.Utils
   alias Wik.Markdown.Embeds
+  alias Wik.Page
 
   @doc """
   Sanitizes raw Markdown to safe HTML.
@@ -26,35 +27,24 @@ defmodule Wik.Markdown do
     |> String.replace("&gt;", ">")
   end
 
-  def parse(markdown, base_path, embedded_pages) do
-    result =
-      markdown
-      |> Embeds.embed_pages(base_path, embedded_pages)
-      |> do_parse(base_path)
-
-    html =
-      result
-      |> String.replace("EMBED PAGE START", "<div class='embed embed-page'>")
-      |> String.replace("EMBED PAGE END", "</div>")
-
-    dbg()
-    html
+  def parse(markdown, base_path, embedded_pages \\ []) do
+    to_ast(markdown, base_path, embedded_pages)
+    |> Enum.map_join("", &Transform.transform/1)
   end
 
-  defp do_parse(markdown, base_path) do
+  def to_ast(markdown, base_path, embedded_pages) do
     case Parser.as_ast(markdown, wikilinks: true) do
       {:ok, ast, _msgs} ->
         ast
         |> List.wrap()
-        |> Transform.map_ast(&transform_node(&1, base_path), true)
-        |> Enum.map_join("", &Transform.transform/1)
+        |> Transform.map_ast(&transform_node(&1, base_path, embedded_pages), true)
 
       _ ->
         {:error, "Unexpected return from Parser.as_ast/2"}
     end
   end
 
-  defp transform_node({"a", [{"href", href}], children, meta}, base_path) do
+  defp transform_node({"a", [{"href", href}], children, meta}, base_path, _embedded_pages) do
     if Utils.Href.external?(href) do
       {"a", [{"href", href}], children, meta}
     else
@@ -63,9 +53,9 @@ defmodule Wik.Markdown do
     end
   end
 
-  defp transform_node({"a", _, _, _} = node, _), do: node
+  defp transform_node({"a", _, _, _} = node, _base_path, _embedded_pages), do: node
 
-  defp transform_node({"img", attrs, _children, meta}, _base_path) do
+  defp transform_node({"img", attrs, _children, meta}, _base_path, _embedded_pages) do
     attr_map = Enum.into(attrs, %{})
     src = Map.get(attr_map, "src", "")
     raw_opts = Map.get(attr_map, "alt", "")
@@ -82,5 +72,15 @@ defmodule Wik.Markdown do
     end
   end
 
-  defp transform_node(other, _), do: other
+  defp transform_node({"p", attrs, children, meta}, base_path, embedded_pages) do
+    case children do
+      ["!", {"a", [{"href", page_name}], [node], _} | _] ->
+        Embeds.embed_page(meta, base_path, page_name, node, embedded_pages)
+
+      _ ->
+        {"p", attrs, children, meta}
+    end
+  end
+
+  defp transform_node(other, _, _), do: other
 end

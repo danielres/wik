@@ -1,55 +1,47 @@
 defmodule Wik.Markdown.Embeds do
   alias Wik.Page
   alias Wik.Utils
+  alias Wik.Markdown
 
-  def embed_pages(markdown, base_path, embedded_pages) do
+  def embed_page(meta, base_path, page_name, node, embedded_pages) do
     [group_slug, _] =
       String.split(base_path, "/") |> Enum.filter(&(&1 != ""))
 
-    Regex.replace(~r/!\[\[(.+?)\]\]/, markdown, fn _, page_name ->
-      opts_whitelist = ["offset"]
-      {alt_text, opts} = parse_embed_alt_data(page_name, opts_whitelist)
+    opts_whitelist = ["offset"]
+    {_, opts} = parse_embed_alt_data(node, opts_whitelist)
 
-      page_slug = Utils.slugify(alt_text)
+    page_slug = Utils.slugify(page_name)
 
-      # Detect a circular embedding and return the plain embed text
-      if page_slug in embedded_pages do
-        "![[#{alt_text}]]"
-      else
-        # Load and recursively resolve the embedded page
-        loaded =
-          Page.load(group_slug, page_slug)
-          |> embed_pages(base_path, [page_slug | embedded_pages])
-          |> apply_offset_replacement(opts)
+    markdown = Page.load(group_slug, page_slug)
 
-        result = """
-        EMBED PAGE START [[#{alt_text}]]
-        #{loaded}
-        EMBED PAGE END
-        """
+    embed_link_text = [{"span", [], [page_name], %{}}]
+    embed_icon = [{"i", [{"class", "hero-paper-clip embed-page-icon"}], [], %{}}]
 
-        dbg()
-        result
-      end
-    end)
-  end
+    embed_link = [
+      {"a", [{"href", page_slug}, {"class", "embed-page-link"}], [embed_icon, embed_link_text],
+       %{}}
+    ]
 
-  defp apply_offset_replacement(loaded, opts) do
-    # Safely parse the offset value
-    offset =
-      case Keyword.get(opts, :offset, "1") |> Integer.parse() do
-        {int, ""} when int >= 0 -> int
-        # Default to 0 if invalid or negative
-        _ -> 0
-      end
+    recursive_embed? = page_slug in embedded_pages
 
-    case offset do
-      0 -> loaded
-      _ -> String.replace(loaded, ~r/^#/m, String.duplicate("#", offset + 1))
+    if(recursive_embed?) do
+      explanation = [
+        {"span", [{"class", "embed-page-blocked-explanation"}],
+         ["Embed blocked to prevent an infinite loop."], %{}}
+      ]
+
+      class = "embed embed-page embed-page-blocked"
+      replacement = {"div", [{"class", class}], [embed_link, explanation], meta}
+      {:replace, replacement}
+    else
+      ast = Markdown.to_ast(markdown, base_path, [page_slug | embedded_pages])
+      class = "embed embed-page embed-page-allowed"
+      replacement = {"div", [{"class", class}], [embed_link, ast], meta}
+      {:replace, replacement}
     end
   end
 
-  def embed_image(meta, raw_opts, src) do
+  def embed_image(_meta, raw_opts, src) do
     opts_whitelist = ["width", "height", "border"]
     {alt_text, opts} = parse_embed_alt_data(raw_opts, opts_whitelist)
 

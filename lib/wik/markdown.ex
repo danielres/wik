@@ -26,7 +26,22 @@ defmodule Wik.Markdown do
     |> String.replace("&gt;", ">")
   end
 
-  def parse(markdown, base_path) do
+  def parse(markdown, base_path, embedded_pages) do
+    result =
+      markdown
+      |> Embeds.embed_pages(base_path, embedded_pages)
+      |> do_parse(base_path)
+
+    html =
+      result
+      |> String.replace("EMBED PAGE START", "<div class='embed embed-page'>")
+      |> String.replace("EMBED PAGE END", "</div>")
+
+    dbg()
+    html
+  end
+
+  defp do_parse(markdown, base_path) do
     case Parser.as_ast(markdown, wikilinks: true) do
       {:ok, ast, _msgs} ->
         ast

@@ -28,7 +28,7 @@ defmodule WikWeb.Page.ShowLive do
   def handle_params(%{"group_slug" => group_slug, "slug" => page_slug}, _uri, socket) do
     # TODO: trim markdown when saving instead
     markdown = Page.load(group_slug, page_slug) |> String.trim()
-    rendered = Page.render(group_slug, markdown)
+    rendered = Page.render(group_slug, markdown, [page_slug])
     socket = socket |> assign(:content, rendered) |> assign(:markdown, markdown)
     {:noreply, socket}
   end

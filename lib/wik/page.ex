@@ -39,7 +39,7 @@ defmodule Wik.Page do
 
   def load_rendered(group_slug, page_slug) do
     body = load(group_slug, page_slug)
-    render(group_slug, body)
+    render(group_slug, body, [page_slug])
   end
 
   def load_raw(group_slug, slug) do
@@ -52,9 +52,9 @@ defmodule Wik.Page do
     end
   end
 
-  def render(group_slug, content) do
+  def render(group_slug, content, embedded_pages) do
     base_path = "/#{group_slug}/wiki/"
-    content |> Markdown.parse(base_path)
+    content |> Markdown.parse(base_path, embedded_pages)
   end
 
   def load_at(group_slug, page_slug, index) do

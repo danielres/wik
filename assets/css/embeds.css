@@ -21,3 +21,19 @@
     aspect-ratio: 16/9;
   }
 }
+
+div.embed-page {
+  /* @apply border-l-4 pl-4  border-slate-300/50; */
+  @apply border  px-4  border-slate-300/50 rounded mb-4 ;
+
+  > a:first-of-type {
+    @apply  text-xs text-slate-300 -ml-4 px-2 py-1 inline-block rounded-br-lg;
+  }
+
+  &:hover {
+    @apply border-slate-300/100;
+    > a:first-of-type {
+      @apply text-slate-500;
+    }
+  }
+}

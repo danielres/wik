@@ -1,5 +1,53 @@
 defmodule Wik.Markdown.Embeds do
+  alias Wik.Page
   alias Wik.Utils
+
+  def embed_pages(markdown, base_path, embedded_pages) do
+    [group_slug, _] =
+      String.split(base_path, "/") |> Enum.filter(&(&1 != ""))
+
+    Regex.replace(~r/!\[\[(.+?)\]\]/, markdown, fn _, page_name ->
+      opts_whitelist = ["offset"]
+      {alt_text, opts} = parse_embed_alt_data(page_name, opts_whitelist)
+
+      page_slug = Utils.slugify(alt_text)
+
+      # Detect a circular embedding and return the plain embed text
+      if page_slug in embedded_pages do
+        "![[#{alt_text}]]"
+      else
+        # Load and recursively resolve the embedded page
+        loaded =
+          Page.load(group_slug, page_slug)
+          |> embed_pages(base_path, [page_slug | embedded_pages])
+          |> apply_offset_replacement(opts)
+
+        result = """
+        EMBED PAGE START [[#{alt_text}]]
+        #{loaded}
+        EMBED PAGE END
+        """
+
+        dbg()
+        result
+      end
+    end)
+  end
+
+  defp apply_offset_replacement(loaded, opts) do
+    # Safely parse the offset value
+    offset =
+      case Keyword.get(opts, :offset, "1") |> Integer.parse() do
+        {int, ""} when int >= 0 -> int
+        # Default to 0 if invalid or negative
+        _ -> 0
+      end
+
+    case offset do
+      0 -> loaded
+      _ -> String.replace(loaded, ~r/^#/m, String.duplicate("#", offset + 1))
+    end
+  end
 
   def embed_image(meta, raw_opts, src) do
     opts_whitelist = ["width", "height", "border"]

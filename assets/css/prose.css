@@ -3,3 +3,9 @@
   display: inline-block;
   border-radius: 3px;
 }
+
+.prose {
+  hr {
+    @apply border-slate-400/60;
+  }
+}

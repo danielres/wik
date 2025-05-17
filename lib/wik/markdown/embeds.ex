@@ -1,75 +1,9 @@
 defmodule Wik.Markdown.Embeds do
-  alias Wik.Page
   alias Wik.Utils
-  alias Wik.Markdown
 
-  def embed_page(meta, base_path, page_name, node, embedded_pages) do
-    [group_slug, _] =
-      String.split(base_path, "/") |> Enum.filter(&(&1 != ""))
-
-    opts_whitelist = ["offset", "head"]
-    {_, opts} = parse_embed_alt_data(node, opts_whitelist)
-    offset = Keyword.get(opts, :offset, 1)
-    head? = Keyword.get(opts, :head, "yes")
-    head? = if head? == "yes", do: true, else: false
-    page_slug = Utils.slugify(page_name)
-
-    markdown =
-      Page.load(group_slug, page_slug)
-      |> apply_page_head_removal(head?)
-      |> apply_offset_replacement(offset)
-
-    embed_link_text = [{"span", [], [page_name], %{}}]
-    embed_icon = [{"i", [{"class", "hero-paper-clip embed-page-icon"}], [], %{}}]
-
-    embed_link = [
-      {"a", [{"href", page_slug}, {"class", "embed-page-link"}], [embed_icon, embed_link_text],
-       %{}}
-    ]
-
-    recursive_embed? = page_slug in embedded_pages
-
-    if(recursive_embed?) do
-      explanation = [
-        {"span", [{"class", "embed-page-blocked-explanation"}],
-         ["Embed blocked to prevent an infinite loop."], %{}}
-      ]
-
-      class = "embed embed-page embed-page-blocked"
-      replacement = {"div", [{"class", class}], [embed_link, explanation], meta}
-      {:replace, replacement}
-    else
-      ast = Markdown.to_ast(markdown, base_path, [page_slug | embedded_pages])
-      class = "embed embed-page embed-page-allowed"
-      replacement = {"div", [{"class", class}], [embed_link, ast], meta}
-      {:replace, replacement}
-    end
-  end
-
-  defp apply_page_head_removal(markdown, head?) do
-    markdown = markdown |> String.trim()
-    page_head_regex = ~r/^# .+/
-
-    if !head? do
-      String.replace(markdown, page_head_regex, "")
-    else
-      markdown
-    end
-  end
-
-  defp apply_offset_replacement(markdown, offset) do
-    offset =
-      case offset |> to_string() |> Integer.parse() do
-        {int, ""} when int >= 0 -> int
-        # Default if invalid or negative
-        _ -> 1
-      end
-
-    case offset do
-      0 -> markdown
-      _ -> String.replace(markdown, ~r/^#/m, String.duplicate("#", offset + 1))
-    end
-  end
+  defdelegate embed_page(meta, base_path, page_name, node, embedded_pages),
+    to: Wik.Markdown.Embeds.Page,
+    as: :embed
 
   def embed_image(_meta, raw_opts, src) do
     opts_whitelist = ["width", "height", "border"]
@@ -144,7 +78,6 @@ defmodule Wik.Markdown.Embeds do
   """
   @spec parse_embed_alt_data(raw :: String.t(), whitelist :: [String.t()]) ::
           {String.t(), keyword()}
-
   def parse_embed_alt_data(raw, opts_whitelist) do
     cond do
       raw |> String.contains?("|") ->

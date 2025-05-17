@@ -44,4 +44,18 @@ defmodule Wik.UtilsTest do
       assert Utils.slugify("Café & Croissant") == "cafe-and-croissant"
     end
   end
+
+  describe "read_base_path/1" do
+    test "returns the component parts of a base path as {group_slug, feature}" do
+      assert Utils.read_base_path("group_slug/wiki") == {"group_slug", "wiki"}
+    end
+
+    test "handles empty strings" do
+      assert Utils.read_base_path("") == {}
+    end
+
+    test "handles empty feature" do
+      assert Utils.read_base_path("group_slug") == {"group_slug"}
+    end
+  end
 end

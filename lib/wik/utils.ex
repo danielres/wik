@@ -3,6 +3,7 @@ defmodule Wik.Utils do
   A module for various utility functions.
   """
 
+  @spec slugify(String.t()) :: String.t()
   def slugify(string) do
     string
     |> String.downcase()
@@ -18,5 +19,21 @@ defmodule Wik.Utils do
     |> String.replace(~r/-+/, "-")
     # Remove any leading or trailing hyphens
     |> String.replace(~r/^-|-$/, "")
+  end
+
+  @spec read_base_path(String.t()) :: {String.t(), String.t()} | {String.t()} | {}
+  def read_base_path(""), do: {}
+
+  def read_base_path(base_path) do
+    parts =
+      base_path
+      |> String.split("/")
+      |> Enum.filter(&(&1 != ""))
+
+    case parts do
+      [group_slug, feature] -> {group_slug, feature}
+      [group_slug] -> {group_slug}
+      _ -> {}
+    end
   end
 end

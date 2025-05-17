@@ -37,6 +37,10 @@
   @apply mt-4;
 }
 
+.embed-page-allowed > :first-child + * {
+  @apply mt-2;
+}
+
 div.embed-page {
   .embed-page-icon {
     @apply size-4 opacity-75;

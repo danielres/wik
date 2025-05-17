@@ -9,7 +9,6 @@ defmodule Wik.Markdown do
   alias Earmark.Transform
   alias Wik.Utils
   alias Wik.Markdown.Embeds
-  alias Wik.Page
 
   @doc """
   Sanitizes raw Markdown to safe HTML.

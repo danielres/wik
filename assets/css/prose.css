@@ -8,4 +8,11 @@
   hr {
     @apply border-slate-400/60;
   }
+
+  a {
+    word-wrap: break-word; /* Old, but compatible */
+    word-break: break-all; /* Breaks long words */
+    overflow-wrap: break-word; /* Modern equivalent */
+    white-space: normal; /* Allows wrapping */
+  }
 }

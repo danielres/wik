@@ -6,7 +6,7 @@
 
 .prose {
   hr {
-    @apply border-slate-400/60;
+    @apply border-slate-400/60 border-t-2 -mx-6;
   }
 
   a {

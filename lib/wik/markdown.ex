@@ -44,7 +44,7 @@ defmodule Wik.Markdown do
   end
 
   defp transform_node({"a", [{"href", href}], children, meta}, base_path, _embedded_pages) do
-    max_length = 50
+    max_length = 40
 
     simple_link? =
       case children do

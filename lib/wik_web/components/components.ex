@@ -56,7 +56,7 @@ defmodule WikWeb.Components do
                 [&_h2]:border-b [&_h2]:border-slate-500/40
                 [&_h2]:leading-snug [&_h2]:pb-2
                 [&_h3]:text-lg [&_h3]:font-normal
-                [&_h4]:text-base
+                [&_h4]:text-md [&_h4]:font-normal
                 [&_h5]:text-sm
                 [&_h6]:text-xs
                 [&_pre]:whitespace-pre-wrap

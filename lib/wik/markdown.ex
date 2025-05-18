@@ -19,6 +19,12 @@ defmodule Wik.Markdown do
     |> preserve_html_entities()
   end
 
+  def cleanup(markdown) do
+    markdown
+    |> String.trim()
+    |> String.replace(~r/(\n\s*){3,}/, "\n\n")
+  end
+
   defp preserve_html_entities(text) do
     text
     |> String.replace("&amp;", "&")

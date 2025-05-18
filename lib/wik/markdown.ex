@@ -44,11 +44,37 @@ defmodule Wik.Markdown do
   end
 
   defp transform_node({"a", [{"href", href}], children, meta}, base_path, _embedded_pages) do
+    max_length = 50
+
+    simple_link? =
+      case children do
+        [text] when is_binary(text) and text == href -> true
+        _ -> false
+      end
+
+    truncated_text =
+      if simple_link? and String.length(href) > max_length do
+        String.slice(href, 0, max_length) <> "..."
+      else
+        href
+      end
+
+    final_children = if simple_link?, do: [truncated_text], else: children
+
     if Utils.Href.external?(href) do
-      {"a", [{"href", href}], children, meta}
+      if simple_link? do
+        {:replace, {"a", [{"href", href}], final_children, meta}}
+      else
+        {"a", [{"href", href}], children, meta}
+      end
     else
       slug = Utils.slugify(href)
-      {"a", [{"href", Path.join(base_path, slug)}], children, meta}
+
+      if simple_link? do
+        {:replace, {"a", [{"href", Path.join(base_path, slug)}], final_children, meta}}
+      else
+        {"a", [{"href", Path.join(base_path, slug)}], children, meta}
+      end
     end
   end
 

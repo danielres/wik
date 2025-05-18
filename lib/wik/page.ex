@@ -71,7 +71,7 @@ defmodule Wik.Page do
 
   # TODO: rename to create_or_update
   def upsert(user_id, group_slug, slug, body) do
-    body = Markdown.sanitize(body)
+    body = body |> Markdown.sanitize() |> Markdown.cleanup()
     resource_path = Page.resource_path(group_slug, slug)
     before = Page.load_raw(group_slug, slug)
     new = body

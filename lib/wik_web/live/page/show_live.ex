@@ -58,7 +58,9 @@ defmodule WikWeb.Page.ShowLive do
       </:header_left>
 
       <:header_right>
-        <Components.avatar user_photo_url={@user.photo_url} />
+        <.link navigate={~p"/me"}>
+          <Components.avatar user_photo_url={@user.photo_url} />
+        </.link>
       </:header_right>
 
       <:menu>

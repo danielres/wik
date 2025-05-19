@@ -66,6 +66,26 @@ defmodule WikWeb.Page.ShowLive do
           <Layouts.page_slug group_slug={@group_slug} page_slug={@page_slug} />
 
           <div class="flex gap-3">
+            <Components.shortcut key="v">
+              <button
+                title="Toggle source"
+                class="block p-2 rounded-full bg-slate-200 opacity-30 hover:opacity-75"
+                phx-click={
+                  JS.toggle(to: "#source-markdown")
+                  |> JS.toggle(to: "#content-html")
+                  |> JS.toggle(to: "#backlinks-widget")
+                  |> JS.toggle_class("shadow-md")
+                  |> JS.toggle_class("shadow-inner")
+                  |> JS.toggle_class("bg-white")
+                  |> JS.toggle_class("bg-slate-300")
+                }
+              >
+                <i class="hero-hashtag">
+                  Show source
+                </i>
+              </button>
+            </Components.shortcut>
+
             <Components.shortcut key="h">
               <.link
                 href={~p"/#{@group_slug}/wiki/#{@page_slug}/revisions"}
@@ -90,16 +110,10 @@ defmodule WikWeb.Page.ShowLive do
       </:menu>
 
       <:main>
-        <div class="grid grid-rows-[1fr_auto] gap-4">
+        <div class="">
           <Layouts.card tabindex="1" class="">
             <div class="float-right -mr-2 relative print:hidden ml-4 mb-4">
-              <div class="absolute right-0 -top-3 sm:-right-3">
-                <Components.toggle_source_button phx-click={
-                  JS.toggle(to: "#source-markdown")
-                  |> JS.toggle(to: "#content-html")
-                  |> JS.toggle(to: "#backlinks-widget")
-                } />
-              </div>
+              <div class="absolute right-0 -top-3 sm:-right-3"></div>
               <Components.backlinks_widget
                 class=""
                 id="backlinks-widget"

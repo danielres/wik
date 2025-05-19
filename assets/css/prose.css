@@ -17,7 +17,7 @@
   }
 
   strong {
-    @apply text-slate-600 p-4;
+    @apply text-slate-600;
   }
 
   h1 {

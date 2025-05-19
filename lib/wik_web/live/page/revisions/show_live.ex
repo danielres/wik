@@ -151,7 +151,7 @@ defmodule WikWeb.Page.Revisions.ShowLive do
             </div>
             <Components.prose>
               <div id="html_differ" phx-hook="HtmlDiffer">
-                <div class="hidden font-mono whitespace-pre-line" id="markdown-source">
+                <div class="hidden font-mono whitespace-pre-line break-all" id="markdown-source">
                   {raw(@markdown)}
                 </div>
 

@@ -14,7 +14,6 @@ defmodule Wik.Markdown.Embeds.Page do
     section = Keyword.get(opts, :section, nil)
     head? = if head? == "yes", do: true, else: false
     page_slug = Utils.slugify(page_name)
-
     markdown_unprocessed = Page.load(group_slug, page_slug)
 
     header_text = get_header_text(markdown_unprocessed, section)
@@ -102,11 +101,12 @@ defmodule Wik.Markdown.Embeds.Page do
   def find_header(_markdown, section) when section == nil, do: nil
 
   @doc "Finds the first line that matches the given section name as a header"
+
   def find_header(markdown, section) do
     markdown
     |> String.split("\n")
     |> Enum.find(fn line ->
-      String.match?(line, ~r/^#+\s+.*#{Regex.escape(section)}\s*$/i)
+      String.match?(line, ~r/^#+\s+.*\b#{Regex.escape(section)}/i)
     end)
   end
 

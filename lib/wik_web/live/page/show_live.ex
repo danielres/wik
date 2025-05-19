@@ -114,11 +114,7 @@ defmodule WikWeb.Page.ShowLive do
               <div class="clear-both"></div>
             </div>
 
-            <div
-              id="source-markdown"
-              class="hidden font-mono whitespace-pre-line text-sm"
-              style="word-break: break-word"
-            >
+            <div id="source-markdown" class="hidden font-mono whitespace-pre-line text-sm break-all">
               {@markdown}
             </div>
           </Layouts.card>

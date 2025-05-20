@@ -10,7 +10,13 @@
 /* This file is for your main application CSS */
 
 .btn {
-  @apply block py-2 px-4 rounded opacity-60 hover:opacity-100;
+  @apply block py-2 px-4 rounded opacity-60 hover:opacity-100 focus:outline-none focus:opacity-100;
+  i:first-child {
+    @apply -ml-1.5;
+  }
+  i:last-child {
+    @apply -mr-1.5;
+  }
 }
 
 .btn:disabled {
@@ -36,4 +42,3 @@
 .badge-info {
   @apply bg-blue-500;
 }
-

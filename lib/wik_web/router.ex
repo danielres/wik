@@ -74,6 +74,8 @@ defmodule WikWeb.Router do
         live "/:slug/revisions", Page.Revisions.ShowLive
         live "/:slug/revisions/:index", Page.Revisions.ShowLive
 
+        live "/:slug/edit/confirm", Page.EditConfirmLive
+
         live_session :default do
           pipe_through [:handle_resource_lock]
           live "/:slug/edit", Page.EditLive
@@ -144,9 +146,17 @@ defmodule WikWeb.Router do
       :ok ->
         conn
 
-      {:error, reason} ->
+      {:error, :locked_by_same_user} ->
         conn
-        |> Phoenix.Controller.put_flash(:error, reason)
+        |> redirect(to: "/#{group_slug}/wiki/#{slug}/edit/confirm")
+        |> halt()
+
+      {:error, :locked_by_other_user, userinfo} ->
+        conn
+        |> Phoenix.Controller.put_flash(
+          :error,
+          "This resource is currently edited by #{userinfo.username}"
+        )
         |> Phoenix.Controller.redirect(to: "/#{group_slug}/wiki/#{slug}")
         |> halt()
     end

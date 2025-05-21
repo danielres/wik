@@ -22,7 +22,7 @@ defmodule WikWeb.Components do
       <span class="hint
         hidden
         absolute -top-2 -left-2
-        flex items-baseline
+        items-baseline
         px-[0.5em] gap-[0.125em]
         rounded shadow-sm
         text-xs leading-none text-nowrap
@@ -118,7 +118,7 @@ defmodule WikWeb.Components do
       <%= if(@user_photo_url && String.length(@user_photo_url) > 0) do %>
         <img src={@user_photo_url} alt="user photo" class="w-10 h-10 rounded-full" />
       <% else %>
-        <i class="hero-user-solid text-slate-600 size-8 text-gray-400"></i>
+        <i class="hero-user-solid size-8 text-gray-400"></i>
       <% end %>
     </div>
     """

@@ -8,6 +8,7 @@ defmodule Wik.Markdown do
   alias Earmark.Parser
   alias Earmark.Transform
   alias Wik.Utils
+  alias Wik.Markdown.Ast
   alias Wik.Markdown.Embeds
 
   @doc """
@@ -113,5 +114,26 @@ defmodule Wik.Markdown do
     end
   end
 
+  defp transform_node(node = {"h1", _, _, _}, bp, ep), do: add_anchor(node, bp, ep)
+  defp transform_node(node = {"h2", _, _, _}, bp, ep), do: add_anchor(node, bp, ep)
+  defp transform_node(node = {"h3", _, _, _}, bp, ep), do: add_anchor(node, bp, ep)
+  defp transform_node(node = {"h4", _, _, _}, bp, ep), do: add_anchor(node, bp, ep)
+  defp transform_node(node = {"h5", _, _, _}, bp, ep), do: add_anchor(node, bp, ep)
+  defp transform_node(node = {"h6", _, _, _}, bp, ep), do: add_anchor(node, bp, ep)
+
   defp transform_node(other, _, _), do: other
+
+  defp add_anchor({tag, attrs, children, meta}, _, _) do
+    icon = [{"i", [{"class", "hero-link"}], [], %{}}]
+    icon_wrapper = [{"div", [{"class", "icon"}], icon, %{}}]
+
+    slug =
+      children
+      |> Ast.to_text()
+      |> Utils.slugify()
+
+    link = [{"a", [{"href", "##{slug}"}, {"class", "anchored"}], [  children , icon_wrapper ], %{}}]
+    attrs = Earmark.AstTools.merge_atts(attrs, id: slug)
+    {:replace, {tag, attrs, link, meta}}
+  end
 end

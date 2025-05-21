@@ -1,6 +1,5 @@
 defmodule WikWeb.Page.EditConfirmLive do
   use WikWeb, :live_view
-  alias Wik.Groups
   alias Wik.Page
   alias Wik.ResourceLockServer
   alias WikWeb.Page.ShowLive

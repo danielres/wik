@@ -123,17 +123,14 @@ defmodule Wik.Markdown do
 
   defp transform_node(other, _, _), do: other
 
-  defp add_anchor({tag, attrs, children, meta}, _, _) do
+  defp add_anchor({tag, attrs, children, meta}, _, eb) do
     icon = [{"i", [{"class", "hero-link"}], [], %{}}]
     icon_wrapper = [{"div", [{"class", "icon"}], icon, %{}}]
-
-    slug =
-      children
-      |> Ast.to_text()
-      |> Utils.slugify()
-
-    link = [{"a", [{"href", "##{slug}"}, {"class", "anchored"}], [  children , icon_wrapper ], %{}}]
-    attrs = Earmark.AstTools.merge_atts(attrs, id: slug)
+    prefix = eb |> Enum.reverse() |> tl() |> Enum.join("_")
+    slug = children |> Ast.to_text() |> Utils.slugify()
+    id = [prefix, slug] |> Enum.reject(&(&1 == "")) |> Enum.join("_")
+    link = [{"a", [{"href", "##{id}"}, {"class", "anchored"}], [children, icon_wrapper], %{}}]
+    attrs = [{"id", id} | attrs]
     {:replace, {tag, attrs, link, meta}}
   end
 end

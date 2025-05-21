@@ -42,3 +42,21 @@
 .badge-info {
   @apply bg-blue-500;
 }
+
+a.anchored {
+  @apply block;
+  @apply text-slate-700;
+  div.icon {
+    @apply opacity-0 transition-opacity;
+    @apply inline ml-1;
+    i {
+      @apply size-4;
+    }
+  }
+  &:hover {
+    @apply no-underline;
+    div.icon {
+      @apply opacity-60;
+    }
+  }
+}

@@ -53,17 +53,20 @@ defmodule WikWeb.Layouts do
   slot :inner_block, required: true
 
   def card(assigns) do
+    # for variants with a pictogram like the "warning" variant.
+    variant_with_icon_class = "flex items-start gap-4 sm:px-6 sm:gap-6 lg:px-8 lg:gap-8 "
+
     variant =
       case assigns[:variant] do
         "card" -> "bg-slate-50 shadow md:rounded"
-        "warning" -> "bg-white shadow md:rounded text-sm"
+        "warning" -> "bg-white shadow md:rounded text-sm #{variant_with_icon_class}"
         "transparent" -> ""
       end
 
     assigns = assigns |> assign(:class, variant <> " " <> assigns[:class])
 
     ~H"""
-    <div class={ "py-6  px-4 gap-4 sm:px-6 sm:gap-6 lg:px-8 lg:gap-8  text-slate-800 flex  items-start #{@class}" }>
+    <div class={ "py-6 px-4 text-slate-800 #{@class}" }>
       <%= if @variant == "warning" do %>
         <div class="rounded-full p-2 bg-orange-100">
           <i class="hero-exclamation-triangle size-8 text-orange-600"></i>

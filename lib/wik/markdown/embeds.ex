@@ -72,6 +72,26 @@ defmodule Wik.Markdown.Embeds do
     {:replace, {"div", wrapper_attrs, [iframe_node], meta}}
   end
 
+  def embed_scribblemaps(meta, raw_opts, src) do
+    opts_whitelist = []
+
+    {_alt_text, opts} = parse_embed_alt_data(raw_opts, opts_whitelist)
+    embed_url = src
+
+    wrapper_attrs = [
+      {"class", "embed-wrapper embed-wrapper-scribblemaps"}
+    ]
+
+    iframe_attrs = [
+      {"class", "embed embed-scribblemaps"},
+      {"src", embed_url}
+    ]
+
+    iframe_node = {"iframe", iframe_attrs, [], meta}
+
+    {:replace, {"div", wrapper_attrs, [iframe_node], meta}}
+  end
+
   @doc """
   Splits off optional alt-text before the first `|` and returns a tuple
   of `{alt_text, opts}`. Alt defaults to `""` if not provided.

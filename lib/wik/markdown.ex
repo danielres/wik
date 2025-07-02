@@ -99,6 +99,9 @@ defmodule Wik.Markdown do
       Utils.GoogleCalendar.is_google_calendar_url?(src) ->
         Embeds.embed_google_calendar(meta, raw_opts, src)
 
+      Utils.Scribblemaps.is_scribblemaps_url?(src) ->
+        Embeds.embed_scribblemaps(meta, raw_opts, src)
+
       true ->
         Embeds.embed_image(meta, raw_opts, src)
     end

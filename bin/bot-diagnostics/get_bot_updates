@@ -2,5 +2,5 @@
 ### GETS UPDATES FROM ALL GROUPS HAVING @WIKSPACEBOT
 echo ""
 echo "GET UPDATES --------------------"
-URL="https://api.telegram.org/bot$BOT_TOKEN_WIKSPACEBOT/getUpdates"
+URL="https://api.telegram.org/bot$BOT_TOKEN/getUpdates"
 curl -s $URL | jq .

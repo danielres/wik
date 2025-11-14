@@ -8,5 +8,7 @@ defmodule Wik.Accounts do
   resources do
     resource Wik.Accounts.Token
     resource Wik.Accounts.User
+    resource Wik.Accounts.Group
+    resource Wik.Accounts.GroupUserRelation
   end
 end

@@ -5,19 +5,7 @@ defmodule Wik.Accounts.GroupTest do
 
   test "creates group with actor as author and member" do
     user = create_user!()
-
-    group =
-      Wik.Accounts.Group
-      |> Ash.Changeset.for_create(
-        :create,
-        %{
-          title: "Test Group",
-          text: "Description"
-        },
-        actor: user,
-        authorize?: false
-      )
-      |> Ash.create!()
+    group = user |> create_group!(authorize?: false)
 
     assert group.author_id == user.id
 
@@ -31,10 +19,7 @@ defmodule Wik.Accounts.GroupTest do
              Wik.Accounts.Group
              |> Ash.Changeset.for_create(
                :create,
-               %{
-                 title: "Test Group",
-                 text: "Description"
-               },
+               %{title: "Test Group", text: "Description"},
                actor: nil
              )
              |> Ash.create()
@@ -45,7 +30,6 @@ defmodule Wik.Accounts.GroupTest do
   test "only members can read group" do
     user1 = create_user!()
     user2 = create_user!()
-
     group = create_group!(user1)
 
     # User1 (member) can read
@@ -62,18 +46,7 @@ defmodule Wik.Accounts.GroupTest do
   test "destroying group removes memberships but not users" do
     user = create_user!()
 
-    group =
-      Wik.Accounts.Group
-      |> Ash.Changeset.for_create(
-        :create,
-        %{
-          title: "Test Group",
-          text: "Description"
-        },
-        actor: user,
-        authorize?: false
-      )
-      |> Ash.create!()
+    group = user |> create_group!(authorize?: false)
 
     # Verify membership exists
     memberships = Ash.read!(Wik.Accounts.GroupUserRelation)
@@ -135,15 +108,27 @@ defmodule Wik.Accounts.GroupTest do
     |> Ash.create!(authorize?: false)
   end
 
-  defp create_group!(user) do
+  defp create_group!(user, opts \\ [], attrs \\ %{}) do
+    default_attrs = %{
+      title: "Test Group #{System.unique_integer()}",
+      text: "Test description"
+    }
+
+    attrs = Map.merge(default_attrs, attrs)
+
+    default_opts = [
+      authorize?: true
+    ]
+
+    opts = Keyword.merge(default_opts, opts)
+
     Wik.Accounts.Group
     |> Ash.Changeset.for_create(
       :create,
-      %{
-        title: "Test Group",
-        text: "Description"
-      },
-      actor: user
+      # Use merged attrs, not default_attrs  
+      attrs,
+      # Merge actor with opts  
+      Keyword.merge([actor: user], opts)
     )
     |> Ash.create!()
   end

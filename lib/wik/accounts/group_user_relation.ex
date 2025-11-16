@@ -3,6 +3,7 @@ defmodule Wik.Accounts.GroupUserRelation do
     otp_app: :wik,
     domain: Wik.Accounts,
     data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer],
     extensions: [AshAdmin.Resource]
 
   postgres do
@@ -11,16 +12,29 @@ defmodule Wik.Accounts.GroupUserRelation do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:read]
 
     create :create do
       primary? true
       accept [:group_id, :user_id]
+      change relate_actor(:author)
+    end
 
-      change fn cs, ctx ->
-        author = ctx.actor || raise "no actor in context"
-        Ash.Changeset.manage_relationship(cs, :author, author, type: :append_and_remove)
-      end
+    destroy :destroy do
+      primary? true
+    end
+  end
+
+  policies do
+    policy action_type(:read) do
+      # TODO: authorize only if actor and GroupUserRelation have 1 or more groups in common
+      authorize_if always()
+    end
+
+    policy action_type(:destroy) do
+
+      # TODO: authorize only if actor is group author 
+      authorize_if always()
     end
   end
 

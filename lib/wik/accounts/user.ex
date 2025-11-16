@@ -52,6 +52,11 @@ defmodule Wik.Accounts.User do
       get_by :email
     end
 
+    create :create do
+      primary? true
+      accept [:email]
+    end
+
     create :sign_in_with_magic_link do
       description "Sign in or register a user with magic link."
 
@@ -85,6 +90,19 @@ defmodule Wik.Accounts.User do
     bypass AshAuthentication.Checks.AshAuthenticationInteraction do
       authorize_if always()
     end
+
+    policy action_type(:read) do
+      # Users can read themselves  
+      authorize_if expr(id == ^actor(:id))
+
+      # Users can read other users if they share a group  
+      authorize_if expr(
+                     exists(
+                       group_user_relations,
+                       exists(group.group_user_relations, user_id == ^actor(:id))
+                     )
+                   )
+    end
   end
 
   attributes do
@@ -93,6 +111,12 @@ defmodule Wik.Accounts.User do
     attribute :email, :ci_string do
       allow_nil? false
       public? true
+    end
+  end
+
+  relationships do
+    has_many :group_user_relations, Wik.Accounts.GroupUserRelation do
+      destination_attribute :user_id
     end
   end
 

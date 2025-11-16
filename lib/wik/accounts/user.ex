@@ -6,6 +6,10 @@ defmodule Wik.Accounts.User do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshAuthentication]
 
+  defimpl String.Chars do
+    def to_string(user), do: user.email |> Ash.CiString.value()
+  end
+
   authentication do
     add_ons do
       log_out_everywhere do

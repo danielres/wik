@@ -35,6 +35,13 @@ defmodule WikWeb.Router do
       #
       # If an authenticated user must *not* be present:
       # on_mount {WikWeb.LiveUserAuth, :live_no_user}
+
+      live "/groups", GroupLive.Index, :index
+      live "/groups/new", GroupLive.Form, :new
+      live "/groups/:id/edit", GroupLive.Form, :edit
+
+      live "/groups/:id", GroupLive.Show, :show
+      live "/groups/:id/show/edit", GroupLive.Show, :edit
     end
   end
 

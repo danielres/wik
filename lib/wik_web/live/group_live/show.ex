@@ -34,9 +34,43 @@ defmodule WikWeb.GroupLive.Show do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
+    group = reload_group(id, socket)
+
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Wik.PubSub, "group:updated:#{group.id}")
+      Phoenix.PubSub.subscribe(Wik.PubSub, "group:destroyed:#{group.id}")
+    end
+
     {:ok,
      socket
      |> assign(:page_title, "Show Group")
-     |> assign(:group, Ash.get!(Wik.Accounts.Group, id, actor: socket.assigns.current_user))}
+     |> assign(:group, group)}
+  end
+
+  defp reload_group(group_id, socket) do
+    Ash.get!(Wik.Accounts.Group, group_id, actor: socket.assigns.current_user)
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
+    updated_group = reload_group(payload.data.id, socket)
+
+    socket =
+      socket
+      |> put_flash(:info, "#{payload.actor.email} just updated this group")
+      |> assign(:group, updated_group)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
+    title = payload.data.title
+    email = payload.actor.email
+
+    {:noreply,
+     socket
+     |> put_flash(:info, ~s(Group "#{title}" was just deleted by #{email}))
+     |> push_navigate(to: ~p"/groups")}
   end
 end

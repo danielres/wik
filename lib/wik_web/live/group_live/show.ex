@@ -30,7 +30,7 @@ defmodule WikWeb.GroupLive.Show do
           {@group.text}
         </:item>
 
-        <:item title="Author">{@group.author_id}</:item>
+        <:item title="Author">{@group.author |> to_string}</:item>
       </.list>
     </Layouts.app>
     """
@@ -53,7 +53,7 @@ defmodule WikWeb.GroupLive.Show do
   end
 
   defp reload_group!(group_id, socket) do
-    Ash.get!(Wik.Accounts.Group, group_id, actor: socket.assigns.current_user)
+    Ash.get!(Wik.Accounts.Group, group_id, actor: socket.assigns.current_user, load: [:author])
   end
 
   @impl true

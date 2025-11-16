@@ -38,7 +38,7 @@ defmodule WikWeb.GroupLive.Show do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    group = reload_group(id, socket)
+    group = reload_group!(id, socket)
 
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:updated:#{group.id}")
@@ -52,13 +52,13 @@ defmodule WikWeb.GroupLive.Show do
      |> assign(:group, group)}
   end
 
-  defp reload_group(group_id, socket) do
+  defp reload_group!(group_id, socket) do
     Ash.get!(Wik.Accounts.Group, group_id, actor: socket.assigns.current_user)
   end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
-    updated_group = reload_group(payload.data.id, socket)
+    updated_group = reload_group!(payload.data.id, socket)
     updated_fields = Map.keys(payload.changeset.attributes)
 
     if(updated_fields == []) do

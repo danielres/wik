@@ -30,7 +30,7 @@ defmodule WikWeb.GroupLive.Index do
         <:col :let={{_id, group}} label="Id">{group.id}</:col>
         <:col :let={{_id, group}} label="Title">{group.title}</:col>
         <:col :let={{_id, group}} label="Text">{group.text}</:col>
-        <:col :let={{_id, group}} label="Author">{group.author_id}</:col>
+        <:col :let={{_id, group}} label="Author">{group.author |> to_string()}</:col>
 
         <:action :let={{_id, group}}>
           <div class="sr-only">
@@ -65,8 +65,7 @@ defmodule WikWeb.GroupLive.Index do
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:destroyed")
     end
 
-    groups =
-      Ash.read!(Wik.Accounts.Group, actor: socket.assigns[:current_user])
+    groups = reload_groups!(socket)
 
     {:ok,
      socket
@@ -74,6 +73,14 @@ defmodule WikWeb.GroupLive.Index do
      |> assign(:highlighted_group_ids, MapSet.new())
      |> assign_new(:current_user, fn -> nil end)
      |> stream(:groups, groups)}
+  end
+
+  defp reload_groups!(socket) do
+    Wik.Accounts.Group |> Ash.read!(actor: socket.assigns[:current_user], load: [:author])
+  end
+
+  defp reload_group!(socket, id) do
+    Wik.Accounts.Group |> Ash.get!(id, actor: socket.assigns.current_user, load: [:author])
   end
 
   @impl true
@@ -112,7 +119,7 @@ defmodule WikWeb.GroupLive.Index do
 
     {:noreply,
      socket
-     |> stream_insert(:groups, payload.data)
+     |> stream_insert(:groups, reload_group!(socket, payload.data.id))
      |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))
      |> put_flash(:info, msg)}
   end

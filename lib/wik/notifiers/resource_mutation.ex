@@ -13,7 +13,6 @@ defmodule Wik.Notifiers.ResourceMutation do
 
     if updated_fields != [] do
       resource_name = resource_name(resource)
-      topic = "#{resource_name}:updated:#{data.id}"
 
       payload = %{
         data: data,
@@ -21,11 +20,23 @@ defmodule Wik.Notifiers.ResourceMutation do
         actor: actor
       }
 
+      # Broadcast to specific item topic (for show pages)  
       Phoenix.PubSub.broadcast(
         Wik.PubSub,
-        topic,
+        "#{resource_name}:updated:#{data.id}",
         %Phoenix.Socket.Broadcast{
-          topic: topic,
+          topic: "#{resource_name}:updated:#{data.id}",
+          event: "update",
+          payload: payload
+        }
+      )
+
+      # Also broadcast to collection topic (for index pages)  
+      Phoenix.PubSub.broadcast(
+        Wik.PubSub,
+        "#{resource_name}:updated",
+        %Phoenix.Socket.Broadcast{
+          topic: "#{resource_name}:updated",
           event: "update",
           payload: payload
         }
@@ -42,15 +53,25 @@ defmodule Wik.Notifiers.ResourceMutation do
         actor: actor
       }) do
     resource_name = resource_name(resource)
-    topic = "#{resource_name}:created:#{data.id}"
+    payload = %{data: data, actor: actor}
 
     Phoenix.PubSub.broadcast(
       Wik.PubSub,
-      topic,
+      "#{resource_name}:created:#{data.id}",
       %Phoenix.Socket.Broadcast{
-        topic: topic,
+        topic: "#{resource_name}:created:#{data.id}",
         event: "create",
-        payload: %{data: data, actor: actor}
+        payload: payload
+      }
+    )
+
+    Phoenix.PubSub.broadcast(
+      Wik.PubSub,
+      "#{resource_name}:created",
+      %Phoenix.Socket.Broadcast{
+        topic: "#{resource_name}:created",
+        event: "create",
+        payload: payload
       }
     )
   end
@@ -62,15 +83,25 @@ defmodule Wik.Notifiers.ResourceMutation do
         actor: actor
       }) do
     resource_name = resource_name(resource)
-    topic = "#{resource_name}:destroyed:#{data.id}"
+    payload = %{data: data, actor: actor}
 
     Phoenix.PubSub.broadcast(
       Wik.PubSub,
-      topic,
+      "#{resource_name}:destroyed:#{data.id}",
       %Phoenix.Socket.Broadcast{
-        topic: topic,
+        topic: "#{resource_name}:destroyed:#{data.id}",
         event: "destroy",
-        payload: %{data: data, actor: actor}
+        payload: payload
+      }
+    )
+
+    Phoenix.PubSub.broadcast(
+      Wik.PubSub,
+      "#{resource_name}:destroyed",
+      %Phoenix.Socket.Broadcast{
+        topic: "#{resource_name}:destroyed",
+        event: "destroy",
+        payload: payload
       }
     )
   end

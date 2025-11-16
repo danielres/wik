@@ -1,6 +1,4 @@
 defmodule Wik.Accounts.GroupTest do
-  use ExUnit.Case, async: true
-
   use Wik.DataCase, async: true
 
   test "creates group with actor as author and member" do

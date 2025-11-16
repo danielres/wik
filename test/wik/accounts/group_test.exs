@@ -1,9 +1,10 @@
 defmodule Wik.Accounts.GroupTest do
   use Wik.DataCase, async: true
+  import Wik.Generator
 
   test "creates group with actor as author and member" do
-    user = create_user!()
-    group = user |> create_group!(authorize?: false)
+    user = generate(user(authorize?: false))
+    group = generate(group(actor: user, authorize?: false))
 
     assert group.author_id == user.id
 
@@ -26,9 +27,9 @@ defmodule Wik.Accounts.GroupTest do
   end
 
   test "only members can read group" do
-    user1 = create_user!()
-    user2 = create_user!()
-    group = create_group!(user1)
+    user1 = generate(user(authorize?: false))
+    user2 = generate(user(authorize?: false))
+    group = generate(group(actor: user1))
 
     # User1 (member) can read
     assert {:ok, _} = Wik.Accounts.Group |> Ash.get(group.id, actor: user1)
@@ -39,9 +40,8 @@ defmodule Wik.Accounts.GroupTest do
   end
 
   test "destroying group removes memberships but not users" do
-    user = create_user!()
-
-    group = user |> create_group!(authorize?: false)
+    user = generate(user(authorize?: false))
+    group = generate(group(actor: user, authorize: false))
 
     # Verify membership exists
     memberships = Ash.read!(Wik.Accounts.GroupUserRelation)
@@ -59,10 +59,10 @@ defmodule Wik.Accounts.GroupTest do
   end
 
   test "only author can add and remove members" do
-    user1 = create_user!()
-    user2 = create_user!()
-    user3 = create_user!()
-    group = create_group!(user1)
+    user1 = generate(user(authorize?: false))
+    user2 = generate(user(authorize?: false))
+    user3 = generate(user(authorize?: false))
+    group = generate(group(actor: user1))
 
     # user1 (author) can add user2 as member 
     group =
@@ -103,29 +103,5 @@ defmodule Wik.Accounts.GroupTest do
 
     assert length(group.users) == 1
     assert hd(group.users).id == user1.id
-  end
-
-  defp create_user! do
-    Wik.Accounts.User
-    |> Ash.Changeset.for_create(:create, %{
-      email: "user#{System.unique_integer()}@example.com"
-    })
-    |> Ash.create!(authorize?: false)
-  end
-
-  defp create_group!(user, opts \\ [], attrs \\ %{}) do
-    default_attrs = %{title: "Group #{System.unique_integer()}", text: "Description"}
-    attrs = Map.merge(default_attrs, attrs)
-
-    default_opts = [authorize?: true]
-    opts = Keyword.merge(default_opts, opts)
-
-    Wik.Accounts.Group
-    |> Ash.Changeset.for_create(
-      :create,
-      attrs,
-      Keyword.merge([actor: user], opts)
-    )
-    |> Ash.create!()
   end
 end

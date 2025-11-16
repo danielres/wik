@@ -91,7 +91,7 @@ defmodule WikWeb.GroupLive.Index do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "create", payload: payload}, socket) do
-    msg = ~s(Group "#{payload.data.title}" was just created by #{payload.actor.email})
+    msg = ~s(Group "#{payload.data.title}" was just created by #{payload.actor})
     Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
 
     {:noreply,
@@ -103,7 +103,7 @@ defmodule WikWeb.GroupLive.Index do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
-    msg = ~s(Group "#{payload.data.title}" was just deleted by #{payload.actor.email})
+    msg = ~s(Group "#{payload.data.title}" was just deleted by #{payload.actor})
 
     {:noreply,
      socket
@@ -113,7 +113,7 @@ defmodule WikWeb.GroupLive.Index do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
-    msg = ~s(Group "#{payload.data.title}" was just updated by #{payload.actor.email})
+    msg = ~s(Group "#{payload.data.title}" was just updated by #{payload.actor})
     Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
 
     {:noreply,

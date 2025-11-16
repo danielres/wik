@@ -68,7 +68,7 @@ defmodule WikWeb.GroupLive.Show do
 
       socket =
         socket
-        |> put_flash(:info, "#{payload.actor.email} just updated this group")
+        |> put_flash(:info, "#{payload.actor} just updated this group")
         |> assign(:group, updated_group)
         |> assign(:updated_fields, updated_fields)
 
@@ -84,11 +84,10 @@ defmodule WikWeb.GroupLive.Show do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
     title = payload.data.title
-    email = payload.actor.email
 
     {:noreply,
      socket
-     |> put_flash(:info, ~s(Group "#{title}" was just deleted by #{email}))
+     |> put_flash(:info, ~s(Group "#{title}" was just deleted by #{payload.actor}))
      |> push_navigate(to: ~p"/groups")}
   end
 end

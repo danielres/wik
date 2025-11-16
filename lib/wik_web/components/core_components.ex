@@ -321,6 +321,10 @@ defmodule WikWeb.CoreComponents do
     default: &Function.identity/1,
     doc: "the function for mapping each row before calling the :col and :action slots"
 
+  attr :row_class, :any,
+    default: nil,
+    doc: "the function for generating row classes"
+
   slot :col, required: true do
     attr :label, :string
   end
@@ -344,7 +348,11 @@ defmodule WikWeb.CoreComponents do
         </tr>
       </thead>
       <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
+        <tr 
+          :for={row <- @rows} 
+          id={@row_id && @row_id.(row)} 
+          class={@row_class && @row_class.(row)}
+          >
           <td
             :for={col <- @col}
             phx-click={@row_click && @row_click.(row)}

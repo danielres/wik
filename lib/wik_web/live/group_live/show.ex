@@ -13,11 +13,31 @@ defmodule WikWeb.GroupLive.Show do
           <.button navigate={~p"/groups"}>
             <.icon name="hero-arrow-left" />
           </.button>
-          <.button variant="primary" navigate={~p"/groups/#{@group}/edit?return_to=show"}>
-            <.icon name="hero-pencil-square" /> Edit Group
-          </.button>
+
+          <%= if Ash.can?({@group, :update}, @current_user) do %>
+            <.button variant="primary" patch={~p"/groups/#{@group}/edit"}>
+              <.icon name="hero-pencil-square" /> Edit Group
+            </.button>
+          <% end %>
         </:actions>
       </.header>
+
+      <.live_component
+        module={WikWeb.Components.Generic.Modal}
+        mandatory?
+        id="user-tz-selector-modal"
+        open?={@live_action == :edit}
+        phx-click-close={JS.patch(~p"/groups/#{@group.id}")}
+      >
+        <.live_component
+          module={WikWeb.Components.Group.Form}
+          id={ "form-group-#{@group.id}" }
+          group={@group}
+          actor={@current_user}
+          return_to={~p"/groups/#{@group.id}"}
+        >
+        </.live_component>
+      </.live_component>
 
       <.list>
         <:item title="Id">{@group.id}</:item>
@@ -50,6 +70,11 @@ defmodule WikWeb.GroupLive.Show do
      |> assign(:page_title, "Show Group")
      |> assign(:updated_fields, [])
      |> assign(:group, group)}
+  end
+
+  @impl true
+  def handle_params(_params, _url, socket) do
+    {:noreply, socket}
   end
 
   defp reload_group!(group_id, socket) do

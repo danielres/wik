@@ -60,37 +60,47 @@ defmodule Wik.Accounts.GroupTest do
     assert Ash.get!(Wik.Accounts.User, user.id, authorize?: false)
   end
 
-  test "can add and remove members" do
-    # TODO: ensure that only a group author can add/remove members
+  test "only author can add and remove members" do
     user1 = create_user!()
     user2 = create_user!()
-
+    user3 = create_user!()
     group = create_group!(user1)
 
-    # Add user2 as member - include BOTH users
+    # user1 (author) can add user2 as member 
     group =
       group
       |> Ash.Changeset.for_update(:update, %{}, actor: user1)
-      # Include both!
-      |> Ash.Changeset.manage_relationship(:users, [user1, user2],
-        type: :append_and_remove,
+      |> Ash.Changeset.manage_relationship(:users, [user2],
+        type: :append,
+        # Still needed for the relationship management itself
         authorize?: false
       )
-      |> Ash.update!()
+      # But authorize the update action
+      |> Ash.update!(authorize?: true)
       |> Ash.load!(:users, authorize?: false)
 
     assert length(group.users) == 2
 
-    # Remove user2 - keep only user1
+    # user2 (non-author) CANNOT add user3 as member
+    assert_raise Ash.Error.Forbidden, fn ->
+      group
+      |> Ash.Changeset.for_update(:update, %{}, actor: user2)
+      |> Ash.Changeset.manage_relationship(:users, [user3],
+        type: :append,
+        authorize?: false
+      )
+      |> Ash.update!(authorize?: true)
+    end
+
+    # user1 (author) can remove user2 - keep only user1
     group =
       group
       |> Ash.Changeset.for_update(:update, %{}, actor: user1)
-      # Only user1 now
-      |> Ash.Changeset.manage_relationship(:users, [user1],
-        type: :append_and_remove,
+      |> Ash.Changeset.manage_relationship(:users, [user2],
+        type: :remove,
         authorize?: false
       )
-      |> Ash.update!()
+      |> Ash.update!(authorize?: true)
       |> Ash.load!(:users, authorize?: false)
 
     assert length(group.users) == 1

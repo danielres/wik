@@ -18,13 +18,15 @@ defmodule WikWeb.GroupLive.Index do
         id="groups"
         rows={@streams.groups}
         row_click={fn {_id, group} -> JS.navigate(~p"/groups/#{group}") end}
+        row_class={
+          fn {_id, group} ->
+            (group.id in @highlighted_group_ids && "animate-fade-out") || nil
+          end
+        }
       >
         <:col :let={{_id, group}} label="Id">{group.id}</:col>
-
         <:col :let={{_id, group}} label="Title">{group.title}</:col>
-
         <:col :let={{_id, group}} label="Text">{group.text}</:col>
-
         <:col :let={{_id, group}} label="Author">{group.author_id}</:col>
 
         <:action :let={{_id, group}}>
@@ -35,9 +37,9 @@ defmodule WikWeb.GroupLive.Index do
           <.link navigate={~p"/groups/#{group}/edit"}>Edit</.link>
         </:action>
 
-        <:action :let={{id, group}}>
+        <:action :let={{_id, group}}>
           <.link
-            phx-click={JS.push("delete", value: %{id: group.id}) |> hide("##{id}")}
+            phx-click={JS.push("delete", value: %{id: group.id})}
             data-confirm="Are you sure?"
           >
             Delete
@@ -50,18 +52,66 @@ defmodule WikWeb.GroupLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Wik.PubSub, "group:created")
+      Phoenix.PubSub.subscribe(Wik.PubSub, "group:updated")
+      Phoenix.PubSub.subscribe(Wik.PubSub, "group:destroyed")
+    end
+
+    groups =
+      Ash.read!(Wik.Accounts.Group, actor: socket.assigns[:current_user])
+
     {:ok,
      socket
      |> assign(:page_title, "Listing Groups")
+     |> assign(:highlighted_group_ids, MapSet.new())
      |> assign_new(:current_user, fn -> nil end)
-     |> stream(:groups, Ash.read!(Wik.Accounts.Group, actor: socket.assigns[:current_user]))}
+     |> stream(:groups, groups)}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     group = Ash.get!(Wik.Accounts.Group, id, actor: socket.assigns.current_user)
     Ash.destroy!(group, actor: socket.assigns.current_user)
+    {:noreply, socket}
+  end
 
-    {:noreply, stream_delete(socket, :groups, group)}
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "create", payload: payload}, socket) do
+    msg = ~s(Group "#{payload.data.title}" was just created by #{payload.actor.email})
+    Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
+
+    {:noreply,
+     socket
+     |> stream_insert(:groups, payload.data, at: 0)
+     |> put_flash(:info, msg)
+     |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
+    msg = ~s(Group "#{payload.data.title}" was just deleted by #{payload.actor.email})
+
+    {:noreply,
+     socket
+     |> stream_delete(:groups, payload.data)
+     |> put_flash(:info, msg)}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
+    msg = ~s(Group "#{payload.data.title}" was just updated by #{payload.actor.email})
+    Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
+
+    {:noreply,
+     socket
+     |> stream_insert(:groups, payload.data)
+     |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))
+     |> put_flash(:info, msg)}
+  end
+
+  @impl true
+  def handle_info({:clear_highlight, group_id}, socket) do
+    {:noreply, update(socket, :highlighted_group_ids, &MapSet.delete(&1, group_id))}
   end
 end

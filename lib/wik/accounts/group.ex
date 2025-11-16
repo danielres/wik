@@ -3,7 +3,8 @@ defmodule Wik.Accounts.Group do
     otp_app: :wik,
     domain: Wik.Accounts,
     authorizers: [Ash.Policy.Authorizer],
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    notifiers: [Ash.Notifier.PubSub]
 
   postgres do
     table "groups"
@@ -61,6 +62,15 @@ defmodule Wik.Accounts.Group do
     policy action_type(:destroy) do
       authorize_if relates_to_actor_via(:author)
     end
+  end
+
+  pub_sub do
+    module WikWeb.Endpoint
+    prefix "group"
+
+    publish :create, ["created", :id]
+    publish :update, ["updated", :id], previous_values?: true
+    publish :destroy, ["destroyed", :id], previous_values?: true
   end
 
   attributes do

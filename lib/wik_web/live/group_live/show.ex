@@ -22,9 +22,13 @@ defmodule WikWeb.GroupLive.Show do
       <.list>
         <:item title="Id">{@group.id}</:item>
 
-        <:item title="Title">{@group.title}</:item>
+        <:item title="Title" class={:title in @updated_fields && "animate-fade-out"}>
+          {@group.title}
+        </:item>
 
-        <:item title="Text">{@group.text}</:item>
+        <:item title="Text" class={:text in @updated_fields && "animate-fade-out"}>
+          {@group.text}
+        </:item>
 
         <:item title="Author">{@group.author_id}</:item>
       </.list>
@@ -44,6 +48,7 @@ defmodule WikWeb.GroupLive.Show do
     {:ok,
      socket
      |> assign(:page_title, "Show Group")
+     |> assign(:updated_fields, [])
      |> assign(:group, group)}
   end
 
@@ -54,13 +59,26 @@ defmodule WikWeb.GroupLive.Show do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
     updated_group = reload_group(payload.data.id, socket)
+    updated_fields = Map.keys(payload.changeset.attributes)
 
-    socket =
-      socket
-      |> put_flash(:info, "#{payload.actor.email} just updated this group")
-      |> assign(:group, updated_group)
+    if(updated_fields == []) do
+      {:noreply, socket}
+    else
+      Process.send_after(self(), :clear_updated_fields, 2000)
 
-    {:noreply, socket}
+      socket =
+        socket
+        |> put_flash(:info, "#{payload.actor.email} just updated this group")
+        |> assign(:group, updated_group)
+        |> assign(:updated_fields, updated_fields)
+
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info(:clear_updated_fields, socket) do
+    {:noreply, assign(socket, :updated_fields, [])}
   end
 
   @impl true

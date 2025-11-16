@@ -104,3 +104,13 @@
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
 /* This file is for your main application CSS */
+
+
+@theme {
+  --animate-fade-out: fade-out 2s ease-out forwards;
+
+  @keyframes fade-out {
+    0% { background-color: hsl(170 100% 70% / 10%); }
+    100% { background-color: transparent; }
+  }
+}

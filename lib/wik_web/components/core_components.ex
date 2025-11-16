@@ -377,12 +377,13 @@ defmodule WikWeb.CoreComponents do
   """
   slot :item, required: true do
     attr :title, :string, required: true
+    attr :class, :string
   end
 
   def list(assigns) do
     ~H"""
     <ul class="list">
-      <li :for={item <- @item} class="list-row">
+      <li :for={item <- @item} class={["list-row", item[:class]]}>
         <div class="list-col-grow">
           <div class="font-bold">{item.title}</div>
           <div>{render_slot(item)}</div>

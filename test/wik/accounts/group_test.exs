@@ -116,25 +116,16 @@ defmodule Wik.Accounts.GroupTest do
   end
 
   defp create_group!(user, opts \\ [], attrs \\ %{}) do
-    default_attrs = %{
-      title: "Test Group #{System.unique_integer()}",
-      text: "Test description"
-    }
-
+    default_attrs = %{title: "Group #{System.unique_integer()}", text: "Description"}
     attrs = Map.merge(default_attrs, attrs)
 
-    default_opts = [
-      authorize?: true
-    ]
-
+    default_opts = [authorize?: true]
     opts = Keyword.merge(default_opts, opts)
 
     Wik.Accounts.Group
     |> Ash.Changeset.for_create(
       :create,
-      # Use merged attrs, not default_attrs  
       attrs,
-      # Merge actor with opts  
       Keyword.merge([actor: user], opts)
     )
     |> Ash.create!()

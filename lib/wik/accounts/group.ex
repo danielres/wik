@@ -14,6 +14,7 @@ defmodule Wik.Accounts.Group do
     defaults []
 
     update :update do
+      accept [:title, :text]
       primary? true
       require_atomic? false
     end

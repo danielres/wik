@@ -6,6 +6,10 @@ defmodule Wik.Accounts.Group do
     data_layer: AshPostgres.DataLayer,
     notifiers: [Wik.Notifiers.ResourceMutation]
 
+  defimpl String.Chars do
+    def to_string(group), do: group.title
+  end
+
   postgres do
     table "groups"
     repo Wik.Repo

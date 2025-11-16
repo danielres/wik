@@ -83,11 +83,9 @@ defmodule WikWeb.GroupLive.Show do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
-    title = payload.data.title
-
     {:noreply,
      socket
-     |> put_flash(:info, ~s(Group "#{title}" was just deleted by #{payload.actor}))
+     |> put_flash(:info, ~s(Group "#{payload.data}" was just deleted by #{payload.actor}))
      |> push_navigate(to: ~p"/groups")}
   end
 end

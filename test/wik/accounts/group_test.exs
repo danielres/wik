@@ -33,14 +33,11 @@ defmodule Wik.Accounts.GroupTest do
     group = create_group!(user1)
 
     # User1 (member) can read
-    assert {:ok, _} = Ash.get(Wik.Accounts.Group, group.id, actor: user1)
+    assert {:ok, _} = Wik.Accounts.Group |> Ash.get(group.id, actor: user1)
 
-    # # User2 (non-member) cannot read
-    # assert {:error, %Ash.Error.Forbidden{}} =
-    #          Ash.get(Wik.Accounts.Group, group.id, actor: user2, authorize?: true)
-    # User2 (non-member) gets NotFound instead of Forbidden
-    assert {:error, %Ash.Error.Invalid{}} =
-             Ash.get(Wik.Accounts.Group, group.id, actor: user2, authorize?: true)
+    # User2 (non-member) cannot read
+    {:error, error} = Wik.Accounts.Group |> Ash.get(group.id, actor: user2)
+    assert %Ash.Error.Invalid{errors: [%Ash.Error.Query.NotFound{} | _]} = error
   end
 
   test "destroying group removes memberships but not users" do

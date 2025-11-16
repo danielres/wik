@@ -32,13 +32,7 @@ defmodule WikWeb.GroupLive.Index do
         <:col :let={{_id, group}} label="Author">{group.author |> to_string}</:col>
 
         <:action :let={{_id, group}}>
-          <div class="sr-only">
-            <.link navigate={~p"/groups/#{group}"}>Show</.link>
-          </div>
-
-          <%= if Ash.can?({group, :update}, @current_user) do %>
-            <.link navigate={~p"/groups/#{group}/edit"}>Edit</.link>
-          <% end %>
+          <.link navigate={~p"/groups/#{group}"}>Show</.link>
         </:action>
 
         <:action :let={{_id, group}}>

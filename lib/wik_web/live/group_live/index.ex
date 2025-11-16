@@ -9,9 +9,11 @@ defmodule WikWeb.GroupLive.Index do
       <.header>
         Listing Groups
         <:actions>
-          <.button variant="primary" navigate={~p"/groups/new"}>
-            <.icon name="hero-plus" /> New Group
-          </.button>
+          <%= if Ash.can?({Wik.Accounts.Group, :create}, @current_user) do %>
+            <.button variant="primary" navigate={~p"/groups/new"}>
+              <.icon name="hero-plus" /> New Group
+            </.button>
+          <% end %>
         </:actions>
       </.header>
 
@@ -35,16 +37,20 @@ defmodule WikWeb.GroupLive.Index do
             <.link navigate={~p"/groups/#{group}"}>Show</.link>
           </div>
 
-          <.link navigate={~p"/groups/#{group}/edit"}>Edit</.link>
+          <%= if Ash.can?({group, :update}, @current_user) do %>
+            <.link navigate={~p"/groups/#{group}/edit"}>Edit</.link>
+          <% end %>
         </:action>
 
         <:action :let={{_id, group}}>
-          <.link
-            phx-click={JS.push("delete", value: %{id: group.id})}
-            data-confirm="Are you sure?"
-          >
-            Delete
-          </.link>
+          <%= if Ash.can?({group, :destroy}, @current_user) do %>
+            <.link
+              phx-click={JS.push("delete", value: %{id: group.id})}
+              data-confirm="Are you sure?"
+            >
+              Delete
+            </.link>
+          <% end %>
         </:action>
       </.table>
     </Layouts.app>

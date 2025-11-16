@@ -27,7 +27,6 @@ defmodule WikWeb.GroupLive.Index do
           end
         }
       >
-        <:col :let={{_id, group}} label="Id">{group.id}</:col>
         <:col :let={{_id, group}} label="Title">{group.title}</:col>
         <:col :let={{_id, group}} label="Text">{group.text}</:col>
         <:col :let={{_id, group}} label="Author">{group.author |> to_string()}</:col>

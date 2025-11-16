@@ -1,11 +1,7 @@
 defmodule Wik.Accounts.GroupTest do
   use ExUnit.Case, async: true
 
-  setup do
-    # Checkout a connection for this test
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Wik.Repo)
-    :ok
-  end
+  use Wik.DataCase, async: true
 
   test "creates group with actor as author and member" do
     user = create_user!()

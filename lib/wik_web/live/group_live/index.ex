@@ -29,7 +29,7 @@ defmodule WikWeb.GroupLive.Index do
       >
         <:col :let={{_id, group}} label="Title">{group.title}</:col>
         <:col :let={{_id, group}} label="Text">{group.text}</:col>
-        <:col :let={{_id, group}} label="Author">{group.author |> to_string()}</:col>
+        <:col :let={{_id, group}} label="Author">{group.author |> to_string}</:col>
 
         <:action :let={{_id, group}}>
           <div class="sr-only">

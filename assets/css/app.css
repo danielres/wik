@@ -2,6 +2,7 @@
    https://tailwindcss.com/docs/configuration */
 
 @import "tailwindcss" source(none);
+@import "../../deps/toast/assets/css/toast.css";
 @source "../../deps/ash_authentication_phoenix";
 @source "../css";
 @source "../js";
@@ -16,6 +17,7 @@
    Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
 @plugin "../vendor/daisyui" {
   themes: false;
+  exclude: toast;
 }
 
 /* daisyUI theme plugin. You can update this file by fetching the latest version with:
@@ -114,3 +116,36 @@
     100% { background-color: transparent; }
   }
 }
+
+@keyframes toast-fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+[data-theme="dark"] { 
+  .toast-success {
+    --bg: var(--color-success);
+    --fg: var(--color-success-content);
+  }
+  .toast-info {
+    --bg: var(--color-info);
+    --fg: var(--color-info-content);
+  }
+  .toast {
+    border-width: 3px;
+    --toast-bg: color-mix(in oklab, var(--bg) 70%, var(--color-neutral));
+    --toast-color: var(--fg);
+    --toast-icon-color: color-mix(in oklab, var(--fg) 50%, var(--bg));
+    --toast-border: color-mix(in oklab, var(--bg) 90%, var(--color-neutral));
+    &:hover {
+      --toast-bg: color-mix(in oklab, var(--bg) 90%, var(--color-neutral));
+      --toast-border: color-mix(in oklab, var(--bg) 100%, var(--color-neutral));
+    }
+    animation: toast-fade-out 600ms ease-out 5s forwards; 
+  }
+  .toast-close {
+    color: var(--fg);
+    @apply opacity-50 hover:opacity-100 transition-opacity;
+  } 
+}
+

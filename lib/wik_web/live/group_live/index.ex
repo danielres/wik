@@ -119,6 +119,11 @@ defmodule WikWeb.GroupLive.Index do
 
   @impl true
   def handle_info({:clear_highlight, group_id}, socket) do
-    {:noreply, update(socket, :highlighted_group_ids, &MapSet.delete(&1, group_id))}
+    group = reload_group!(socket, group_id)
+
+    {:noreply,
+     socket
+     |> update(:highlighted_group_ids, &MapSet.delete(&1, group_id))
+     |> stream_insert(:groups, group)}
   end
 end

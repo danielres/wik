@@ -68,7 +68,7 @@ defmodule WikWeb.Layouts do
       </div>
     </main>
 
-    <.flash_group flash={@flash} />
+    <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
     """
   end
 

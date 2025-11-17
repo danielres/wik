@@ -40,7 +40,8 @@ defmodule WikWeb.GroupLive.Index do
         row_click={fn {_id, group} -> JS.navigate(~p"/groups/#{group}") end}
         row_class={
           fn {_id, group} ->
-            (group.id in @highlighted_group_ids && "animate-fade-out") || nil
+            (group.id in @highlighted_group_ids && "animate-fade-out") ||
+              "hover:bg-base-200 transition"
           end
         }
       >
@@ -48,9 +49,9 @@ defmodule WikWeb.GroupLive.Index do
         <:col :let={{_id, group}} label="Text">{group.text}</:col>
         <:col :let={{_id, group}} label="Author">{group.author |> to_string}</:col>
 
-        <:action :let={{_id, group}}>
-          <.link navigate={~p"/groups/#{group}"}>Show</.link>
-        </:action>
+        {# <:action :let={{_id, group}}> }
+        {#   <.link navigate={~p"/groups/#{group}"}>Show</.link> }
+        {# </:action> }
 
         <:action :let={{_id, group}}>
           <%= if Ash.can?({group, :destroy}, @current_user) do %>
@@ -58,7 +59,7 @@ defmodule WikWeb.GroupLive.Index do
               phx-click={JS.push("delete", value: %{id: group.id})}
               data-confirm="Are you sure?"
             >
-              Delete
+              <.icon name="hero-trash" />
             </.link>
           <% end %>
         </:action>

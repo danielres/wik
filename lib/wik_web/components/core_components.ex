@@ -338,7 +338,7 @@ defmodule WikWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
+    <table class="table">
       <thead>
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>

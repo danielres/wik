@@ -54,9 +54,11 @@ defmodule WikWeb.OnlineUsersLive do
 
   def render(assigns) do
     ~H"""
-    <ul id="online_users" phx-update="stream">
+    <ul id="online_users" phx-update="stream" class="space-y-8">
       <li :for={{dom_id, %{id: _id, metas: metas}} <- @streams.presences} id={dom_id}>
-        {List.first(metas).username} <sup>{length(deduplicate_metas(metas))}</sup>
+        <div class="font-semibold">
+          {List.first(metas).username} <sup>{length(deduplicate_metas(metas))}</sup>
+        </div>
         <ul class="pl-4">
           <li :for={meta <- deduplicate_metas(metas)}>
             <.link patch={meta.path |> remove_path_suffix()}>

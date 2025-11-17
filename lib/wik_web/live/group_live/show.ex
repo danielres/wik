@@ -7,18 +7,23 @@ defmodule WikWeb.GroupLive.Show do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
-        Group {@group.id}
-        <:subtitle>This is a group record from your database.</:subtitle>
+        <.link class="opacity-50 hover:opacity-100 transition" navigate={~p"/groups"}>
+          <.icon name="hero-arrow-left" />
+        </.link>
+        <div class={:title in @updated_fields && "animate-fade-out"}>
+          {@group.title}
+        </div>
+
+        <:subtitle>Group by {@group.author |> to_string}</:subtitle>
 
         <:actions>
-          <.button navigate={~p"/groups"}>
-            <.icon name="hero-arrow-left" />
-          </.button>
-
           <%= if Ash.can?({@group, :update}, @current_user) do %>
-            <.button variant="primary" patch={~p"/groups/#{@group}/edit"}>
-              <.icon name="hero-pencil-square" /> Edit Group
-            </.button>
+            <.link
+              class="btn btn-neutral btn-circle hover:btn-primary"
+              patch={~p"/groups/#{@group}/edit"}
+            >
+              <.icon name="hero-pencil-square" />
+            </.link>
           <% end %>
         </:actions>
       </.header>
@@ -40,19 +45,12 @@ defmodule WikWeb.GroupLive.Show do
         </.live_component>
       </.live_component>
 
-      <.list>
-        <:item title="Id">{@group.id}</:item>
-
-        <:item title="Title" class={:title in @updated_fields && "animate-fade-out"}>
-          {@group.title}
-        </:item>
-
-        <:item title="Text" class={:text in @updated_fields && "animate-fade-out"}>
-          {@group.text}
-        </:item>
-
-        <:item title="Author">{@group.author |> to_string}</:item>
-      </.list>
+      <div class={[
+        "border-l-4 border-base-content/30 pl-4",
+        :text in @updated_fields && "animate-fade-out"
+      ]}>
+        {@group.text}
+      </div>
 
       <:aside>
         {live_render(@socket, WikWeb.OnlineUsersLive, id: "online-users")}

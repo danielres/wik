@@ -1,6 +1,8 @@
 defmodule WikWeb.HomeLive do
   use WikWeb, :live_view
 
+  on_mount {WikWeb.LiveUserAuth, :live_user_required}
+
   @impl true
   def render(assigns) do
     ~H"""

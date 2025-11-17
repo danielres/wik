@@ -7,7 +7,10 @@ defmodule Wik.Accounts.User do
     extensions: [AshAuthentication]
 
   defimpl String.Chars do
-    def to_string(user), do: user.email |> Ash.CiString.value()
+    def to_string(user) do
+      [username, _] = Kernel.to_string(user.email) |> String.split("@", parts: 2)
+      username
+    end
   end
 
   authentication do

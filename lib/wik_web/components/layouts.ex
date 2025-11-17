@@ -26,7 +26,7 @@ defmodule WikWeb.Layouts do
 
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
-  attr :ctx, :any 
+  attr :ctx, :any
 
   attr :current_scope, :map,
     default: nil,
@@ -47,7 +47,11 @@ defmodule WikWeb.Layouts do
         <ul class="flex flex-column px-1 space-x-4 items-center">
           <li>
             {@ctx.current_user |> to_string}
-          </li><li>
+          </li>
+          <li>
+            <.link navigate={~p"/sign-out"}>sign-out</.link>
+          </li>
+          <li>
             <.theme_toggle />
           </li>
         </ul>

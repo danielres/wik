@@ -109,10 +109,10 @@
 
 
 @theme {
-  --animate-fade-out: fade-out 2s ease-out forwards;
+  --animate-fade-out: fade-out 3s ease-out forwards;
 
   @keyframes fade-out {
-    0% { background-color: hsl(170 100% 70% / 10%); }
+    0% { background-color: hsl(68 100% 85% / 20%); }
     100% { background-color: transparent; }
   }
 }

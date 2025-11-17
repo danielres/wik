@@ -4,7 +4,7 @@ defmodule WikWeb.GroupLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
         Group {@group.id}
         <:subtitle>This is a group record from your database.</:subtitle>
@@ -69,6 +69,7 @@ defmodule WikWeb.GroupLive.Show do
      socket
      |> assign(:page_title, "Show Group")
      |> assign(:updated_fields, [])
+     |> assign(:ctx, %{current_user: socket.assigns.current_user})
      |> assign(:group, group)}
   end
 

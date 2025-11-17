@@ -5,7 +5,7 @@ defmodule WikWeb.GroupLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
         Listing Groups
         <:actions>
@@ -81,7 +81,7 @@ defmodule WikWeb.GroupLive.Index do
      socket
      |> assign(:page_title, "Listing Groups")
      |> assign(:highlighted_group_ids, MapSet.new())
-     |> assign_new(:current_user, fn -> nil end)
+     |> assign(:ctx, %{current_user: socket.assigns.current_user})
      |> stream(:groups, groups)}
   end
 

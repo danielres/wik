@@ -37,7 +37,7 @@ defmodule WikWeb.Router do
       # on_mount {WikWeb.LiveUserAuth, :live_no_user}
 
       live "/groups", GroupLive.Index, :index
-      live "/groups/new", GroupLive.Form, :new
+      live "/groups/new", GroupLive.Index, :new
       live "/groups/:id", GroupLive.Show, :show
       live "/groups/:id/edit", GroupLive.Show, :edit
     end

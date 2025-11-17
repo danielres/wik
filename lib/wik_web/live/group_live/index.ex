@@ -17,6 +17,23 @@ defmodule WikWeb.GroupLive.Index do
         </:actions>
       </.header>
 
+      <.live_component
+        module={WikWeb.Components.Generic.Modal}
+        mandatory?
+        id="user-tz-selector-modal"
+        open?={@live_action == :new}
+        phx-click-close={JS.patch(~p"/groups")}
+      >
+        <.live_component
+          module={WikWeb.Components.Group.Form}
+          id="form-group-new"
+          group={nil}
+          actor={@current_user}
+          return_to={~p"/groups"}
+        >
+        </.live_component>
+      </.live_component>
+
       <.table
         id="groups"
         rows={@streams.groups}
@@ -66,6 +83,11 @@ defmodule WikWeb.GroupLive.Index do
      |> assign(:highlighted_group_ids, MapSet.new())
      |> assign_new(:current_user, fn -> nil end)
      |> stream(:groups, groups)}
+  end
+
+  @impl true
+  def handle_params(_params, _url, socket) do
+    {:noreply, socket}
   end
 
   defp reload_groups!(socket) do

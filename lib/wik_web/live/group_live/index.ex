@@ -7,12 +7,12 @@ defmodule WikWeb.GroupLive.Index do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
-        Listing Groups
+        Your groups
         <:actions>
           <%= if Ash.can?({Wik.Accounts.Group, :create}, @current_user) do %>
-            <.button variant="primary" navigate={~p"/groups/new"}>
-              <.icon name="hero-plus" /> New Group
-            </.button>
+            <.link class="btn btn-neutral btn-circle hover:btn-primary" navigate={~p"/groups/new"}>
+              <.icon name="hero-plus" />
+            </.link>
           <% end %>
         </:actions>
       </.header>
@@ -88,7 +88,7 @@ defmodule WikWeb.GroupLive.Index do
 
     {:ok,
      socket
-     |> assign(:page_title, "Listing Groups")
+     |> assign(:page_title, "Your groups")
      |> assign(:highlighted_group_ids, MapSet.new())
      |> assign(:ctx, %{current_user: current_user})
      |> stream(:groups, groups)}

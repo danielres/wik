@@ -53,6 +53,10 @@ defmodule WikWeb.GroupLive.Show do
 
         <:item title="Author">{@group.author |> to_string}</:item>
       </.list>
+
+      <:aside>
+        {live_render(@socket, WikWeb.OnlineUsersLive, id: "online-users")}
+      </:aside>
     </Layouts.app>
     """
   end
@@ -60,17 +64,21 @@ defmodule WikWeb.GroupLive.Show do
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     group = reload_group!(id, socket)
+    current_user = socket.assigns.current_user
 
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:updated:#{group.id}")
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:destroyed:#{group.id}")
+      path = "/groups/#{id}"
+      WikWeb.Presence.track_in_liveview(current_user, path, "group-#{id}")
     end
 
     {:ok,
      socket
      |> assign(:page_title, "Show Group")
      |> assign(:updated_fields, [])
-     |> assign(:ctx, %{current_user: socket.assigns.current_user})
+     # TODO: assign ctx in live_user_required
+     |> assign(:ctx, %{current_user: current_user})
      |> assign(:group, group)}
   end
 

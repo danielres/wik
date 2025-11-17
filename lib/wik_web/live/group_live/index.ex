@@ -63,16 +63,24 @@ defmodule WikWeb.GroupLive.Index do
           <% end %>
         </:action>
       </.table>
+
+      <:aside>
+        {live_render(@socket, WikWeb.OnlineUsersLive, id: "online-users")}
+      </:aside>
     </Layouts.app>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
+    current_user = socket.assigns.current_user
+
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:created")
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:updated")
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:destroyed")
+      path = "/groups#{(socket.assigns.live_action == :new && "/new") || ""}"
+      WikWeb.Presence.track_in_liveview(current_user, path, "groups_index")
     end
 
     groups = reload_groups!(socket)
@@ -81,7 +89,7 @@ defmodule WikWeb.GroupLive.Index do
      socket
      |> assign(:page_title, "Listing Groups")
      |> assign(:highlighted_group_ids, MapSet.new())
-     |> assign(:ctx, %{current_user: socket.assigns.current_user})
+     |> assign(:ctx, %{current_user: current_user})
      |> stream(:groups, groups)}
   end
 

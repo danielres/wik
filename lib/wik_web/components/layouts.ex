@@ -25,6 +25,15 @@ defmodule WikWeb.Layouts do
       </Layouts.app>
 
   """
+  defp slot_has_content?(slot) when is_list(slot) do
+    Enum.all?(slot, fn item ->
+      case item do
+        %{inner_block: %{static: static}} -> Enum.all?(static, &(&1 == ""))
+        _ -> true
+      end
+    end)
+  end
+
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :ctx, :any
 
@@ -33,6 +42,7 @@ defmodule WikWeb.Layouts do
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
   slot :inner_block, required: true
+  slot :aside
 
   def app(assigns) do
     ~H"""
@@ -60,6 +70,9 @@ defmodule WikWeb.Layouts do
 
     <main class="px-4 py-20 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl space-y-4">
+        <div :if={slot_has_content?(@aside)} class="bg-base-200 p-4 rounded-lg">
+          {render_slot(@aside)}
+        </div>
         {render_slot(@inner_block)}
       </div>
     </main>

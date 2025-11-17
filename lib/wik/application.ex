@@ -16,7 +16,8 @@ defmodule Wik.Application do
       # {Wik.Worker, arg},
       # Start to serve requests, typically the last entry
       WikWeb.Endpoint,
-      {AshAuthentication.Supervisor, [otp_app: :wik]}
+      {AshAuthentication.Supervisor, [otp_app: :wik]},
+      WikWeb.Presence
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -18,15 +18,25 @@ defmodule WikWeb.HomeLive do
           <.link class="btn" navigate={~p"/groups"}>Groups</.link>
         </li>
       </ul>
+
+      <:aside>
+        {live_render(@socket, WikWeb.OnlineUsersLive, id: "online-users")}
+      </:aside>
     </Layouts.app>
     """
   end
 
   @impl true
   def mount(_params, _session, socket) do
+    current_user = socket.assigns.current_user
+
+    if connected?(socket) do
+      WikWeb.Presence.track_in_liveview(current_user, "/", "home_id")
+    end
+
     {:ok,
      socket
      |> assign(:page_title, "Home")
-     |> assign(:ctx, %{current_user: socket.assigns.current_user})}
+     |> assign(:ctx, %{current_user: current_user})}
   end
 end

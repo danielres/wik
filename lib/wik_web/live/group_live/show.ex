@@ -92,7 +92,10 @@ defmodule WikWeb.GroupLive.Show do
       Process.send_after(self(), :clear_updated_fields, 2000)
       msg = "#{payload.actor} just updated this group"
       actor_is_current_user = payload.actor == socket.assigns.current_user
-      socket = if actor_is_current_user, do: socket, else: socket |> put_flash(:info, msg)
+
+      socket =
+        if actor_is_current_user, do: socket, else: socket |> Toast.put_toast(:success, msg)
+
       socket = socket |> assign(group: updated_group, updated_fields: updated_fields)
       {:noreply, socket}
     end
@@ -107,7 +110,7 @@ defmodule WikWeb.GroupLive.Show do
   def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
     msg = ~s(Group "#{payload.data}" was just deleted by #{payload.actor})
     actor_is_current_user = payload.actor == socket.assigns.current_user
-    socket = if actor_is_current_user, do: socket, else: socket |> put_flash(:info, msg)
+    socket = if actor_is_current_user, do: socket, else: socket |> Toast.put_toast(:info, msg)
     socket = socket |> push_navigate(to: ~p"/groups")
     {:noreply, socket}
   end

@@ -91,30 +91,45 @@ defmodule WikWeb.GroupLive.Index do
     {:noreply,
      socket
      |> stream_insert(:groups, payload.data, at: 0)
-     |> put_flash(:info, msg)
+     |> Toast.put_toast(:info, msg)
      |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))}
   end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
-    msg = ~s(Group "#{payload.data.title}" was just deleted by #{payload.actor})
+    actor_is_current_user = payload.actor == socket.assigns.current_user
 
-    {:noreply,
-     socket
-     |> stream_delete(:groups, payload.data)
-     |> put_flash(:info, msg)}
+    socket =
+      if actor_is_current_user do
+        msg = ~s(Group "#{payload.data}" deleted successfully)
+        socket |> Toast.put_toast(:success, msg)
+      else
+        msg = ~s(Group "#{payload.data}" was just deleted by #{payload.actor})
+        socket |> Toast.put_toast(:info, msg)
+      end
+
+    socket = socket |> stream_delete(:groups, payload.data)
+    {:noreply, socket}
   end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
-    msg = ~s(Group "#{payload.data.title}" was just updated by #{payload.actor})
     Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
 
-    {:noreply,
-     socket
-     |> stream_insert(:groups, reload_group!(socket, payload.data.id))
-     |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))
-     |> put_flash(:info, msg)}
+    actor_is_current_user = payload.actor == socket.assigns.current_user
+
+    msg =
+      if actor_is_current_user,
+        do: ~s(Group "#{payload.data}" updated),
+        else: ~s(Group "#{payload.data}" was just updated by #{payload.actor})
+
+    socket =
+      socket
+      |> stream_insert(:groups, reload_group!(socket, payload.data.id))
+      |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))
+      |> Toast.put_toast(:info, msg)
+
+    {:noreply, socket}
   end
 
   @impl true

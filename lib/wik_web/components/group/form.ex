@@ -39,7 +39,7 @@ defmodule WikWeb.Components.Group.Form do
         socket =
           socket
           |> push_patch(to: socket.assigns.return_to)
-          |> put_flash(:info, "Group #{socket.assigns.form.source.type}d successfully")
+          |> Toast.put_toast(:success, "Group #{socket.assigns.form.source.type}d successfully")
 
         {:noreply, socket}
 

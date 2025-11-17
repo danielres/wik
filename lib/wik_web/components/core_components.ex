@@ -348,11 +348,11 @@ defmodule WikWeb.CoreComponents do
         </tr>
       </thead>
       <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr 
-          :for={row <- @rows} 
-          id={@row_id && @row_id.(row)} 
+        <tr
+          :for={row <- @rows}
+          id={@row_id && @row_id.(row)}
           class={@row_class && @row_class.(row)}
-          >
+        >
           <td
             :for={col <- @col}
             phx-click={@row_click && @row_click.(row)}

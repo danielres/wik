@@ -69,11 +69,11 @@ defmodule WikWeb.Layouts do
     </header>
 
     <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
-        <div :if={slot_has_content?(@aside)} class="bg-base-200 p-4 rounded-lg">
+      <div class={["mx-auto  space-y-4 grid gap-4", true && "grid-cols-[1fr_auto]"]}>
+        {render_slot(@inner_block)}
+        <div :if={slot_has_content?(@aside)} class="bg-base-200 p-4 rounded-lg w-64 overflow-hidden truncate text-sm">
           {render_slot(@aside)}
         </div>
-        {render_slot(@inner_block)}
       </div>
     </main>
 

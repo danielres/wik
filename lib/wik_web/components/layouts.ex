@@ -25,14 +25,6 @@ defmodule WikWeb.Layouts do
       </Layouts.app>
 
   """
-  defp slot_has_content?(slot) when is_list(slot) do
-    Enum.all?(slot, fn item ->
-      case item do
-        %{inner_block: %{static: static}} -> Enum.all?(static, &(&1 == ""))
-        _ -> true
-      end
-    end)
-  end
 
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :ctx, :any
@@ -74,7 +66,7 @@ defmodule WikWeb.Layouts do
         </div>
 
         <div
-          :if={slot_has_content?(@aside)}
+          :if={WikWeb.Helpers.slot_has_content?(@aside)}
           class="border-l border-base-content/30 pl-8 w-64 overflow-hidden truncate text-sm"
         >
           {render_slot(@aside)}

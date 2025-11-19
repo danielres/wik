@@ -35,6 +35,10 @@
   };
 
   process.manager.implementation = "overmind";
+
+  # enable iex history
+  env.ERL_AFLAGS = "-kernel shell_history enabled";
+  #
   # env.REDIS_URL = config.secretspec.secrets.REDIS_URL;
 }
 

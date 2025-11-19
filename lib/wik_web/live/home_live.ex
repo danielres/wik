@@ -31,7 +31,7 @@ defmodule WikWeb.HomeLive do
     current_user = socket.assigns.current_user
 
     if connected?(socket) do
-      WikWeb.Presence.track_in_liveview(current_user, "/", "home_id")
+      WikWeb.Presence.track_in_liveview(current_user, "/")
     end
 
     {:ok,

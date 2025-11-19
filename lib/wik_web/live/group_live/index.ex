@@ -80,8 +80,8 @@ defmodule WikWeb.GroupLive.Index do
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:created")
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:updated")
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:destroyed")
-      path = "/groups#{(socket.assigns.live_action == :new && "/new") || ""}"
-      WikWeb.Presence.track_in_liveview(current_user, path, "groups_index")
+      # path = "/groups#{(socket.assigns.live_action == :new && "/new") || ""}"
+      # WikWeb.Presence.track_in_liveview(current_user, path, "groups_index")
     end
 
     groups = reload_groups!(socket)
@@ -95,7 +95,12 @@ defmodule WikWeb.GroupLive.Index do
   end
 
   @impl true
-  def handle_params(_params, _url, socket) do
+  def handle_params(_params, url, socket) do
+    path = URI.parse(url).path
+
+    if connected?(socket),
+      do: WikWeb.Presence.track_in_liveview(socket.assigns.current_user, path)
+
     {:noreply, socket}
   end
 

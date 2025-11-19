@@ -1,6 +1,6 @@
 defmodule WikWeb.GroupLive.Show do
   use WikWeb, :live_view
-  on_mount {WikWeb.LiveUserAuth, :live_user_required}
+  on_mount({WikWeb.LiveUserAuth, :live_user_required})
 
   @impl true
   def render(assigns) do
@@ -66,8 +66,6 @@ defmodule WikWeb.GroupLive.Show do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:updated:#{group.id}")
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:destroyed:#{group.id}")
-      path = "/groups/#{id}"
-      WikWeb.Presence.track_in_liveview(current_user, path, "group-#{id}")
     end
 
     {:ok,
@@ -80,7 +78,12 @@ defmodule WikWeb.GroupLive.Show do
   end
 
   @impl true
-  def handle_params(_params, _url, socket) do
+  def handle_params(_params, url, socket) do
+    path = URI.parse(url).path
+
+    if connected?(socket),
+      do: WikWeb.Presence.track_in_liveview(socket.assigns.current_user, path)
+
     {:noreply, socket}
   end
 

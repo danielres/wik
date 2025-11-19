@@ -38,9 +38,9 @@ defmodule WikWeb.Presence do
     {:ok, state}
   end
 
-  def track_in_liveview(user, path, docname) do
+  def track_in_liveview(user, path) do
     [username, _] = to_string(user.email) |> String.split("@", parts: 2)
-    meta = %{id: user.id, username: username, path: path, docname: docname}
+    meta = %{id: user.id, username: username, path: path}
     track_user(user.id, meta)
     update(self(), "online_users", user.id, meta)
   end

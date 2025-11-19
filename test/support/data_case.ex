@@ -24,6 +24,14 @@ defmodule Wik.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import Wik.DataCase
+
+      require IEx
+
+      defmacro pry do
+        quote do
+          IEx.pry()
+        end
+      end
     end
   end
 

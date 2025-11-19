@@ -19,7 +19,7 @@ defmodule WikWeb.GroupLive.Show do
           <%= if Ash.can?({@group, :update}, @current_user) do %>
             <.link
               class="btn btn-neutral btn-circle hover:btn-primary"
-              patch={~p"/groups/#{@group}/edit"}
+              patch={~p"/groups/#{@group.slug}/edit"}
             >
               <.icon name="hero-pencil-square" />
             </.link>
@@ -32,14 +32,14 @@ defmodule WikWeb.GroupLive.Show do
         mandatory?
         id="user-tz-selector-modal"
         open?={@live_action == :edit}
-        phx-click-close={JS.patch(~p"/groups/#{@group.id}")}
+        phx-click-close={JS.patch(~p"/groups/#{@group.slug}")}
       >
         <.live_component
           module={WikWeb.Components.Group.Form}
           id={ "form-group-#{@group.id}" }
           group={@group}
           actor={@current_user}
-          return_to={~p"/groups/#{@group.id}"}
+          return_to={~p"/groups/#{@group.slug}"}
         >
         </.live_component>
       </.live_component>
@@ -59,8 +59,8 @@ defmodule WikWeb.GroupLive.Show do
   end
 
   @impl true
-  def mount(%{"id" => id}, _session, socket) do
-    group = reload_group!(id, socket)
+  def mount(%{"slug" => slug}, _session, socket) do
+    group = reload_group!(slug, socket)
     current_user = socket.assigns.current_user
 
     if connected?(socket) do
@@ -87,13 +87,14 @@ defmodule WikWeb.GroupLive.Show do
     {:noreply, socket}
   end
 
-  defp reload_group!(group_id, socket) do
-    Ash.get!(Wik.Accounts.Group, group_id, actor: socket.assigns.current_user, load: [:author])
+  defp reload_group!(slug, socket) do
+    Wik.Accounts.Group
+    |> Ash.get!(%{slug: slug}, actor: socket.assigns.current_user, load: [:author])
   end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
-    updated_group = reload_group!(payload.data.id, socket)
+    updated_group = reload_group!(payload.data.slug, socket)
     updated_fields = Map.keys(payload.changeset.attributes)
 
     if(updated_fields == []) do

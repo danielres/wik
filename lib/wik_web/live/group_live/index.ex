@@ -37,7 +37,7 @@ defmodule WikWeb.GroupLive.Index do
       <.table
         id="groups"
         rows={@streams.groups}
-        row_click={fn {_id, group} -> JS.navigate(~p"/groups/#{group}") end}
+        row_click={fn {_id, group} -> JS.navigate(~p"/groups/#{group.slug}") end}
         row_class={
           fn {_id, group} ->
             (group.id in @highlighted_group_ids && "animate-reload") ||
@@ -46,6 +46,7 @@ defmodule WikWeb.GroupLive.Index do
         }
       >
         <:col :let={{_id, group}} label="Title">{group.title}</:col>
+        <:col :let={{_id, group}} label="Slug">{group.slug}</:col>
         <:col :let={{_id, group}} label="Text">{group.text}</:col>
         <:col :let={{_id, group}} label="Author">{group.author |> to_string}</:col>
 

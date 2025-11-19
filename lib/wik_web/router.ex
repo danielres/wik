@@ -39,8 +39,8 @@ defmodule WikWeb.Router do
       live "/", HomeLive, :index
       live "/groups", GroupLive.Index, :index
       live "/groups/new", GroupLive.Index, :new
-      live "/groups/:id", GroupLive.Show, :show
-      live "/groups/:id/edit", GroupLive.Show, :edit
+      live "/groups/:slug", GroupLive.Show, :show
+      live "/groups/:slug/edit", GroupLive.Show, :edit
     end
   end
 

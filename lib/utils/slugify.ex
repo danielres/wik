@@ -1,6 +1,8 @@
 defmodule Utils.Slugify do
   require Ash.Query
 
+  # ---------- public API ----------
+
   def generate(nil), do: ""
 
   def generate(title) do
@@ -13,50 +15,59 @@ defmodule Utils.Slugify do
     |> String.trim("-")
   end
 
+  @doc """
+  If :slug is nil or empty, generate one from :title (or fallback_base)
+  and ensure it is unique for the resource backing this changeset.
+  """
+  def maybe_set_and_ensure_unique_slug(changeset, fallback_base) do
+    resource = changeset.resource
+
+    case Ash.Changeset.get_attribute(changeset, :slug) do
+      nil ->
+        title = Ash.Changeset.get_attribute(changeset, :title) || fallback_base
+        base = generate(title)
+        unique = pick_unique_slug(resource, base)
+        Ash.Changeset.change_attribute(changeset, :slug, unique)
+
+      "" ->
+        base = fallback_base
+        unique = pick_unique_slug(resource, base)
+        Ash.Changeset.change_attribute(changeset, :slug, unique)
+
+      _slug ->
+        changeset
+    end
+  end
+
+  # ---------- internals ----------
+
   defp normalize_unicode(string) do
     string
     |> :unicode.characters_to_nfd_binary()
     |> String.replace(~r/\p{M}/u, "")
   end
 
-  def maybe_set_and_ensure_unique_slug(cs, resource_type) do
-    case Ash.Changeset.get_attribute(cs, :slug) do
-      nil ->
-        title = Ash.Changeset.get_attribute(cs, :title) || ""
-        base = Utils.Slugify.generate(title)
-        unique = pick_unique_slug(base)
-        Ash.Changeset.change_attribute(cs, :slug, unique)
+  defp pick_unique_slug(resource, base), do: pick_unique_slug(resource, base, 0)
 
-      "" ->
-        base = resource_type
-        unique = pick_unique_slug(base)
-        Ash.Changeset.change_attribute(cs, :slug, unique)
-
-      _slug ->
-        cs
-    end
-  end
-
-  defp pick_unique_slug(base), do: pick_unique_slug(base, 0)
-
-  defp pick_unique_slug(base, tries) do
+  defp pick_unique_slug(resource, base, tries) do
     candidate =
       case tries do
         0 -> base
         _ -> base <> "-" <> random_suffix(4)
       end
 
-    if slug_exists?(candidate) do
-      pick_unique_slug(base, tries + 1)
+    if slug_exists?(resource, candidate) do
+      pick_unique_slug(resource, base, tries + 1)
     else
       candidate
     end
   end
 
-  defp slug_exists?(slug) do
-    q = __MODULE__ |> Ash.Query.filter(slug == ^slug)
-
-    case Ash.read(q, authorize?: false) do
+  defp slug_exists?(resource, slug) do
+    resource
+    |> Ash.Query.filter(slug == ^slug)
+    |> Ash.read(authorize?: false)
+    |> case do
       {:ok, []} -> false
       {:ok, _} -> true
       {:error, _} -> true
@@ -64,7 +75,6 @@ defmodule Utils.Slugify do
   end
 
   defp random_suffix(n) do
-    # 10^n possibilities; n=4 => 0000..9999 (use 1000..9999 if you don't want leading zeros)
     upper = :math.pow(10, n) |> trunc()
     x = :rand.uniform(upper) - 1
     :io_lib.format("~*..0B", [n, x]) |> IO.iodata_to_binary()

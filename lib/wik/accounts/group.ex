@@ -33,6 +33,11 @@ defmodule Wik.Accounts.Group do
       primary? true
       change relate_actor(:author)
 
+      change fn cs, _ctx ->
+        cs
+        |> Utils.Slugify.maybe_set_and_ensure_unique_slug("group")
+      end
+
       change fn changeset, context ->
         Ash.Changeset.manage_relationship(
           changeset,
@@ -71,6 +76,7 @@ defmodule Wik.Accounts.Group do
   attributes do
     uuid_v7_primary_key :id
     attribute :title, :string, allow_nil?: false, public?: true
+    attribute :slug, :string, allow_nil?: false, public?: true
     attribute :text, :string, allow_nil?: true, public?: true
     timestamps()
   end
@@ -92,5 +98,9 @@ defmodule Wik.Accounts.Group do
       destination_attribute :id
       destination_attribute_on_join_resource :user_id
     end
+  end
+
+  identities do
+    identity :unique_slug, [:slug]
   end
 end

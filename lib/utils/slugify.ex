@@ -53,7 +53,7 @@ defmodule Utils.Slugify do
     candidate =
       case tries do
         0 -> base
-        _ -> base <> "-" <> random_suffix(4)
+        _ -> base <> "-" <> random_suffix(2)
       end
 
     if slug_exists?(resource, candidate) do
@@ -80,3 +80,4 @@ defmodule Utils.Slugify do
     :io_lib.format("~*..0B", [n, x]) |> IO.iodata_to_binary()
   end
 end
+

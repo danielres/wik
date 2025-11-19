@@ -10,10 +10,9 @@ defmodule WikWeb.GroupLive.Show do
         <.link class="opacity-50 hover:opacity-100 transition" navigate={~p"/groups"}>
           <.icon name="hero-arrow-left" />
         </.link>
-        <div class={:title in @updated_fields && "animate-fade-out"}>
+        <div class={:title in @updated_fields && "animate-reload"}>
           {@group.title}
         </div>
-
         <:subtitle>Group by {@group.author |> to_string}</:subtitle>
 
         <:actions>
@@ -47,7 +46,7 @@ defmodule WikWeb.GroupLive.Show do
 
       <div class={[
         "border-l-4 border-base-content/30 pl-4",
-        :text in @updated_fields && "animate-fade-out"
+        :text in @updated_fields && "animate-reload"
       ]}>
         {@group.text}
       </div>

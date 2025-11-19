@@ -109,11 +109,13 @@
 
 
 @theme {
-  --animate-fade-out: fade-out 3s ease-out forwards;
+  --animate-reload: slide-in 0.4s ease-out forwards;
 
-  @keyframes fade-out {
-    0% { background-color: hsl(68 100% 85% / 20%); }
-    100% { background-color: transparent; }
+  @keyframes slide-in {
+    0% {
+      transform: translateX(-2rem);
+      opacity: 0;
+    }
   }
 }
 

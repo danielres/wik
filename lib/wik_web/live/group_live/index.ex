@@ -40,7 +40,7 @@ defmodule WikWeb.GroupLive.Index do
         row_click={fn {_id, group} -> JS.navigate(~p"/groups/#{group}") end}
         row_class={
           fn {_id, group} ->
-            (group.id in @highlighted_group_ids && "animate-fade-out") ||
+            (group.id in @highlighted_group_ids && "animate-reload") ||
               "hover:bg-base-200 transition"
           end
         }

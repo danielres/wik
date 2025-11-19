@@ -8,10 +8,21 @@ config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
 # The MIX_TEST_PARTITION environment variable can be used
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
+
+# config :wik, Wik.Repo,
+#   username: "postgres",
+#   password: "postgres",
+#   hostname: "localhost",
+#   database: "wik_test#{System.get_env("MIX_TEST_PARTITION")}",
+#   pool: Ecto.Adapters.SQL.Sandbox,
+#   pool_size: System.schedulers_online() * 2
+
 config :wik, Wik.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "localhost",
+  # hostname: "localhost",
+  # Use Unix socket instead:
+  socket_dir: System.get_env("PGHOST"),
   database: "wik_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2

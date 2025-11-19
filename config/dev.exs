@@ -1,11 +1,12 @@
 import Config
 config :ash, policies: [show_policy_breakdowns?: true]
 
-# Configure your database
 config :wik, Wik.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "localhost",
+  # hostname: "localhost",
+  # Use Unix socket instead:
+  socket_dir: System.get_env("PGHOST"),
   database: "wik_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,

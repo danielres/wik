@@ -31,7 +31,7 @@ defmodule WikWeb.EventLive.Index do
 
         <:action :let={{_id, event}}>
           <div class="sr-only">
-            <.link navigate={~p"/events/#{event}"}>Show</.link>
+            <.link navigate={~p"/versions/#{event}"}>Show</.link>
           </div>
         </:action>
       </.table>
@@ -45,11 +45,7 @@ defmodule WikWeb.EventLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    current_user = socket.assigns.current_user
-
-    if connected?(socket) do
-      Phoenix.PubSub.subscribe(Wik.PubSub, "event:created")
-    end
+    if connected?(socket), do: Phoenix.PubSub.subscribe(Wik.PubSub, "event:created")
 
     {:ok,
      socket

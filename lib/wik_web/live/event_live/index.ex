@@ -49,7 +49,6 @@ defmodule WikWeb.EventLive.Index do
     {:ok,
      socket
      |> assign(:page_title, "Listing Events")
-     |> assign_new(:current_user, fn -> nil end)
      |> stream(:events, Ash.read!(Wik.Events.Event, actor: socket.assigns[:current_user]))}
   end
 

@@ -2,18 +2,28 @@ defmodule WikWeb.Presence.Handlers do
   import Phoenix.Component, only: [assign: 3]
 
   def handle_presence_join(socket) do
-    ctx = Map.put(socket.assigns.ctx, :presences, WikWeb.Presence.list_online_users())
+    presences = get_group_presences(socket)
+    ctx = Map.put(socket.assigns.ctx, :presences, presences)
     assign(socket, :ctx, ctx)
   end
 
   def handle_presence_leave(socket) do
-    ctx = Map.put(socket.assigns.ctx, :presences, WikWeb.Presence.list_online_users())
+    presences = get_group_presences(socket)
+    ctx = Map.put(socket.assigns.ctx, :presences, presences)
     assign(socket, :ctx, ctx)
   end
 
   def handle_presence_update(socket) do
-    ctx = Map.put(socket.assigns.ctx, :presences, WikWeb.Presence.list_online_users())
+    presences = get_group_presences(socket)
+    ctx = Map.put(socket.assigns.ctx, :presences, presences)
     assign(socket, :ctx, ctx)
+  end
+
+  defp get_group_presences(socket) do
+    case socket.assigns[:ctx][:current_group] do
+      nil -> []
+      group -> WikWeb.Presence.list_online_users_in_group(group.id)
+    end
   end
 
   defmacro __using__(_opts) do

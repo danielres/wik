@@ -57,8 +57,16 @@ defmodule WikWeb.LiveUserAuth do
 
   def on_mount(:subscribe_presence, _params, _session, socket) do
     if connected?(socket) do
-      WikWeb.Presence.subscribe()
-      {:cont, socket |> ctx_add(:presences, WikWeb.Presence.list_online_users())}
+      # Subscribe to group-specific presence if we have a current group
+      case socket.assigns[:ctx][:current_group] do
+        nil ->
+          {:cont, socket |> ctx_add(:presences, [])}
+
+        group ->
+          WikWeb.Presence.subscribe_to_group(group.id)
+          presences = WikWeb.Presence.list_online_users_in_group(group.id)
+          {:cont, socket |> ctx_add(:presences, presences)}
+      end
     else
       {:cont, socket}
     end

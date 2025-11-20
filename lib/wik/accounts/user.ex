@@ -125,6 +125,12 @@ defmodule Wik.Accounts.User do
     has_many :group_user_relations, Wik.Accounts.GroupUserRelation do
       destination_attribute :user_id
     end
+
+    many_to_many :groups, Wik.Accounts.Group do
+      join_relationship :group_user_relations
+      source_attribute_on_join_resource :user_id
+      destination_attribute_on_join_resource :group_id
+    end
   end
 
   identities do

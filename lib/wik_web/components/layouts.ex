@@ -39,10 +39,13 @@ defmodule WikWeb.Layouts do
   def app(assigns) do
     ~H"""
     <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
+      <div class="flex-1 flex gap-2 items-center">
+        <a href="/" class="mr-4">
           <img src={~p"/images/logo.svg"} width="36" />
         </a>
+
+        <.link class="btn" navigate={~p"/groups"}>Groups</.link>
+        <.link class="btn" navigate={~p"/versions"}>Versions</.link>
       </div>
       <div class="flex-none">
         <ul class="flex flex-column px-1 space-x-4 items-center">

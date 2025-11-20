@@ -13,11 +13,6 @@ defmodule WikWeb.HomeLive do
 
         <:actions></:actions>
       </.header>
-      <ul>
-        <li>
-          <.link class="btn" navigate={~p"/groups"}>Groups</.link>
-        </li>
-      </ul>
 
       <:aside>
         {live_render(@socket, WikWeb.OnlineUsersLive, id: "online-users")}

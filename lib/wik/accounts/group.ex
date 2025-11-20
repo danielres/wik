@@ -4,7 +4,8 @@ defmodule Wik.Accounts.Group do
     domain: Wik.Accounts,
     authorizers: [Ash.Policy.Authorizer],
     data_layer: AshPostgres.DataLayer,
-    notifiers: [Wik.Notifiers.ResourceMutation]
+    notifiers: [Wik.Notifiers.ResourceMutation],
+    extensions: [AshEvents.Events]
 
   defimpl String.Chars do
     def to_string(group), do: group.title
@@ -13,6 +14,19 @@ defmodule Wik.Accounts.Group do
   postgres do
     table "groups"
     repo Wik.Repo
+  end
+
+  events do
+    # Specify your event log resource
+    event_log Wik.Events.Event
+
+    # Optionally ignore certain actions. This is mainly used for actions
+    # that are kept around for supporting previous event versions, and
+    # are configured as replay_overrrides in the event log (see above).
+    # ignore_actions [:old_create_v1]
+
+    # Optionally specify version numbers for actions
+    # current_action_versions create: 2, update: 3, destroy: 2
   end
 
   actions do

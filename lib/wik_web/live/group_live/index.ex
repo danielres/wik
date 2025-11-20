@@ -10,7 +10,7 @@ defmodule WikWeb.GroupLive.Index do
         Your groups
         <:actions>
           <%= if Ash.can?({Wik.Accounts.Group, :create}, @current_user) do %>
-            <.link class="btn btn-neutral btn-circle hover:btn-primary" navigate={~p"/groups/new"}>
+            <.link class="btn btn-neutral btn-circle hover:btn-primary" navigate={~p"/new-group"}>
               <.icon name="hero-plus" />
             </.link>
           <% end %>

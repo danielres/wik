@@ -139,6 +139,11 @@
 		--bg: var(--color-info);
 		--fg: var(--color-info-content);
 	}
+
+	.toast-error {
+		--bg: var(--color-error);
+		--fg: var(--color-error-content);
+	}
 	.toast {
 		border-width: 3px;
 		--toast-bg: color-mix(in oklab, var(--bg) 70%, var(--color-neutral));

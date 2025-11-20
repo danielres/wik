@@ -13,7 +13,9 @@ defmodule WikWeb.EventLive.Index do
       <.table
         id="events"
         rows={@streams.events}
-        row_click={fn {_id, event} -> JS.navigate(~p"/versions/#{event}") end}
+        row_click={
+          fn {_id, event} -> JS.navigate(~p"/#{@ctx.current_group.slug}/versions/#{event}") end
+        }
       >
         {# <:col :let={{_id, event}} label="Id">{event.id}</:col> }
         {# <:col :let={{_id, event}} label="Record">{event.record_id}</:col> }
@@ -31,7 +33,7 @@ defmodule WikWeb.EventLive.Index do
 
         <:action :let={{_id, event}}>
           <div class="sr-only">
-            <.link navigate={~p"/versions/#{event}"}>Show</.link>
+            <.link navigate={~p"/#{@ctx.current_group.slug}/versions/#{event}"}>Show</.link>
           </div>
         </:action>
       </.table>

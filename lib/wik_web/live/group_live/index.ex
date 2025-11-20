@@ -71,8 +71,6 @@ defmodule WikWeb.GroupLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    current_user = socket.assigns.current_user
-
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:created")
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:updated")

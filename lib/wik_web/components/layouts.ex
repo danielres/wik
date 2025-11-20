@@ -44,9 +44,10 @@ defmodule WikWeb.Layouts do
           <img src={~p"/images/logo.svg"} width="36" />
         </a>
 
-        <.link class="btn" navigate={~p"/groups"}>Groups</.link>
-        <.link class="btn" navigate={~p"/versions"}>Versions</.link>
-        <.link class="btn" navigate={~p"/users"}>Users</.link>
+        <%= if(@ctx[:current_group]) do %>
+          <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/versions"}>Versions</.link>
+          <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/users"}>Users</.link>
+        <% end %>
       </div>
       <div class="flex-none">
         <ul class="flex flex-column px-1 space-x-4 items-center">

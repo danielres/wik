@@ -7,7 +7,7 @@ defmodule WikWeb.GroupLive.Show do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
-        <.link class="opacity-50 hover:opacity-100 transition" navigate={~p"/groups"}>
+        <.link class="opacity-50 hover:opacity-100 transition" navigate={~p"/"}>
           <.icon name="hero-arrow-left" />
         </.link>
         <div class={:title in @updated_fields && "animate-reload"}>
@@ -19,7 +19,7 @@ defmodule WikWeb.GroupLive.Show do
           <%= if Ash.can?({@group, :update}, @current_user) do %>
             <.link
               class="btn btn-neutral btn-circle hover:btn-primary"
-              patch={~p"/groups/#{@group.slug}/edit"}
+              patch={~p"/#{@group.slug}/edit"}
             >
               <.icon name="hero-pencil-square" />
             </.link>
@@ -32,14 +32,14 @@ defmodule WikWeb.GroupLive.Show do
         mandatory?
         id="user-tz-selector-modal"
         open?={@live_action == :edit}
-        phx-click-close={JS.patch(~p"/groups/#{@group.slug}")}
+        phx-click-close={JS.patch(~p"/#{@group.slug}")}
       >
         <.live_component
           module={WikWeb.Components.Group.Form}
           id={ "form-group-#{@group.id}" }
           group={@group}
           actor={@current_user}
-          return_to={~p"/groups/#{@group.slug}"}
+          return_to={~p"/#{@group.slug}"}
         >
         </.live_component>
       </.live_component>
@@ -111,7 +111,7 @@ defmodule WikWeb.GroupLive.Show do
     msg = ~s(Group "#{payload.data}" was just deleted by #{payload.actor})
     actor_is_current_user = payload.actor == socket.assigns.current_user
     socket = if actor_is_current_user, do: socket, else: socket |> Toast.put_toast(:info, msg)
-    socket = socket |> push_navigate(to: ~p"/groups")
+    socket = socket |> push_navigate(to: ~p"/")
     {:noreply, socket}
   end
 end

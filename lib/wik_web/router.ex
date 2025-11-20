@@ -40,13 +40,22 @@ defmodule WikWeb.Router do
       # If an authenticated user must *not* be present:
       # on_mount {WikWeb.LiveUserAuth, :live_no_user}
       live "/", HomeLive, :index
-      live "/groups", GroupLive.Index, :index
       live "/new-group", GroupLive.Index, :new
-      live "/groups/:slug", GroupLive.Show, :show
-      live "/groups/:slug/edit", GroupLive.Show, :edit
-      live "/versions", EventLive.Index, :index
-      live "/versions/:id", EventLive.Show, :show
-      live "/users", UserLive.Index, :index
+    end
+
+    scope "/:slug" do
+      ash_authentication_live_session :authenticated_routes_in_group,
+        on_mount: [
+          {WikWeb.LiveUserAuth, :live_user_required},
+          {WikWeb.LiveUserAuth, :subscribe_presence},
+          {WikWeb.LiveUserAuth, :group_membership_required}
+        ] do
+        live "/", GroupLive.Show, :show
+        live "/edit", GroupLive.Show, :edit
+        live "/versions", EventLive.Index, :index
+        live "/versions/:id", EventLive.Show, :show
+        live "/users", UserLive.Index, :index
+      end
     end
   end
 

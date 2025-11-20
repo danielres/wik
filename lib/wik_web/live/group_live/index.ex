@@ -22,14 +22,14 @@ defmodule WikWeb.GroupLive.Index do
         mandatory?
         id="user-tz-selector-modal"
         open?={@live_action == :new}
-        phx-click-close={JS.patch(~p"/groups")}
+        phx-click-close={JS.patch(~p"/")}
       >
         <.live_component
           module={WikWeb.Components.Group.Form}
           id="form-group-new"
           group={nil}
           actor={@current_user}
-          return_to={~p"/groups"}
+          return_to={~p"/"}
         >
         </.live_component>
       </.live_component>
@@ -37,7 +37,7 @@ defmodule WikWeb.GroupLive.Index do
       <.table
         id="groups"
         rows={@streams.groups}
-        row_click={fn {_id, group} -> JS.navigate(~p"/groups/#{group.slug}") end}
+        row_click={fn {_id, group} -> JS.navigate(~p"/#{group.slug}") end}
         row_class={
           fn {_id, group} ->
             (group.id in @highlighted_group_ids && "animate-reload") ||
@@ -49,10 +49,6 @@ defmodule WikWeb.GroupLive.Index do
         <:col :let={{_id, group}} label="Slug">{group.slug}</:col>
         <:col :let={{_id, group}} label="Text">{group.text}</:col>
         <:col :let={{_id, group}} label="Author">{group.author |> to_string}</:col>
-
-        {# <:action :let={{_id, group}}> }
-        {#   <.link navigate={~p"/groups/#{group}"}>Show</.link> }
-        {# </:action> }
 
         <:action :let={{_id, group}}>
           <%= if Ash.can?({group, :destroy}, @current_user) do %>

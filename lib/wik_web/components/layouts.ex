@@ -46,6 +46,7 @@ defmodule WikWeb.Layouts do
 
         <.link class="btn" navigate={~p"/groups"}>Groups</.link>
         <.link class="btn" navigate={~p"/versions"}>Versions</.link>
+        <.link class="btn" navigate={~p"/users"}>Users</.link>
       </div>
       <div class="flex-none">
         <ul class="flex flex-column px-1 space-x-4 items-center">
@@ -70,7 +71,7 @@ defmodule WikWeb.Layouts do
 
         <div
           :if={WikWeb.Helpers.slot_has_content?(@aside)}
-          class="border-l border-base-content/30 pl-8 w-64 overflow-hidden truncate text-sm"
+          class="border-l border-base-content/30 pl-8 w-64  text-sm"
         >
           {render_slot(@aside)}
         </div>

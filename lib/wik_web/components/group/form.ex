@@ -13,6 +13,7 @@ defmodule WikWeb.Components.Group.Form do
         phx-target={@myself}
       >
         <.input type="text" field={@form[:title]} label="Title" />
+        <.input type="text" field={@form[:slug]} label="Slug" />
         <.input type="text" field={@form[:text]} label="Short description" />
 
         <.button phx-disable-with="Saving..." variant="primary">Save Group</.button>

@@ -38,11 +38,20 @@ defmodule WikWeb.Presence do
     {:ok, state}
   end
 
-  def track_in_liveview(user, path) do
+  def track(user, path) do
     [username, _] = to_string(user.email) |> String.split("@", parts: 2)
     meta = %{id: user.id, username: username, path: path}
     track_user(user.id, meta)
     update(self(), "online_users", user.id, meta)
+  end
+
+  def track_in_liveview(socket, url) do
+    if Phoenix.LiveView.connected?(socket) do
+      path = URI.parse(url).path
+      WikWeb.Presence.track(socket.assigns.current_user, path)
+    end
+
+    socket
   end
 
   def list_online_users(),

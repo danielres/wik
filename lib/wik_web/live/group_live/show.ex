@@ -61,7 +61,6 @@ defmodule WikWeb.GroupLive.Show do
   @impl true
   def mount(%{"slug" => slug}, _session, socket) do
     group = reload_group!(slug, socket)
-    current_user = socket.assigns.current_user
 
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Wik.PubSub, "group:updated:#{group.id}")
@@ -77,11 +76,7 @@ defmodule WikWeb.GroupLive.Show do
 
   @impl true
   def handle_params(_params, url, socket) do
-    path = URI.parse(url).path
-
-    if connected?(socket),
-      do: WikWeb.Presence.track_in_liveview(socket.assigns.current_user, path)
-
+    WikWeb.Presence.track_in_liveview(socket, url)
     {:noreply, socket}
   end
 

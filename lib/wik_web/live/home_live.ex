@@ -23,15 +23,15 @@ defmodule WikWeb.HomeLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    current_user = socket.assigns.current_user
-
-    if connected?(socket) do
-      WikWeb.Presence.track_in_liveview(current_user, "/")
-    end
-
     {:ok,
      socket
      |> assign(:page_title, "Home")
-     |> assign(:ctx, %{current_user: current_user})}
+     |> assign(:ctx, %{current_user: socket.assigns.current_user})}
+  end
+
+  @impl true
+  def handle_params(_params, url, socket) do
+    WikWeb.Presence.track_in_liveview(socket, url)
+    {:noreply, socket}
   end
 end

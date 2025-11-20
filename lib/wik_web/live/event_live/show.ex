@@ -42,11 +42,7 @@ defmodule WikWeb.EventLive.Show do
 
   @impl true
   def handle_params(_params, url, socket) do
-    path = URI.parse(url).path
-
-    if connected?(socket),
-      do: WikWeb.Presence.track_in_liveview(socket.assigns.current_user, path)
-
+    WikWeb.Presence.track_in_liveview(socket, url)
     {:noreply, socket}
   end
 end

@@ -19,7 +19,7 @@ defmodule Utils.Slugify do
   If :slug is nil or empty, generate one from :title (or fallback_base)
   and ensure it is unique for the resource backing this changeset.
   """
-  def maybe_set_and_ensure_unique_slug(changeset, fallback_base) do
+  def maybe_set_and_ensure_unique_slug(changeset, fallback_base \\ "") do
     resource = changeset.resource
 
     case Ash.Changeset.get_attribute(changeset, :slug) do

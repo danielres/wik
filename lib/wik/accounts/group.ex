@@ -19,7 +19,7 @@ defmodule Wik.Accounts.Group do
     defaults []
 
     update :update do
-      accept [:title, :text]
+      accept [:title, :text, :slug]
       primary? true
       require_atomic? false
     end
@@ -35,7 +35,7 @@ defmodule Wik.Accounts.Group do
 
       change fn cs, _ctx ->
         cs
-        |> Utils.Slugify.maybe_set_and_ensure_unique_slug("group")
+        |> Utils.Slugify.maybe_set_and_ensure_unique_slug()
       end
 
       change fn changeset, context ->
@@ -101,6 +101,6 @@ defmodule Wik.Accounts.Group do
   end
 
   identities do
-    identity :unique_slug, [:slug]
+    identity :unique_slug, [:slug], eager_check_with: Wik.Accounts
   end
 end

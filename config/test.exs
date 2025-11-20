@@ -1,3 +1,15 @@
+defmodule TerminalTitle do
+  @moduledoc false
+
+  def notify(_status, message, _opts) do
+    green = message |> String.contains?("0 failures")
+    icon = if green, do: "✅", else: "❌"
+    IO.puts(:stderr, "\e]2;ExUnit #{icon} - #{message} \a")
+  end
+
+  def available?, do: true
+end
+
 import Config
 config :wik, token_signing_secret: "BE4TchqeLk23dgshY5157kHtUZwrsl2g"
 config :bcrypt_elixir, log_rounds: 1
@@ -16,6 +28,8 @@ config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
 #   database: "wik_test#{System.get_env("MIX_TEST_PARTITION")}",
 #   pool: Ecto.Adapters.SQL.Sandbox,
 #   pool_size: System.schedulers_online() * 2
+
+config :ex_unit_notifier, notifier: TerminalTitle
 
 config :wik, Wik.Repo,
   username: "postgres",

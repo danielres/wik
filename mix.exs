@@ -44,7 +44,8 @@ defmodule Wik.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:ex_unit_notifier, "~> 1.3", only: :test},
+      {:mix_test_interactive, "~> 5.0", only: :dev, runtime: false},
       {:toast, "~> 0.2.0"},
       {:picosat_elixir, "~> 0.2"},
       {:sourceror, "~> 1.8", only: [:dev, :test]},

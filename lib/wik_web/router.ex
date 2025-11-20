@@ -24,7 +24,8 @@ defmodule WikWeb.Router do
   scope "/", WikWeb do
     pipe_through :browser
 
-    ash_authentication_live_session :authenticated_routes do
+    ash_authentication_live_session :authenticated_routes,
+      on_mount: [{WikWeb.LiveUserAuth, :live_user_required}] do
       # in each liveview, add one of the following at the top of the module:
       #
       # If an authenticated user must be present:

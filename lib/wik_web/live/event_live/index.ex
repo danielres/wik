@@ -1,5 +1,6 @@
 defmodule WikWeb.EventLive.Index do
   use WikWeb, :live_view
+  use WikWeb.Presence.Handlers
 
   @impl true
   def render(assigns) do
@@ -34,10 +35,6 @@ defmodule WikWeb.EventLive.Index do
           </div>
         </:action>
       </.table>
-
-      <:aside>
-        {live_render(@socket, WikWeb.OnlineUsersLive, id: "online-users")}
-      </:aside>
     </Layouts.app>
     """
   end

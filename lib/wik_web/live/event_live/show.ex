@@ -1,5 +1,6 @@
 defmodule WikWeb.EventLive.Show do
   use WikWeb, :live_view
+  use WikWeb.Presence.Handlers
 
   @impl true
   def render(assigns) do
@@ -23,10 +24,6 @@ defmodule WikWeb.EventLive.Show do
         <:item title="Action type">{@event.action_type}</:item>
         <:item title="User">{@event.user_id}</:item>
       </.list>
-
-      <:aside>
-        {live_render(@socket, WikWeb.OnlineUsersLive, id: "online-users")}
-      </:aside>
     </Layouts.app>
     """
   end

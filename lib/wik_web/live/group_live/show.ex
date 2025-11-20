@@ -1,5 +1,6 @@
 defmodule WikWeb.GroupLive.Show do
   use WikWeb, :live_view
+  use WikWeb.Presence.Handlers
 
   @impl true
   def render(assigns) do
@@ -49,10 +50,6 @@ defmodule WikWeb.GroupLive.Show do
       ]}>
         {@group.text}
       </div>
-
-      <:aside>
-        {live_render(@socket, WikWeb.OnlineUsersLive, id: "online-users")}
-      </:aside>
     </Layouts.app>
     """
   end

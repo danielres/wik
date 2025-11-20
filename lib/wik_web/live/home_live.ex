@@ -13,10 +13,6 @@ defmodule WikWeb.HomeLive do
 
         <:actions></:actions>
       </.header>
-
-      <:aside>
-        {live_render(@socket, WikWeb.OnlineUsersLive, id: "online-users")}
-      </:aside>
     </Layouts.app>
     """
   end

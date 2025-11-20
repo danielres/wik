@@ -69,6 +69,8 @@ defmodule WikWeb.Layouts do
           {render_slot(@inner_block)}
         </div>
 
+        <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
+
         <div
           :if={WikWeb.Helpers.slot_has_content?(@aside)}
           class="border-l border-base-content/30 pl-8 w-64  text-sm"

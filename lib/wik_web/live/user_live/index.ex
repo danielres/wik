@@ -1,5 +1,6 @@
 defmodule WikWeb.UserLive.Index do
   use WikWeb, :live_view
+  use WikWeb.Presence.Handlers
 
   @impl true
   def render(assigns) do
@@ -14,10 +15,6 @@ defmodule WikWeb.UserLive.Index do
         <:col :let={{_id, user}} label="Id">{user.id}</:col>
         <:col :let={{_id, user}} label="Email">{user.email}</:col>
       </.table>
-
-      <:aside>
-        {live_render(@socket, WikWeb.OnlineUsersLive, id: "online-users")}
-      </:aside>
     </Layouts.app>
     """
   end

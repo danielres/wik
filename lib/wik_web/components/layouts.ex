@@ -39,15 +39,17 @@ defmodule WikWeb.Layouts do
   def app(assigns) do
     ~H"""
     <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1 flex gap-2 items-center">
-        <a href="/" class="mr-4">
-          <img src={~p"/images/logo.svg"} width="36" />
-        </a>
-
-        <%= if(@ctx[:current_group]) do %>
-          <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/versions"}>Versions</.link>
-          <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/users"}>Users</.link>
-        <% end %>
+      <div class="flex-1 ">
+        <div class="flex gap-2 items-center">
+          <%= if(@ctx[:current_group]) do %>
+            <.link class="btn btn-square btn-ghost" navigate={~p"/"}>
+              <.icon name="hero-arrow-left" />
+            </.link>
+            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}"}>Home</.link>
+            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/versions"}>Versions</.link>
+            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/users"}>Users</.link>
+          <% end %>
+        </div>
       </div>
       <div class="flex-none">
         <ul class="flex flex-column px-1 space-x-4 items-center">
@@ -65,6 +67,10 @@ defmodule WikWeb.Layouts do
     </header>
 
     <main class="px-4 py-20 sm:px-6 lg:px-8">
+      <%= if(@ctx[:current_group]) do %>
+        <h1 class="font-bold opacity-50 text-xl">{@ctx.current_group.title}</h1>
+      <% end %>
+
       <div class={["mx-auto  space-y-4 grid gap-8", true && "grid-cols-[1fr_auto]"]}>
         <div>
           {render_slot(@inner_block)}

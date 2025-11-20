@@ -7,7 +7,7 @@ defmodule WikWeb.EventLive.Index do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
-        Listing versions
+        Versions
       </.header>
 
       <.table

@@ -7,14 +7,6 @@ defmodule WikWeb.GroupLive.Show do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
-        <.link class="opacity-50 hover:opacity-100 transition" navigate={~p"/"}>
-          <.icon name="hero-arrow-left" />
-        </.link>
-        <div class={:title in @updated_fields && "animate-reload"}>
-          {@group.title}
-        </div>
-        <:subtitle>Group by {@group.author |> to_string}</:subtitle>
-
         <:actions>
           <%= if Ash.can?({@group, :update}, @current_user) do %>
             <.link
@@ -43,12 +35,29 @@ defmodule WikWeb.GroupLive.Show do
         >
         </.live_component>
       </.live_component>
+      <div class="space-y-4">
+        <div class="card bg-base-200 p-4">
+          <h2>Author</h2>
+          <div>
+            {@group.author |> to_string}
+          </div>
+        </div>
 
-      <div class={[
-        "border-l-4 border-base-content/30 pl-4",
-        :text in @updated_fields && "animate-reload"
-      ]}>
-        {@group.text}
+        <div class="card bg-base-200 p-4">
+          <h2>Description</h2>
+          <div class={[:text in @updated_fields && "animate-reload"]}>
+            {@group.text}
+          </div>
+        </div>
+
+        <div class="card bg-base-200 p-4">
+          <h2>Members<sup class="opacity-75 ml-1">{@ctx.current_group.users |> length()}</sup></h2>
+          <ul class="list list-disc ml-4">
+            <li :for={member <- @ctx.current_group.users}>
+              {member.email}
+            </li>
+          </ul>
+        </div>
       </div>
     </Layouts.app>
     """

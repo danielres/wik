@@ -27,7 +27,6 @@ defmodule WikWeb.Router do
     ash_authentication_live_session :authenticated_routes,
       on_mount: [
         {WikWeb.LiveUserAuth, :live_user_required},
-        {WikWeb.LiveUserAuth, :subscribe_presence}
       ] do
       # in each liveview, add one of the following at the top of the module:
       #
@@ -47,8 +46,8 @@ defmodule WikWeb.Router do
       ash_authentication_live_session :authenticated_routes_in_group,
         on_mount: [
           {WikWeb.LiveUserAuth, :live_user_required},
-          {WikWeb.LiveUserAuth, :subscribe_presence},
-          {WikWeb.LiveUserAuth, :group_membership_required}
+          {WikWeb.LiveUserAuth, :group_membership_required},
+          {WikWeb.LiveUserAuth, :subscribe_presence}
         ] do
         live "/", GroupLive.Show, :show
         live "/edit", GroupLive.Show, :edit

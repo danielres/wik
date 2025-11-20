@@ -35,7 +35,7 @@ defmodule WikWeb.LiveUserAuth do
 
     # returns NotFoundError if policies don't allow access
     case Wik.Accounts.Group
-         |> Ash.get(%{slug: slug}, actor: user) do
+         |> Ash.get(%{slug: slug}, actor: user, load: [:users]) do
       {:error, _} ->
         {:halt,
          socket

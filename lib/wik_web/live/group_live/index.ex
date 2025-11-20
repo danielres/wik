@@ -116,14 +116,16 @@ defmodule WikWeb.GroupLive.Index do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "create", payload: payload}, socket) do
-    msg = ~s(Group "#{payload.data.title}" was just created by #{payload.actor})
-    Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
+    if(payload.actor.id == socket.assigns.current_user.id) do
+      Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
 
-    {:noreply,
-     socket
-     |> stream_insert(:groups, payload.data, at: 0)
-     |> Toast.put_toast(:info, msg)
-     |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))}
+      {:noreply,
+       socket
+       |> stream_insert(:groups, payload.data, at: 0)
+       |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true

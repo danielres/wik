@@ -4,9 +4,10 @@ defmodule WikWeb.Components.OnlineUsers do
   def list(assigns) do
     ~H"""
     <ul :if={@presences} id="online_users" class="space-y-8">
-      <li :for={%{id: id, metas: metas} <- @presences} id={id}>
+      <li :for={%{id: id, user: user, metas: metas} <- @presences} id={id}>
         <div class="font-semibold">
-          {List.first(metas).username} <sup>{length(metas)}</sup>
+          {user.username}
+          <sup>{length(metas)}</sup>
         </div>
         <ul class="pl-4">
           <li :for={meta <- metas}>

@@ -11,12 +11,11 @@ defmodule WikWeb.Presence do
   end
 
   def fetch(_topic, presences) do
-    # Extract all unique user IDs from presence metas
+    # Extract all unique user IDs from presence keys (not metas)
     user_ids =
-      for {_key, %{metas: metas}} <- presences,
-          meta <- metas,
+      for {key, _presence} <- presences,
           into: MapSet.new() do
-        meta.id
+        key
       end
 
     # Fetch users from database
@@ -36,9 +35,9 @@ defmodule WikWeb.Presence do
 
     # Build presence data with real user information
     for {key, %{metas: [meta | metas]}} <- presences, into: %{} do
-      user = Map.get(users, meta.id, %{email: "unknown@example.com"})
+      user = Map.get(users, key, %{email: "unknown@example.com"})
 
-      user_name =
+      username =
         case user.email do
           nil ->
             "Unknown User"
@@ -50,7 +49,7 @@ defmodule WikWeb.Presence do
             end
         end
 
-      {key, %{metas: [meta | metas], id: meta.id, user: %{name: user_name, email: user.email}}}
+      {key, %{metas: [meta | metas], id: key, user: %{username: username, email: user.email}}}
     end
   end
 
@@ -77,19 +76,8 @@ defmodule WikWeb.Presence do
   end
 
   def track_user_presence(user, path, group_id) do
-    username =
-      case user.email do
-        nil ->
-          "Anonymous"
-
-        email ->
-          case String.split(to_string(email), "@", parts: 2) do
-            [username, _] -> username
-            _ -> "Unknown"
-          end
-      end
-
-    meta = %{id: user.id, username: username, path: path, group_id: group_id}
+    # Only store non-user data in meta - user data will be added by fetch/2
+    meta = %{path: path, group_id: group_id}
     topic = "group:#{group_id}:users"
 
     # Use Phoenix.Presence.track/4 to track the user in the group-specific topic

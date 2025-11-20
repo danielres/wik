@@ -72,8 +72,6 @@ defmodule WikWeb.GroupLive.Show do
      socket
      |> assign(:page_title, "Show Group")
      |> assign(:updated_fields, [])
-     # TODO: assign ctx in live_user_required
-     |> assign(:ctx, %{current_user: current_user})
      |> assign(:group, group)}
   end
 

@@ -91,7 +91,6 @@ defmodule WikWeb.GroupLive.Index do
      socket
      |> assign(:page_title, "Your groups")
      |> assign(:highlighted_group_ids, MapSet.new())
-     |> assign(:ctx, %{current_user: current_user})
      |> stream(:groups, groups)}
   end
 

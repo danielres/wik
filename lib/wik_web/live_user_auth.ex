@@ -23,6 +23,7 @@ defmodule WikWeb.LiveUserAuth do
 
   def on_mount(:live_user_required, _params, _session, socket) do
     if socket.assigns[:current_user] do
+      socket = socket |> assign(:ctx, %{current_user: socket.assigns[:current_user]})
       {:cont, socket}
     else
       {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}

@@ -31,18 +31,31 @@ defmodule WikWeb.PageLive.Show do
 
   @impl true
   def mount(%{"page_slug" => page_slug}, _session, socket) do
-    # Wik.Accounts.Group
-    # |> Ash.get!(%{slug: slug}, actor: socket.assigns.current_user, load: [:author])
-    page =
-      Wik.Wiki.Page
-      |> Ash.get!(
-        %{group_id: socket.assigns.ctx.current_group.id, slug: page_slug},
-        actor: socket.assigns.current_user
-      )
+    case Wik.Wiki.Page
+         |> Ash.get(
+           %{group_id: socket.assigns.ctx.current_group.id, slug: page_slug},
+           actor: socket.assigns.current_user
+         ) do
+      {:ok, page} ->
+        {:ok,
+         socket
+         |> assign(:page_title, page.title)
+         |> assign(:page, page)}
 
-    {:ok,
-     socket
-     |> assign(:page_title, "Show Page")
-     |> assign(:page, page)}
+      {:error, _error} ->
+        page =
+          Wik.Wiki.Page
+          |> Ash.Changeset.for_create(
+            :create,
+            %{title: page_slug},
+            actor: socket.assigns.current_user,
+            context: %{shared: %{current_group_id: socket.assigns.ctx.current_group.id}}
+          )
+          |> Ash.create!()
+
+        {:ok,
+         socket
+         |> push_navigate(to: ~p"/#{socket.assigns.ctx.current_group.slug}/pages/#{page.slug}")}
+    end
   end
 end

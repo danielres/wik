@@ -161,3 +161,7 @@
 		@apply opacity-50 hover:opacity-100 transition-opacity;
 	}
 }
+
+li::marker {
+	color: color-mix(in oklab, var(--color-base-content) 20%, transparent);
+}

@@ -54,7 +54,7 @@ defmodule WikWeb.GroupLive.Show do
           <h2>Members<sup class="opacity-75 ml-1">{@ctx.current_group.users |> length()}</sup></h2>
           <ul class="list list-disc ml-4">
             <li :for={member <- @ctx.current_group.users}>
-              {member.email}
+              {member |> to_string()}
             </li>
           </ul>
         </div>

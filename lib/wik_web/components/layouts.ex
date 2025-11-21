@@ -47,7 +47,7 @@ defmodule WikWeb.Layouts do
             </.link>
             <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}"}>Home</.link>
             <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/versions"}>Versions</.link>
-            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/users"}>Users</.link>
+            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/members"}>Members</.link>
           <% end %>
         </div>
       </div>

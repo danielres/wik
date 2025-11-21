@@ -1,19 +1,20 @@
 defmodule WikWeb.UserLive.Index do
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
+  require Ash.Query
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
-        Users
+        Members
         <:actions></:actions>
       </.header>
 
-      <.table id="users" rows={@streams.users}>
-        <:col :let={{_id, user}} label="Id">{user.id}</:col>
-        <:col :let={{_id, user}} label="Email">{user.email}</:col>
+      <.table id="members" rows={@rels}>
+        <:col :let={rel} label="Username">{rel.user |> to_string()}</:col>
+        <:col :let={rel} label="Since">{rel.inserted_at}</:col>
       </.table>
     </Layouts.app>
     """
@@ -21,10 +22,15 @@ defmodule WikWeb.UserLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
+    rels =
+      Wik.Accounts.GroupUserRelation
+      |> Ash.Query.filter(group_id == ^socket.assigns.ctx.current_group.id)
+      |> Ash.read!(actor: socket.assigns[:current_user], load: [:user])
+
     {:ok,
      socket
      |> assign(:page_title, "Listing Users")
-     |> stream(:users, Ash.read!(Wik.Accounts.User, actor: socket.assigns[:current_user]))}
+     |> assign(:rels, rels)}
   end
 
   @impl true

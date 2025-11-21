@@ -124,6 +124,12 @@ defmodule Wik.Wiki.Page do
       allow_nil? false
       public? true
     end
+
+    has_many :versions, Wik.Events.Event do
+      destination_attribute :record_id
+      source_attribute :id
+      filter expr(resource == Wik.Wiki.Page)
+    end
   end
 
   identities do

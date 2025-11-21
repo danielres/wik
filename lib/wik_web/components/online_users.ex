@@ -7,17 +7,28 @@ defmodule WikWeb.Components.OnlineUsers do
       <li :for={%{id: id, user: user, metas: metas} <- @presences} id={id}>
         <div class="font-semibold">
           {user |> to_string}
-          <sup>{length(metas)}</sup>
+          <sup class="opacity-50">{length(metas)}</sup>
         </div>
-        <ul class="pl-4">
+        <ul class="pl-2">
           <li :for={meta <- metas}>
-            <.link navigate={meta.path}>
-              {meta.path}
+            <.link navigate={meta.path} class="opacity-75 hover:opacity-100 transition">
+              {meta.path |> pretty_path()}
             </.link>
           </li>
         </ul>
       </li>
     </ul>
     """
+  end
+
+  defp pretty_path(path) when is_binary(path) do
+    case String.split(path, "/") do
+      ["", first_segment | rest] when first_segment != "" ->
+        res = Enum.join(rest, "/")
+        (res == "" && "home") || res
+
+      _ ->
+        path
+    end
   end
 end

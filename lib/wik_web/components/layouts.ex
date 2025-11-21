@@ -76,7 +76,7 @@ defmodule WikWeb.Layouts do
           {render_slot(@inner_block)}
         </div>
 
-        <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
+        <WikWeb.Components.OnlineUsers.list presences={@ctx.presences} />
 
         <div
           :if={WikWeb.Helpers.slot_has_content?(@aside)}

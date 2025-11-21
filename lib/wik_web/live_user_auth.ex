@@ -68,7 +68,8 @@ defmodule WikWeb.LiveUserAuth do
           {:cont, socket |> ctx_add(:presences, presences)}
       end
     else
-      {:cont, socket}
+      # Initialize presences even when not connected
+      {:cont, socket |> ctx_add(:presences, [])}
     end
   end
 

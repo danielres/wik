@@ -42,6 +42,20 @@ defmodule Wik.Wiki.Page do
       primary? true
     end
 
+    changes do
+      change fn changeset, _context ->
+               case Ash.Changeset.fetch_change(changeset, :title) do
+                 {:ok, title} when is_binary(title) ->
+                   capitalized = String.capitalize(title)
+                   Ash.Changeset.force_change_attribute(changeset, :title, capitalized)
+
+                 _ ->
+                   changeset
+               end
+             end,
+             on: [:create, :update]
+    end
+
     create :create do
       accept [:title, :text]
       primary? true

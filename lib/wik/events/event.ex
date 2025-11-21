@@ -18,7 +18,7 @@ defmodule Wik.Events.Event do
     primary_key_type Ash.Type.UUIDv7
 
     # Optional, defaults to :uuid
-    record_id_type :uuid
+    record_id_type :uuid_v7
 
     # Store primary key of actors running the actions
     persist_actor_primary_key :user_id, Wik.Accounts.User

@@ -11,45 +11,17 @@ defmodule WikWeb.Presence do
   end
 
   def fetch(_topic, presences) do
-    # Extract all unique user IDs from presence keys (not metas)
-    user_ids =
-      for {key, _presence} <- presences,
-          into: MapSet.new() do
-        key
-      end
+    user_id_list = Map.keys(presences)
 
-    # Fetch users from database
     users =
-      case MapSet.size(user_ids) do
-        0 ->
-          %{}
-
-        _ ->
-          user_id_list = MapSet.to_list(user_ids)
-
-          Wik.Accounts.User
-          |> Ash.Query.filter(id in ^user_id_list)
-          |> Ash.read!(authorize?: false)
-          |> Map.new(&{&1.id, &1})
-      end
+      Wik.Accounts.User
+      |> Ash.Query.filter(id in ^user_id_list)
+      |> Ash.read!(authorize?: false)
+      |> Map.new(&{&1.id, &1})
 
     # Build presence data with real user information
     for {key, %{metas: [meta | metas]}} <- presences, into: %{} do
-      user = Map.get(users, key, %{email: "unknown@example.com"})
-
-      username =
-        case user.email do
-          nil ->
-            "Unknown User"
-
-          email ->
-            case String.split(to_string(email), "@", parts: 2) do
-              [username, _] -> username
-              _ -> "Unknown User"
-            end
-        end
-
-      {key, %{metas: [meta | metas], id: key, user: %{username: username, email: user.email}}}
+      {key, %{metas: [meta | metas], id: key, user: Map.get(users, key)}}
     end
   end
 

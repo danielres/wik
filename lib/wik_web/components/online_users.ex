@@ -6,7 +6,7 @@ defmodule WikWeb.Components.OnlineUsers do
     <ul :if={@presences} id="online_users" class="space-y-8">
       <li :for={%{id: id, user: user, metas: metas} <- @presences} id={id}>
         <div class="font-semibold">
-          {user.username}
+          {user |> to_string}
           <sup>{length(metas)}</sup>
         </div>
         <ul class="pl-4">

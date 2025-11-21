@@ -3,7 +3,7 @@ defmodule WikWeb.Components.OnlineUsers do
 
   def list(assigns) do
     ~H"""
-    <ul id="online_users" class="space-y-4 text-xs">
+    <ul :if={@presences} id="online_users" class="space-y-4 text-xs">
       <li :for={%{id: id, user: user, metas: metas} <- @presences} id={id}>
         <div class="font-semibold">
           {user |> to_string}

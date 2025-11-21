@@ -54,6 +54,10 @@ defmodule WikWeb.Router do
         live "/versions", EventLive.Index, :index
         live "/versions/:id", EventLive.Show, :show
         live "/members", UserLive.Index, :index
+        live "/pages", PageLive.Index, :index
+        live "/pages/:page_slug", PageLive.Show, :show
+        live "/pages/:page_slug/edit", PageLive.Form, :edit
+        live "/new-page", PageLive.Form, :new
       end
     end
   end

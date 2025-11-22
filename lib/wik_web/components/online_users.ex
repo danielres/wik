@@ -1,6 +1,18 @@
 defmodule WikWeb.Components.OnlineUsers do
+  @moduledoc """
+  Component for displaying a list of currently online users.
+
+  Shows users currently present in a group along with the pages they are viewing.
+  """
+
   use Phoenix.Component
 
+  @doc """
+  Renders a list of online users with their current locations.
+
+  ## Assigns
+    - presences: List of presence data for online users
+  """
   def list(assigns) do
     ~H"""
     <ul :if={@presences} id="online_users" class="space-y-4 text-xs">
@@ -21,14 +33,15 @@ defmodule WikWeb.Components.OnlineUsers do
     """
   end
 
+  @spec pretty_path(String.t()) :: String.t()
   defp pretty_path(path) when is_binary(path) do
-    case String.split(path, "/") do
-      ["", first_segment | rest] when first_segment != "" ->
-        res = Enum.join(rest, "/")
-        (res == "" && "home") || res
+    case String.split(path, "/", trim: true) do
+      [] ->
+        "home"
 
-      _ ->
-        path
+      [_first_segment | rest] ->
+        joined = Enum.join(rest, "/")
+        if joined == "", do: "home", else: joined
     end
   end
 end

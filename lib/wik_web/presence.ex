@@ -1,15 +1,29 @@
 defmodule WikWeb.Presence do
+  @moduledoc """
+  Manages user presence tracking across the application.
+
+  This module tracks which users are currently online in each group,
+  including the pages they are viewing. It extends Phoenix.Presence
+  to provide group-scoped presence tracking.
+  """
+
   use Phoenix.Presence,
     otp_app: :wik,
     pubsub_server: Wik.PubSub
 
   require Ash.Query
 
+  @doc false
   def init(_opts) do
     # user-land state
     {:ok, %{}}
   end
 
+  @doc """
+  Fetches user data for presence tracking.
+
+  Enriches presence data with full user information from the database.
+  """
   def fetch(_topic, presences) do
     user_id_list = Map.keys(presences)
 
@@ -47,6 +61,15 @@ defmodule WikWeb.Presence do
     {:ok, state}
   end
 
+  @doc """
+  Tracks a user's presence in a specific group and path.
+
+  ## Parameters
+    - user: The user struct to track
+    - path: The current path/URL the user is viewing
+    - group_id: The ID of the group the user is in
+  """
+  @spec track_user_presence(Wik.Accounts.User.t(), String.t(), String.t()) :: {:ok, binary()} | {:error, term()}
   def track_user_presence(user, path, group_id) do
     # Only store non-user data in meta - user data will be added by fetch/2
     meta = %{path: path, group_id: group_id}
@@ -58,6 +81,13 @@ defmodule WikWeb.Presence do
     update(self(), topic, user.id, meta)
   end
 
+  @doc """
+  Tracks presence for a LiveView socket.
+
+  Automatically extracts the path and group context from the socket
+  and tracks the user's presence if they are in a group.
+  """
+  @spec track_in_liveview(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
   def track_in_liveview(socket, url) do
     if Phoenix.LiveView.connected?(socket) do
       path = URI.parse(url).path
@@ -76,18 +106,31 @@ defmodule WikWeb.Presence do
     socket
   end
 
-  # Group-specific presence functions
+  @doc """
+  Lists all users currently online in a specific group.
+
+  Returns a list of presence structs containing user information
+  and metadata about their current location.
+  """
+  @spec list_online_users_in_group(String.t()) :: list(map())
   def list_online_users_in_group(group_id) do
     topic = "group:#{group_id}:users"
     list(topic) |> Enum.map(fn {_id, presence} -> presence end)
   end
 
+  @doc """
+  Subscribes the current process to presence updates for a specific group.
+  """
+  @spec subscribe_to_group(String.t()) :: :ok | {:error, term()}
   def subscribe_to_group(group_id) do
     topic = "group:#{group_id}:users"
     Phoenix.PubSub.subscribe(Wik.PubSub, "proxy:#{topic}")
   end
 
-  # Legacy function - deprecated but kept for backwards compatibility
+  # Legacy functions - deprecated but kept for backwards compatibility
+  @deprecated "Use list_online_users_in_group/1 instead"
   def list_online_users(), do: []
+
+  @deprecated "Use subscribe_to_group/1 instead"
   def subscribe(), do: :ok
 end

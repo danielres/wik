@@ -95,7 +95,7 @@ defmodule WikWeb.Layouts do
     </header>
 
     <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class={["mx-auto  space-y-4 grid gap-8", true && "grid-cols-[1fr_auto]"]}>
+      <div class={["mx-auto space-y-4 grid gap-8", @ctx[:presences] && "grid-cols-[1fr_auto]"]}>
         <div>
           {render_slot(@inner_block)}
         </div>

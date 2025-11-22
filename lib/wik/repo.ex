@@ -1,4 +1,13 @@
 defmodule Wik.Repo do
+  @moduledoc """
+  PostgreSQL repository for the application.
+
+  Configured to use AshPostgres with the following extensions:
+  - `ash-functions` - Ash framework database functions
+  - `citext` - Case-insensitive text type
+
+  Requires PostgreSQL version 17.6.0 or higher.
+  """
   use AshPostgres.Repo,
     otp_app: :wik
 
@@ -8,8 +17,11 @@ defmodule Wik.Repo do
     ["ash-functions", "citext"]
   end
 
-  # Don't open unnecessary transactions
-  # will default to `false` in 4.0
+  @doc """
+  Disables unnecessary transactions for better performance.
+
+  This will be the default behavior in Ash 4.0.
+  """
   @impl true
   def prefer_transaction? do
     false

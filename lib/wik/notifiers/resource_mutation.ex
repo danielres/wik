@@ -1,6 +1,31 @@
 defmodule Wik.Notifiers.ResourceMutation do
+  @moduledoc """
+  Broadcasts resource mutations (create, update, destroy) via Phoenix PubSub.
+
+  This notifier is used by Ash resources to broadcast changes in real-time,
+  enabling LiveViews to react to updates from other users.
+
+  ## Topics
+
+  For each mutation, broadcasts to two topics:
+  - Specific item: `{resource}:{action}:{id}` - for individual item subscriptions
+  - Collection: `{resource}:{action}` - for list/index page subscriptions
+
+  ## Events
+
+  - `create` - When a resource is created
+  - `update` - When a resource is updated (only if attributes changed)
+  - `destroy` - When a resource is destroyed
+  """
+
   use Ash.Notifier
 
+  @doc """
+  Handles update notifications.
+
+  Only broadcasts if there are actual attribute changes to avoid
+  unnecessary network traffic.
+  """
   def notify(%Ash.Notifier.Notification{
         action: %{type: :update},
         changeset: changeset,
@@ -46,6 +71,11 @@ defmodule Wik.Notifiers.ResourceMutation do
     end
   end
 
+  @doc """
+  Handles create notifications.
+
+  Broadcasts to both item-specific and collection topics.
+  """
   def notify(%Ash.Notifier.Notification{
         action: %{type: :create},
         resource: resource,
@@ -76,6 +106,11 @@ defmodule Wik.Notifiers.ResourceMutation do
     )
   end
 
+  @doc """
+  Handles destroy notifications.
+
+  Broadcasts to both item-specific and collection topics.
+  """
   def notify(%Ash.Notifier.Notification{
         action: %{type: :destroy},
         resource: resource,
@@ -106,9 +141,23 @@ defmodule Wik.Notifiers.ResourceMutation do
     )
   end
 
+  @doc """
+  Fallback for unhandled notification types.
+  """
   def notify(_), do: :ok
 
-  # Helper to extract a lowercase resource name from the module  
+  @doc """
+  Extracts a lowercase, underscored resource name from the module.
+
+  ## Examples
+
+      iex> resource_name(Wik.Accounts.Group)
+      "group"
+
+      iex> resource_name(Wik.Wiki.Page)
+      "page"
+  """
+  @spec resource_name(module()) :: String.t()
   defp resource_name(resource) do
     resource
     |> Module.split()

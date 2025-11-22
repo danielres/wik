@@ -1,5 +1,6 @@
 defmodule WikWeb.PageLive.Show do
   use WikWeb, :live_view
+  use WikWeb.Presence.Handlers
 
   @impl true
   def render(assigns) do
@@ -75,5 +76,11 @@ defmodule WikWeb.PageLive.Show do
          socket
          |> push_navigate(to: ~p"/#{socket.assigns.ctx.current_group.slug}/pages/#{page.slug}")}
     end
+  end
+
+  @impl true
+  def handle_params(_params, url, socket) do
+    WikWeb.Presence.track_in_liveview(socket, url)
+    {:noreply, socket}
   end
 end

@@ -38,40 +38,63 @@ defmodule WikWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1 ">
-        <div class="flex gap-2 items-center">
-          <%= if(@ctx[:current_group]) do %>
-            <.link class="btn btn-square btn-ghost" navigate={~p"/"}>
-              <.icon name="hero-arrow-left" />
-            </.link>
-            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}"}>Home</.link>
-            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/versions"}>Versions</.link>
-            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/members"}>Members</.link>
-            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/pages/home"}>Pages</.link>
+    <header class="px-4 sm:px-6 lg:px-8 pt-0 space-y-2 mt-2">
+      <div class="flex justify-between w-full">
+        <div class="flex items-center gap-2 mt-2 font-bold text-sm">
+          <%= if @ctx[:current_group] do %>
+          <.link
+            class="opacity-50 hover:opacity-100 transition"
+            navigate={~p"/"}
+          >
+            Groups
+          </.link>
+
+          <span class="opacity-50">/</span>
+          <.link
+            class="opacity-50 hover:opacity-100 transition"
+            navigate={~p"/#{@ctx.current_group.slug}"}
+          >
+            {@ctx.current_group.title}
+          </.link>
+
           <% end %>
         </div>
+
+        <div>
+          <ul class="flex flex-column px-1 space-x-4 items-center">
+            <li>
+              {@ctx.current_user |> to_string}
+            </li>
+            <li>
+              <.link navigate={~p"/sign-out"}>sign-out</.link>
+            </li>
+            <li>
+              <.theme_toggle />
+            </li>
+          </ul>
+        </div>
       </div>
-      <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
-          <li>
-            {@ctx.current_user |> to_string}
-          </li>
-          <li>
-            <.link navigate={~p"/sign-out"}>sign-out</.link>
-          </li>
-          <li>
-            <.theme_toggle />
-          </li>
-        </ul>
-      </div>
+
+      <%= if(@ctx[:current_group]) do %>
+        <div class="flex gap-2 items-center justify-between">
+          <div>
+            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/pages/home"}>Pages</.link>
+            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/members"}>Members</.link>
+          </div>
+
+          <%= if Mix.env() == :dev do %>
+            <.link
+              class="btn opacity-25 hover:opacity-100 transition"
+              navigate={~p"/#{@ctx.current_group.slug}/versions"}
+            >
+              Versions
+            </.link>
+          <% end %>
+        </div>
+      <% end %>
     </header>
 
     <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <%= if(@ctx[:current_group]) do %>
-        <h1 class="font-bold opacity-50 text-xl">{@ctx.current_group.title}</h1>
-      <% end %>
-
       <div class={["mx-auto  space-y-4 grid gap-8", true && "grid-cols-[1fr_auto]"]}>
         <div>
           {render_slot(@inner_block)}

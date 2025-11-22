@@ -1,4 +1,20 @@
 defmodule Wik.Accounts.Group do
+  @moduledoc """
+  Represents a group that can contain wiki pages and users.
+
+  Groups are the main organizational unit in the application. Each group:
+  - Has a unique slug used in URLs
+  - Contains wiki pages
+  - Has multiple members (users)
+  - Has an author (creator) with special permissions
+  - Tracks changes through event logging
+
+  ## Authorization
+  - Any authenticated user can create a group
+  - Users can read groups they are members of
+  - Only the group author can update or destroy the group
+  """
+
   use Ash.Resource,
     otp_app: :wik,
     domain: Wik.Accounts,

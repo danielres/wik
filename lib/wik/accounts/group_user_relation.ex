@@ -1,4 +1,15 @@
 defmodule Wik.Accounts.GroupUserRelation do
+  @moduledoc """
+  Represents the many-to-many relationship between groups and users.
+
+  This resource manages which users belong to which groups, including
+  tracking who added the user to the group (the author).
+
+  ## Authorization
+  - Users can read relations for groups they belong to
+  - Only group authors can remove members from groups
+  """
+
   use Ash.Resource,
     otp_app: :wik,
     domain: Wik.Accounts,
@@ -26,15 +37,16 @@ defmodule Wik.Accounts.GroupUserRelation do
   end
 
   policies do
+    # Users can read group-user relations for groups they are members of
     policy action_type(:read) do
-      # TODO: authorize only if actor and GroupUserRelation have 1 or more groups in common
-      authorize_if always()
+      # Allow reading if the actor is related to the group through group_user_relations
+      authorize_if relates_to_actor_via([:group, :users])
     end
 
+    # Only group authors can remove members from groups
     policy action_type(:destroy) do
-
-      # TODO: authorize only if actor is group author 
-      authorize_if always()
+      # Allow destroy if actor is the author of the group
+      authorize_if relates_to_actor_via([:group, :author])
     end
   end
 

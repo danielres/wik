@@ -1,4 +1,19 @@
 defmodule Wik.Wiki.Page do
+  @moduledoc """
+  Represents a wiki page within a group.
+
+  Pages are the primary content units in the application. Each page:
+  - Belongs to a specific group
+  - Has a unique slug within its group
+  - Contains markdown or text content
+  - Has an author (creator)
+  - Tracks all changes through event logging for version history
+
+  ## Authorization
+  - Users can read pages in groups they belong to
+  - Users can create/update/destroy pages in their groups
+  """
+
   use Ash.Resource,
     otp_app: :wik,
     domain: Wik.Wiki,

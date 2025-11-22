@@ -1,5 +1,6 @@
 defmodule WikWeb.PageLive.History do
   use WikWeb, :live_view
+  use WikWeb.Presence.Handlers
   require Ash.Query
 
   @impl true
@@ -86,7 +87,9 @@ defmodule WikWeb.PageLive.History do
   end
 
   @impl true
-  def handle_params(%{"version" => v}, _uri, socket) do
+  def handle_params(%{"version" => v}, url, socket) do
+    WikWeb.Presence.track_in_liveview(socket, url)
+
     v = v |> String.to_integer()
 
     {:ok, version} = get_page_version(socket.assigns.page.id, v, socket.assigns.current_user)

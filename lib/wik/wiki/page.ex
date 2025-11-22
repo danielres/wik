@@ -132,6 +132,12 @@ defmodule Wik.Wiki.Page do
     end
   end
 
+  aggregates do
+    count :versions_count, :versions do
+      public? true
+    end
+  end
+
   identities do
     identity :unique_group_slug, [:group_id, :slug], eager_check_with: Wik.Accounts
   end

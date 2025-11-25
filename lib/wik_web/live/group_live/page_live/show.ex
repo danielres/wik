@@ -26,15 +26,12 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         </:subtitle>
 
         <:actions>
-          <.button navigate={~p"/#{@ctx.current_group.slug}/pages"}>
-            <.icon name="hero-arrow-left" />
-          </.button>
-          <.button
-            variant="primary"
-            navigate={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/edit?return_to=show"}
-          >
-            <.icon name="hero-pencil-square" /> Edit Page
-          </.button>
+          <WikWeb.Components.ButtonEdit.button
+            :if={Ash.can?({@page, :update}, @current_user)}
+            link={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/edit?return_to=show"}
+            watch_path={@current_path <> "/edit"}
+            presences={@ctx.presences}
+          />
         </:actions>
       </.header>
 
@@ -118,6 +115,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @impl true
   def handle_params(_params, url, socket) do
     WikWeb.Presence.track_in_liveview(socket, url)
+    socket = socket |> assign(current_path: URI.parse(url).path)
     {:noreply, socket}
   end
 end

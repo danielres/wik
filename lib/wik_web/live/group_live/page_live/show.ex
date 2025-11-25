@@ -38,7 +38,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       <.live_component
         module={WikWeb.Components.Generic.Modal}
         mandatory?
-        id="user-tz-selector-modal"
+        id={ "modal-form-page-#{@page.id}" }
         open?={@live_action == :edit and connected?(@socket)}
         phx-click-close={JS.patch(~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}")}
       >
@@ -55,30 +55,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       <main>{@page.text}</main>
     </Layouts.app>
     """
-  end
-
-  @doc """
-  Retrieves a specific version of a page from the event history.
-
-  ## Parameters
-    - page_id: The ID of the page
-    - version_number: The version number to retrieve (1-indexed)
-    - actor: The actor performing the query (for authorization)
-
-  ## Returns
-    `{:ok, event}` or `{:error, reason}`
-  """
-  @spec get_page_version(String.t(), pos_integer(), Wik.Accounts.User.t()) ::
-          {:ok, Wik.Versions.Version.t()} | {:error, term()}
-  def get_page_version(page_id, version_number, actor) do
-    require Ash.Query
-
-    Wik.Versions.Version
-    |> Ash.Query.filter(record_id == ^page_id and resource == "Wik.Wiki.Page")
-    |> Ash.Query.sort(occurred_at: :asc)
-    |> Ash.Query.offset(version_number - 1)
-    |> Ash.Query.limit(1)
-    |> Ash.read_one(actor: actor)
   end
 
   @impl true
@@ -119,22 +95,35 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     socket = socket |> assign(current_path: current_path)
 
     socket =
-      if socket.assigns.live_action == :edit do
-        editors = socket.assigns.ctx.presences |> WikWeb.Presence.users_at_path(current_path)
-
-        if editors |> length() > 0 do
-          group_slug = socket.assigns.ctx.current_group.slug
-          page_slug = socket.assigns.page.slug
-          socket
-          |> push_patch(to: ~p"/#{group_slug}/pages/#{page_slug}")
-          |> Toast.put_toast(:info, "#{editors |> List.first()} is already editing this page")
-        else
-          socket
-        end
+      if socket.assigns.live_action == :edit and has_editors?(socket, current_path) do
+        redirect_from_edit(socket)
       else
         socket
       end
 
     {:noreply, socket}
+  end
+
+  defp has_editors?(socket, path) do
+    socket.assigns.ctx.presences
+    |> WikWeb.Presence.users_at_path(path)
+    |> length() > 0
+  end
+
+  defp redirect_from_edit(socket) do
+    group_slug = socket.assigns.ctx.current_group.slug
+    page_slug = socket.assigns.page.slug
+
+    current_editor =
+      socket.assigns.ctx.presences
+      |> WikWeb.Presence.users_at_path(socket.assigns.current_path)
+      |> List.first()
+
+    socket
+    |> push_patch(to: ~p"/#{group_slug}/pages/#{page_slug}")
+    |> Toast.put_toast(
+      :info,
+      "Aready being edited by #{current_editor}, please try again later."
+    )
   end
 end

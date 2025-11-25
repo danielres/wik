@@ -1,4 +1,11 @@
 defmodule WikWeb.HomeLive do
+  @moduledoc """
+  LiveView for the home page showing a user's groups.
+
+  Displays all groups the current user belongs to and allows creating new groups.
+  Includes real-time updates when groups are created, updated, or deleted.
+  """
+
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
 
@@ -94,10 +101,12 @@ defmodule WikWeb.HomeLive do
     {:noreply, socket}
   end
 
+  @spec reload_groups!(Phoenix.LiveView.Socket.t()) :: list(Wik.Accounts.Group.t())
   defp reload_groups!(socket) do
     Wik.Accounts.Group |> Ash.read!(actor: socket.assigns[:current_user], load: [:author])
   end
 
+  @spec reload_group!(Phoenix.LiveView.Socket.t(), String.t()) :: Wik.Accounts.Group.t()
   defp reload_group!(socket, id) do
     Wik.Accounts.Group |> Ash.get!(id, actor: socket.assigns.current_user, load: [:author])
   end

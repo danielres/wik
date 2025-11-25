@@ -8,26 +8,12 @@ defmodule WikWeb.GroupLive.Show do
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
         <:actions>
-          <div
+          <WikWeb.Components.ButtonEdit.button
             :if={Ash.can?({@group, :update}, @current_user)}
-            class={[
-              "tooltip tooltip-info tooltip-bottom tooltip-primary",
-              false && "tooltip-open"
-            ]}
-          >
-            <span class={["cursor-pointer"]}>
-              <.link
-                class="btn btn-neutral btn-circle hover:btn-primary"
-                patch={~p"/#{@group.slug}/edit"}
-              >
-                <.icon name="hero-pencil-square" />
-              </.link>
-            </span>
-
-            <div class="tooltip-content" style="font-size: inherit">
-              Edit group
-            </div>
-          </div>
+            link={~p"/#{@group.slug}/edit"}
+            watch_path={@current_path <> "/edit"}
+            presences={@ctx.presences}
+          />
         </:actions>
       </.header>
 
@@ -95,6 +81,7 @@ defmodule WikWeb.GroupLive.Show do
   @impl true
   def handle_params(_params, url, socket) do
     WikWeb.Presence.track_in_liveview(socket, url)
+    socket = socket |> assign(current_path: URI.parse(url).path)
     {:noreply, socket}
   end
 

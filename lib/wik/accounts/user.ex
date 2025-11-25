@@ -56,6 +56,7 @@ defmodule Wik.Accounts.User do
 
     read :get_by_email do
       description "Looks up a user by their email"
+      argument :email, :string, allow_nil?: false
       get_by :email
     end
 

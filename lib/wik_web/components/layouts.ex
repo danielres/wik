@@ -42,21 +42,20 @@ defmodule WikWeb.Layouts do
       <div class="flex justify-between w-full">
         <div class="flex items-center gap-2 mt-2 font-bold text-sm">
           <%= if @ctx[:current_group] do %>
-          <.link
-            class="opacity-50 hover:opacity-100 transition"
-            navigate={~p"/"}
-          >
-            Groups
-          </.link>
+            <.link
+              class="opacity-50 hover:opacity-100 transition"
+              navigate={~p"/"}
+            >
+              Groups
+            </.link>
 
-          <span class="opacity-50">/</span>
-          <.link
-            class="opacity-50 hover:opacity-100 transition"
-            navigate={~p"/#{@ctx.current_group.slug}"}
-          >
-            {@ctx.current_group.title}
-          </.link>
-
+            <span class="opacity-50">/</span>
+            <.link
+              class="opacity-50 hover:opacity-100 transition"
+              navigate={~p"/#{@ctx.current_group.slug}"}
+            >
+              {@ctx.current_group.title}
+            </.link>
           <% end %>
         </div>
 

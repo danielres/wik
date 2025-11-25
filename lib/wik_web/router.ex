@@ -86,8 +86,6 @@ defmodule WikWeb.Router do
         ] do
         live "/", GroupLive.Show, :show
         live "/edit", GroupLive.Show, :edit
-        live "/versions", VersionLive.Index, :index
-        live "/versions/:id", VersionLive.Show, :show
         live "/members", UserLive.Index, :index
         live "/pages", PageLive.Index, :index
         live "/pages/:page_slug", PageLive.Show, :show

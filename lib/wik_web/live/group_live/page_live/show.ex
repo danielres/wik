@@ -38,6 +38,23 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         </:actions>
       </.header>
 
+      <.live_component
+        module={WikWeb.Components.Generic.Modal}
+        mandatory?
+        id="user-tz-selector-modal"
+        open?={@live_action == :edit}
+        phx-click-close={JS.patch(~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}")}
+      >
+        <.live_component
+          module={WikWeb.Components.Page.Form}
+          id={ "form-page-#{@page.id}" }
+          page={@page}
+          actor={@current_user}
+          group={@ctx.current_group}
+          return_to={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+        >
+        </.live_component>
+      </.live_component>
       <main>{@page.text}</main>
     </Layouts.app>
     """

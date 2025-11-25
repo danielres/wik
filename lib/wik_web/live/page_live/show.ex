@@ -1,4 +1,11 @@
 defmodule WikWeb.PageLive.Show do
+  @moduledoc """
+  LiveView for displaying a wiki page.
+
+  Handles viewing wiki pages within a group, automatically creating pages
+  that don't exist yet when accessed.
+  """
+
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
 
@@ -36,6 +43,19 @@ defmodule WikWeb.PageLive.Show do
     """
   end
 
+  @doc """
+  Retrieves a specific version of a page from the event history.
+
+  ## Parameters
+    - page_id: The ID of the page
+    - version_number: The version number to retrieve (1-indexed)
+    - actor: The actor performing the query (for authorization)
+
+  ## Returns
+    `{:ok, event}` or `{:error, reason}`
+  """
+  @spec get_page_version(String.t(), pos_integer(), Wik.Accounts.User.t()) ::
+          {:ok, Wik.Events.Event.t()} | {:error, term()}
   def get_page_version(page_id, version_number, actor) do
     require Ash.Query
 

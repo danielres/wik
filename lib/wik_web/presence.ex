@@ -119,6 +119,13 @@ defmodule WikWeb.Presence do
     list(topic) |> Enum.map(fn {_id, presence} -> presence end)
   end
 
+  def users_at_path(presences, path) do
+    for p <- presences,
+        m <- p.metas,
+        m.path == path,
+        do: p.user |> to_string()
+  end
+
   @doc """
   Subscribes the current process to presence updates for a specific group.
   """

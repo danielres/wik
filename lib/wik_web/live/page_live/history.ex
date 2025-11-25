@@ -35,7 +35,10 @@ defmodule WikWeb.PageLive.History do
             </div>
 
             <div class="text-xs">
-              <WikWeb.Components.Time.pretty datetime={@version.occurred_at} />
+              <WikWeb.Components.Time.pretty
+                datetime={@version.occurred_at}
+                class="opacity-80 hover:opacity-100 transition"
+              />
 
               <span class="opacity-50">by</span>
 

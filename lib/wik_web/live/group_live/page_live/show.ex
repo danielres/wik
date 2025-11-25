@@ -39,7 +39,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         module={WikWeb.Components.Generic.Modal}
         mandatory?
         id="user-tz-selector-modal"
-        open?={@live_action == :edit}
+        open?={@live_action == :edit and connected?(@socket)}
         phx-click-close={JS.patch(~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}")}
       >
         <.live_component
@@ -115,7 +115,26 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @impl true
   def handle_params(_params, url, socket) do
     WikWeb.Presence.track_in_liveview(socket, url)
-    socket = socket |> assign(current_path: URI.parse(url).path)
+    current_path = URI.parse(url).path
+    socket = socket |> assign(current_path: current_path)
+
+    socket =
+      if socket.assigns.live_action == :edit do
+        editors = socket.assigns.ctx.presences |> WikWeb.Presence.users_at_path(current_path)
+
+        if editors |> length() > 0 do
+          group_slug = socket.assigns.ctx.current_group.slug
+          page_slug = socket.assigns.page.slug
+          socket
+          |> push_patch(to: ~p"/#{group_slug}/pages/#{page_slug}")
+          |> Toast.put_toast(:info, "#{editors |> List.first()} is already editing this page")
+        else
+          socket
+        end
+      else
+        socket
+      end
+
     {:noreply, socket}
   end
 end

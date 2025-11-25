@@ -64,7 +64,7 @@ defmodule WikWeb.PageLive.History do
   def get_page_version(page_id, version_number, actor) do
     require Ash.Query
 
-    Wik.Events.Event
+    Wik.Versions.Version
     |> Ash.Query.filter(record_id == ^page_id and resource == ^Wik.Wiki.Page)
     |> Ash.Query.sort(occurred_at: :asc)
     |> Ash.Query.offset(version_number - 1)

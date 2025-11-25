@@ -53,7 +53,7 @@ config :spark,
 config :wik,
   ecto_repos: [Wik.Repo],
   generators: [timestamp_type: :utc_datetime],
-  ash_domains: [Wik.Accounts, Wik.Events, Wik.Wiki]
+  ash_domains: [Wik.Accounts, Wik.Versions, Wik.Wiki]
 
 # Configures the endpoint
 config :wik, WikWeb.Endpoint,

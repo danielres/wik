@@ -2,54 +2,6 @@
   "attributes": [
     {
       "allow_nil?": false,
-      "default": "fragment(\"uuid_generate_v7()\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": true,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "title",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "slug",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "text",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
@@ -91,7 +43,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "pages_author_id_fkey",
+        "name": "group_user_relations_author_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -108,7 +60,7 @@
       "default": "nil",
       "generated?": false,
       "precision": null,
-      "primary_key?": false,
+      "primary_key?": true,
       "references": {
         "deferrable": false,
         "destination_attribute": "id",
@@ -122,7 +74,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "pages_group_id_fkey",
+        "name": "group_user_relations_group_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -133,19 +85,50 @@
       "size": null,
       "source": "group_id",
       "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": true,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "group_user_relations_user_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "users"
+      },
+      "scale": null,
+      "size": null,
+      "source": "user_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "custom_indexes": [],
   "custom_statements": [],
-  "has_create_action": false,
-  "hash": "DD312F1FE36D7DE38E01C623604662CCAB7C9C18DC4ADAAD4F336DA34B0303B1",
+  "has_create_action": true,
+  "hash": "C4A8EB256A9D382D13CF1A1E15A4BA1C8AB5D7FEB3F13ABB3F80ED9371D04535",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "pages_unique_group_slug_index",
+      "index_name": "group_user_relations_unique_group_user_relation_index",
       "keys": [
         {
           "type": "atom",
@@ -153,10 +136,10 @@
         },
         {
           "type": "atom",
-          "value": "slug"
+          "value": "user_id"
         }
       ],
-      "name": "unique_group_slug",
+      "name": "unique_group_user_relation",
       "nils_distinct?": true,
       "where": null
     }
@@ -168,5 +151,5 @@
   },
   "repo": "Elixir.Wik.Repo",
   "schema": null,
-  "table": "pages"
+  "table": "group_user_relations"
 }

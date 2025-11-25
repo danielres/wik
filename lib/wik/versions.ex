@@ -1,4 +1,4 @@
-defmodule Wik.Events do
+defmodule Wik.Versions do
   use Ash.Domain, otp_app: :wik, extensions: [AshAdmin.Domain]
 
   admin do
@@ -6,6 +6,6 @@ defmodule Wik.Events do
   end
 
   resources do
-    resource Wik.Events.Event
+    resource Wik.Versions.Version
   end
 end

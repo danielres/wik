@@ -1,17 +1,17 @@
-defmodule Wik.Events.Event do
+defmodule Wik.Versions.Version do
   use Ash.Resource,
-    domain: Wik.Events,
+    domain: Wik.Versions,
     data_layer: AshPostgres.DataLayer,
     extensions: [AshEvents.EventLog]
 
   postgres do
-    table "app_events"
+    table "versions"
     repo Wik.Repo
   end
 
   event_log do
     # Module that implements clear_records! callback
-    clear_records_for_replay Wik.Events.ClearAllRecords
+    clear_records_for_replay Wik.Versions.ClearAllRecords
 
     # Optional. Defaults to :integer, Ash.Type.UUIDv7 is the recommended option
     # if your event log is set up with multitenancy via the attribute-strategy.

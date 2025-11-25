@@ -1,4 +1,4 @@
-defmodule WikWeb.EventLive.Index do
+defmodule WikWeb.VersionLive.Index do
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
 
@@ -11,8 +11,8 @@ defmodule WikWeb.EventLive.Index do
       </.header>
 
       <.table
-        id="events"
-        rows={@streams.events}
+        id="versions"
+        rows={@streams.versions}
         row_click={
           fn {_id, event} -> JS.navigate(~p"/#{@ctx.current_group.slug}/versions/#{event}") end
         }
@@ -47,8 +47,8 @@ defmodule WikWeb.EventLive.Index do
 
     {:ok,
      socket
-     |> assign(:page_title, "Listing Events")
-     |> stream(:events, Ash.read!(Wik.Events.Event, actor: socket.assigns[:current_user]))}
+     |> assign(:page_title, "Listing Versions")
+     |> stream(:versions, Ash.read!(Wik.Versions.Version, actor: socket.assigns[:current_user]))}
   end
 
   @impl true

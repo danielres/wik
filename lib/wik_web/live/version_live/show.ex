@@ -1,4 +1,4 @@
-defmodule WikWeb.EventLive.Show do
+defmodule WikWeb.VersionLive.Show do
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
 
@@ -33,7 +33,7 @@ defmodule WikWeb.EventLive.Show do
     {:ok,
      socket
      |> assign(:page_title, "Show Event")
-     |> assign(:event, Ash.get!(Wik.Events.Event, id, actor: socket.assigns.current_user))}
+     |> assign(:event, Ash.get!(Wik.Versions.Version, id, actor: socket.assigns.current_user))}
   end
 
   @impl true

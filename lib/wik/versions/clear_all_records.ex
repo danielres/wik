@@ -1,4 +1,4 @@
-defmodule Wik.Events.ClearAllRecords do
+defmodule Wik.Versions.ClearAllRecords do
   use AshEvents.ClearRecordsForReplay
 
   @impl true

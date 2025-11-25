@@ -55,11 +55,11 @@ defmodule WikWeb.PageLive.Show do
     `{:ok, event}` or `{:error, reason}`
   """
   @spec get_page_version(String.t(), pos_integer(), Wik.Accounts.User.t()) ::
-          {:ok, Wik.Events.Event.t()} | {:error, term()}
+          {:ok, Wik.Versions.Version.t()} | {:error, term()}
   def get_page_version(page_id, version_number, actor) do
     require Ash.Query
 
-    Wik.Events.Event
+    Wik.Versions.Version
     |> Ash.Query.filter(record_id == ^page_id and resource == "Wik.Wiki.Page")
     |> Ash.Query.sort(occurred_at: :asc)
     |> Ash.Query.offset(version_number - 1)

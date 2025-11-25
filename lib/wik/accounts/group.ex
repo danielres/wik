@@ -18,7 +18,7 @@ defmodule Wik.Accounts.Group do
 
   events do
     # Specify your event log resource
-    event_log Wik.Events.Event
+    event_log Wik.Versions.Version
 
     # Optionally ignore certain actions. This is mainly used for actions
     # that are kept around for supporting previous event versions, and

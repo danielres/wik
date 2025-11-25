@@ -7,11 +7,7 @@ defmodule WikWeb.GroupLive.PageLive.Index do
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
         Pages
-        <:actions>
-          <.button variant="primary" navigate={~p"/#{@ctx.current_group.slug}/new-page"}>
-            <.icon name="hero-plus" /> New Page
-          </.button>
-        </:actions>
+        <:actions></:actions>
       </.header>
 
       <.table

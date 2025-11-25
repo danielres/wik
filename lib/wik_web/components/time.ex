@@ -10,7 +10,7 @@ defmodule WikWeb.Components.Time do
   def pretty(assigns) do
     ~H"""
     <div class={["tooltip tooltip-info tooltip-bottom tooltip-neutral", @open? && "tooltip-open"]}>
-      <span class={ [ "cursor-pointer", @class ] }>
+      <span class={["cursor-pointer", @class]}>
         {@datetime |> Utils.Time.relative()}
       </span>
 

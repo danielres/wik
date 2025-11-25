@@ -14,7 +14,9 @@ defmodule WikWeb.UserLive.Index do
 
       <.table id="members" rows={@rels}>
         <:col :let={rel} label="Username">{rel.user |> to_string()}</:col>
-        <:col :let={rel} label="Since">{rel.inserted_at}</:col>
+        <:col :let={rel} label="Since">
+          <WikWeb.Components.Time.pretty datetime={rel.inserted_at} />
+        </:col>
       </.table>
     </Layouts.app>
     """

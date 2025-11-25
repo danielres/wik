@@ -1,4 +1,4 @@
-defmodule WikWeb.PageLive.Index do
+defmodule WikWeb.GroupLive.PageLive.Index do
   use WikWeb, :live_view
 
   @impl true

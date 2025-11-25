@@ -1,4 +1,4 @@
-defmodule WikWeb.PageLive.Show do
+defmodule WikWeb.GroupLive.PageLive.Show do
   @moduledoc """
   LiveView for displaying a wiki page.
 

@@ -1,4 +1,4 @@
-defmodule WikWeb.UserLive.Index do
+defmodule WikWeb.GroupLive.MemberLive.Index do
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
   require Ash.Query

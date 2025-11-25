@@ -86,12 +86,12 @@ defmodule WikWeb.Router do
         ] do
         live "/", GroupLive.Show, :show
         live "/edit", GroupLive.Show, :edit
-        live "/members", UserLive.Index, :index
-        live "/pages", PageLive.Index, :index
-        live "/pages/:page_slug", PageLive.Show, :show
-        live "/pages/:page_slug/edit", PageLive.Form, :edit
-        live "/pages/:page_slug/v/:version", PageLive.History
-        live "/new-page", PageLive.Form, :new
+        live "/members", GroupLive.MemberLive.Index, :index
+        live "/new-page", GroupLive.PageLive.Form, :new
+        live "/pages", GroupLive.PageLive.Index, :index
+        live "/pages/:page_slug", GroupLive.PageLive.Show, :show
+        live "/pages/:page_slug/edit", GroupLive.PageLive.Form, :edit
+        live "/pages/:page_slug/v/:version", GroupLive.PageLive.History
       end
     end
   end

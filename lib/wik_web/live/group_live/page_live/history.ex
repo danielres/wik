@@ -1,4 +1,4 @@
-defmodule WikWeb.PageLive.History do
+defmodule WikWeb.GroupLive.PageLive.History do
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
   require Ash.Query

@@ -1,4 +1,4 @@
-defmodule WikWeb.PageLive.Form do
+defmodule WikWeb.GroupLive.PageLive.Form do
   use WikWeb, :live_view
 
   @impl true

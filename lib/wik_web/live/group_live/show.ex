@@ -8,14 +8,26 @@ defmodule WikWeb.GroupLive.Show do
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
         <:actions>
-          <%= if Ash.can?({@group, :update}, @current_user) do %>
-            <.link
-              class="btn btn-neutral btn-circle hover:btn-primary"
-              patch={~p"/#{@group.slug}/edit"}
-            >
-              <.icon name="hero-pencil-square" />
-            </.link>
-          <% end %>
+          <div
+            :if={Ash.can?({@group, :update}, @current_user)}
+            class={[
+              "tooltip tooltip-info tooltip-bottom tooltip-primary",
+              false && "tooltip-open"
+            ]}
+          >
+            <span class={["cursor-pointer"]}>
+              <.link
+                class="btn btn-neutral btn-circle hover:btn-primary"
+                patch={~p"/#{@group.slug}/edit"}
+              >
+                <.icon name="hero-pencil-square" />
+              </.link>
+            </span>
+
+            <div class="tooltip-content" style="font-size: inherit">
+              Edit group
+            </div>
+          </div>
         </:actions>
       </.header>
 
@@ -35,6 +47,7 @@ defmodule WikWeb.GroupLive.Show do
         >
         </.live_component>
       </.live_component>
+
       <div class="space-y-4">
         <div class="card bg-base-200 p-4">
           <h2>Author</h2>

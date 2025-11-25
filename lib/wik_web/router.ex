@@ -24,6 +24,41 @@ defmodule WikWeb.Router do
   scope "/", WikWeb do
     pipe_through :browser
 
+    auth_routes AuthController, Wik.Accounts.User, path: "/auth"
+    sign_out_route AuthController
+
+    # Remove these if you'd like to use your own authentication views
+    sign_in_route register_path: "/register",
+                  reset_path: "/reset",
+                  auth_routes_prefix: "/auth",
+                  on_mount: [{WikWeb.LiveUserAuth, :live_no_user}],
+                  overrides: [
+                    WikWeb.AuthOverrides,
+                    Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI
+                  ]
+
+    # Remove this if you do not want to use the reset password feature
+    reset_route auth_routes_prefix: "/auth",
+                overrides: [
+                  WikWeb.AuthOverrides,
+                  Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI
+                ]
+
+    # Remove this if you do not use the confirmation strategy
+    confirm_route Wik.Accounts.User, :confirm_new_user,
+      auth_routes_prefix: "/auth",
+      overrides: [WikWeb.AuthOverrides, Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI]
+
+    # Remove this if you do not use the magic link strategy.
+    magic_sign_in_route(Wik.Accounts.User, :magic_link,
+      auth_routes_prefix: "/auth",
+      overrides: [WikWeb.AuthOverrides, Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI]
+    )
+  end
+
+  scope "/", WikWeb do
+    pipe_through :browser
+
     ash_authentication_live_session :authenticated_routes,
       on_mount: [
         {WikWeb.LiveUserAuth, :live_user_required}
@@ -61,41 +96,6 @@ defmodule WikWeb.Router do
         live "/new-page", PageLive.Form, :new
       end
     end
-  end
-
-  scope "/", WikWeb do
-    pipe_through :browser
-
-    auth_routes AuthController, Wik.Accounts.User, path: "/auth"
-    sign_out_route AuthController
-
-    # Remove these if you'd like to use your own authentication views
-    sign_in_route register_path: "/register",
-                  reset_path: "/reset",
-                  auth_routes_prefix: "/auth",
-                  on_mount: [{WikWeb.LiveUserAuth, :live_no_user}],
-                  overrides: [
-                    WikWeb.AuthOverrides,
-                    Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI
-                  ]
-
-    # Remove this if you do not want to use the reset password feature
-    reset_route auth_routes_prefix: "/auth",
-                overrides: [
-                  WikWeb.AuthOverrides,
-                  Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI
-                ]
-
-    # Remove this if you do not use the confirmation strategy
-    confirm_route Wik.Accounts.User, :confirm_new_user,
-      auth_routes_prefix: "/auth",
-      overrides: [WikWeb.AuthOverrides, Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI]
-
-    # Remove this if you do not use the magic link strategy.
-    magic_sign_in_route(Wik.Accounts.User, :magic_link,
-      auth_routes_prefix: "/auth",
-      overrides: [WikWeb.AuthOverrides, Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI]
-    )
   end
 
   # Other scopes may use custom stacks.

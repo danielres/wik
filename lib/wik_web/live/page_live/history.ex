@@ -34,13 +34,14 @@ defmodule WikWeb.PageLive.History do
               </.button>
             </div>
 
-            <div>
+            <div class="text-xs">
+              <WikWeb.Components.Time.pretty datetime={@version.occurred_at} />
+
               <span class="opacity-50">by</span>
+
               <.link class="opacity-80 hover:opacity-100 transition">
                 {@author |> to_string()}
               </.link>
-              <span class="opacity-50">on</span>
-              <span class="">{@version.occurred_at}</span>
             </div>
           </div>
         </:subtitle>

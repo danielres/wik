@@ -8,7 +8,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
-  alias WikWeb.Toast
+  alias WikWeb.Components.RealtimeToast
 
   @impl true
   def render(assigns) do
@@ -124,8 +124,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       {:noreply, socket}
     else
       Process.send_after(self(), :clear_updated_fields, 2000)
-      msg = "Just updated by #{payload.actor}"
-      socket = socket |> put_flash(:info, msg)
 
       socket =
         socket
@@ -134,6 +132,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           page_title: updated_page.title,
           updated_fields: updated_fields
         )
+        |> RealtimeToast.put_update_toast(payload)
 
       {:noreply, socket}
     end
@@ -146,9 +145,11 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
-    msg = ~s(Page "#{payload.data.title}" was just deleted by #{payload.actor})
-    socket = socket |> Toast.put_toast(:info, msg)
-    socket = socket |> push_navigate(to: ~p"/#{socket.assigns.ctx.current_group.slug}/pages")
+    socket =
+      socket
+      |> RealtimeToast.put_delete_toast(payload)
+      |> push_navigate(to: ~p"/#{socket.assigns.ctx.current_group.slug}/pages")
+
     {:noreply, socket}
   end
 

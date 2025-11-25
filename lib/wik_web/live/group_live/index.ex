@@ -1,6 +1,7 @@
 defmodule WikWeb.GroupLive.Index do
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
+  alias WikWeb.Components.RealtimeToast
 
   @impl true
   def render(assigns) do
@@ -105,32 +106,22 @@ defmodule WikWeb.GroupLive.Index do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "create", payload: payload}, socket) do
-    if(payload.actor.id == socket.assigns.current_user.id) do
-      Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
+    Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
 
-      {:noreply,
-       socket
-       |> stream_insert(:groups, payload.data, at: 0)
-       |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))}
-    else
-      {:noreply, socket}
-    end
+    {:noreply,
+     socket
+     |> stream_insert(:groups, payload.data, at: 0)
+     |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))
+     |> RealtimeToast.put_create_toast(payload)}
   end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
-    actor_is_current_user = payload.actor == socket.assigns.current_user
-
     socket =
-      if actor_is_current_user do
-        msg = ~s(Group "#{payload.data}" deleted successfully)
-        socket |> Toast.put_toast(:success, msg)
-      else
-        msg = ~s(Group "#{payload.data}" was just deleted by #{payload.actor})
-        socket |> Toast.put_toast(:info, msg)
-      end
+      socket
+      |> stream_delete(:groups, payload.data)
+      |> RealtimeToast.put_delete_toast(payload)
 
-    socket = socket |> stream_delete(:groups, payload.data)
     {:noreply, socket}
   end
 
@@ -138,18 +129,11 @@ defmodule WikWeb.GroupLive.Index do
   def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
     Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
 
-    actor_is_current_user = payload.actor == socket.assigns.current_user
-
-    msg =
-      if actor_is_current_user,
-        do: ~s(Group "#{payload.data}" updated),
-        else: ~s(Group "#{payload.data}" was just updated by #{payload.actor})
-
     socket =
       socket
       |> stream_insert(:groups, reload_group!(socket, payload.data.id))
       |> update(:highlighted_group_ids, &MapSet.put(&1, payload.data.id))
-      |> Toast.put_toast(:info, msg)
+      |> RealtimeToast.put_update_toast(payload)
 
     {:noreply, socket}
   end

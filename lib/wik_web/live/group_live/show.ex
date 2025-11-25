@@ -20,7 +20,7 @@ defmodule WikWeb.GroupLive.Show do
       <.live_component
         module={WikWeb.Components.Generic.Modal}
         mandatory?
-        id="user-tz-selector-modal"
+        id={ "modal-form-group-#{@group.id}" }
         open?={@live_action == :edit}
         phx-click-close={JS.patch(~p"/#{@group.slug}")}
       >

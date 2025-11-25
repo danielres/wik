@@ -32,7 +32,7 @@ defmodule WikWeb.HomeLive do
         <.live_component
           module={WikWeb.Components.Generic.Modal}
           mandatory?
-          id="user-tz-selector-modal"
+          id="modal-form-group-new"
           open?={@live_action == :new}
           phx-click-close={JS.patch(~p"/")}
         >

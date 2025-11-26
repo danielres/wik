@@ -60,17 +60,37 @@ defmodule WikWeb.Layouts do
         </div>
 
         <div>
-          <ul class="flex flex-column px-1 space-x-4 items-center">
-            <li>
+          <div class="dropdown dropdown-end dropdown-open mt-2 text-sm">
+            <div
+              tabindex="0"
+              role="button"
+              class="opacity-50 hover:opacity-100 transition cursor-pointer font-bold"
+            >
               {@ctx.current_user |> to_string}
-            </li>
-            <li>
-              <.link navigate={~p"/sign-out"}>sign-out</.link>
-            </li>
-            <li>
-              <.theme_toggle />
-            </li>
-          </ul>
+            </div>
+
+            <div
+              tabindex="0"
+              class="dropdown-content card card-sm bg-base-100 z-1 w-48 shadow-md mt-2"
+            >
+              <div class="card-body bg-base-200 rounded-lg">
+                <.link
+                  navigate={~p"/sign-out"}
+                  class="flex gap-3 justify-center items-center hover:bg-white/5 transition px-2 py-2 rounded opacity-80 hover:opacity-100"
+                >
+                  <span>Log out</span>
+                  <.icon name="hero-chevron-right size-4" />
+                </.link>
+
+                <hr class="opacity-20 my-2" />
+
+                <div class="py-2 space-y-4 flex flex-col items-center opacity-80 hover:opacity-100">
+                  <div>Theme</div>
+                  <div class=""><.theme_toggle /></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

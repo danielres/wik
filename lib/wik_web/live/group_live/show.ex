@@ -36,27 +36,57 @@ defmodule WikWeb.GroupLive.Show do
       </.live_component>
 
       <div class="space-y-4">
-        <div class="card bg-base-200 p-4">
-          <h2>Author</h2>
-          <div>
+        <div class="card bg-base-200 p-4 space-y-2">
+          <h2 class="font-bold">
+            Author
+          </h2>
+          <div class="opacity-70">
             {@group.author |> to_string}
           </div>
         </div>
 
-        <div class="card bg-base-200 p-4">
-          <h2>Description</h2>
-          <div class={[:text in @updated_fields && "animate-reload"]}>
-            {@group.text}
+        <div class="card bg-base-200 p-4 space-y-2">
+          <h2 class="font-bold">
+            Description
+          </h2>
+          <div class={[:text in @updated_fields && "animate-reload", "opacity-70"]}>
+            {@group.text || "(no description)"}
           </div>
         </div>
 
-        <div class="card bg-base-200 p-4">
-          <h2>Members<sup class="opacity-75 ml-1">{@ctx.current_group.users |> length()}</sup></h2>
-          <ul class="list list-disc ml-4">
-            <li :for={member <- @ctx.current_group.users}>
+        <div class="card bg-base-200 p-4 space-y-2">
+          <h2 class="font-bold">
+            Members<sup class="opacity-75 ml-1">{@group.users |> length()}</sup>
+          </h2>
+          <ul class="list list-disc ml-4 opacity-70">
+            <li :for={member <- @group.users}>
               {member |> to_string()}
             </li>
           </ul>
+        </div>
+
+        <div class="card bg-base-200 p-4 space-y-2">
+          <h2 class="font-bold">
+            Pages<sup class="opacity-75 ml-1">{@group.pages_count}</sup>
+          </h2>
+
+          <h3 class="font-bold text-sm opacity-75">
+            Recent updates
+          </h3>
+
+          <div class="text-sm">
+            <.link
+              :for={p <- @group.last_updated_pages}
+              class="grid grid-cols-3 opacity-60 hover:opacity-100"
+              navigate={~p"/#{@group.slug}/pages/#{p.slug}"}
+            >
+              <div>{p.title}</div>
+              <div>
+                <WikWeb.Components.Time.pretty datetime={p.updated_at} />
+              </div>
+              <div><span class="opacity-50">by</span> {p.author |> to_string}</div>
+            </.link>
+          </div>
         </div>
       </div>
     </Layouts.app>
@@ -88,7 +118,10 @@ defmodule WikWeb.GroupLive.Show do
 
   defp reload_group!(slug, socket) do
     Wik.Accounts.Group
-    |> Ash.get!(%{slug: slug}, actor: socket.assigns.current_user, load: [:author])
+    |> Ash.get!(%{slug: slug},
+      actor: socket.assigns.current_user,
+      load: [:author, :pages_count, :users, last_updated_pages: [limit: 10]]
+    )
   end
 
   @impl true

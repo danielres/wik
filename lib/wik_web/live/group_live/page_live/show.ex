@@ -20,12 +20,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         </div>
 
         <:subtitle>
-          <.link
-            patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@page.versions_count}"}
-            class="btn btn-sm btn-neutral text-base-content/50"
-          >
-            v. {@page.versions_count}
-          </.link>
+          <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={@page} />
         </:subtitle>
 
         <:actions>

@@ -58,6 +58,29 @@ defmodule Wik.Accounts.GroupTest do
     assert Ash.get!(Wik.Accounts.User, user.id, authorize?: false)
   end
 
+  test "destroying group removes pages" do
+    user = generate(user(authorize?: false))
+    group = generate(group(actor: user, authorize?: false))
+
+    page =
+      Wik.Wiki.Page
+      |> Ash.Changeset.for_create(
+        :create,
+        %{title: "Page"},
+        actor: user,
+        context: %{shared: %{current_group_id: group.id}}
+      )
+      |> Ash.create!()
+
+    # Ensure page exists before deletion
+    assert Ash.get!(Wik.Wiki.Page, page.id, actor: user)
+
+    Ash.destroy!(group, actor: user)
+
+    assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Query.NotFound{} | _]}} =
+             Ash.get(Wik.Wiki.Page, page.id, actor: user)
+  end
+
   test "only author can add and remove members" do
     user1 = generate(user(authorize?: false))
     user2 = generate(user(authorize?: false))

@@ -118,6 +118,12 @@ defmodule Wik.Accounts.Group do
     end
   end
 
+  aggregates do
+    count :pages_count, :pages do
+      public? true
+    end
+  end
+
   identities do
     identity :unique_slug, [:slug], eager_check_with: Wik.Accounts
   end

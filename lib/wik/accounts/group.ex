@@ -118,6 +118,17 @@ defmodule Wik.Accounts.Group do
     end
   end
 
+  calculations do
+    calculate :last_updated_pages,
+              {:array, :map},
+              {Wik.Calculations.LastUpdatedPages, limit: 5} do
+      argument :limit, :integer do
+        default 5
+        allow_nil? false
+      end
+    end
+  end
+
   aggregates do
     count :pages_count, :pages do
       public? true
@@ -127,4 +138,47 @@ defmodule Wik.Accounts.Group do
   identities do
     identity :unique_slug, [:slug], eager_check_with: Wik.Accounts
   end
+end
+
+defmodule Wik.Calculations.LastUpdatedPages do
+  use Ash.Resource.Calculation
+
+  @impl true
+  def init(opts) do
+    # Set default limit to 5 if not provided
+    {:ok, Keyword.put_new(opts, :limit, 5)}
+  end
+
+  @impl true
+  def load(_query, _opts, _context) do
+    [pages: [:title, :updated_at, :slug, author: [:email]]]
+  end
+
+  @impl true
+  def calculate(groups, _opts, context) do
+    limit = Map.get(context.arguments, :limit, 5)
+
+    Enum.map(groups, fn group ->
+      case group.pages do
+        %Ash.NotLoaded{} ->
+          []
+
+        pages ->
+          pages
+          |> Enum.sort_by(& &1.updated_at, {:desc, DateTime})
+          |> Enum.take(limit)
+          |> Enum.map(fn page ->
+            %{
+              title: page.title,
+              author: page.author,
+              slug: page.slug,
+              updated_at: page.updated_at
+            }
+          end)
+      end
+    end)
+  end
+
+  @impl true
+  def type(_opts), do: {:array, :map}
 end

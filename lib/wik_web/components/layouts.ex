@@ -60,7 +60,7 @@ defmodule WikWeb.Layouts do
         </div>
 
         <div>
-          <div class="dropdown dropdown-end dropdown-open mt-2 text-sm">
+          <div class="dropdown dropdown-end mt-2 text-sm">
             <div
               tabindex="0"
               role="button"

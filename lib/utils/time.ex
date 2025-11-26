@@ -6,6 +6,12 @@ defmodule Utils.Time do
 
   def relative(%DateTime{} = date) do
     Timex.from_now(date)
+    |> String.replace(" seconds", " sec")
+    |> String.replace(" second", " sec")
+    |> String.replace(" hours", "h")
+    |> String.replace(" hour", "h")
+    |> String.replace(" minutes", "min")
+    |> String.replace(" minute", "min")
   end
 
   def absolute(date) when is_binary(date) do

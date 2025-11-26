@@ -101,6 +101,10 @@ defmodule Wik.Accounts.Group do
       public? true
     end
 
+    has_many :pages, Wik.Wiki.Page do
+      destination_attribute :group_id
+    end
+
     has_many :group_user_relations, Wik.Accounts.GroupUserRelation do
       destination_attribute :group_id
     end

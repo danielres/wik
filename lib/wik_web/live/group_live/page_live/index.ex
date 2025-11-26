@@ -29,6 +29,15 @@ defmodule WikWeb.GroupLive.PageLive.Index do
         <:col :let={{_id, page}} label="Title">{page.title}</:col>
         <:col :let={{_id, page}} label="Slug">{page.slug}</:col>
         <:col :let={{_id, page}} label="Text">{page.text}</:col>
+        <:col :let={{_id, page}} label="Version">
+          <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={page} />
+        </:col>
+        <:col :let={{_id, page}} label="Updated">
+          <WikWeb.Components.Time.pretty
+            datetime={page.updated_at}
+            class="opacity-80 hover:opacity-100 transition"
+          />
+        </:col>
 
         <:action :let={{id, page}}>
           <.link
@@ -72,16 +81,16 @@ defmodule WikWeb.GroupLive.PageLive.Index do
 
     Wik.Wiki.Page
     |> Ash.Query.filter(group_id == ^current_group_id)
-    |> Ash.read!(actor: socket.assigns[:current_user])
+    |> Ash.read!(actor: socket.assigns[:current_user], load: [:versions_count])
   end
 
   defp reload_page!(socket, id) do
-    Wik.Wiki.Page |> Ash.get!(id, actor: socket.assigns.current_user)
+    Wik.Wiki.Page |> Ash.get!(id, actor: socket.assigns.current_user, load: [:versions_count])
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    page = Ash.get!(Wik.Wiki.Page, id, actor: socket.assigns.current_user)
+    page = Wik.Wiki.Page |> Ash.get!(id, actor: socket.assigns.current_user)
     Ash.destroy!(page, actor: socket.assigns.current_user)
 
     {:noreply, socket}

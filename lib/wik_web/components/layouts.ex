@@ -80,15 +80,6 @@ defmodule WikWeb.Layouts do
             <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/pages/home"}>Pages</.link>
             <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/members"}>Members</.link>
           </div>
-
-          <%= if Mix.env() == :dev do %>
-            <.link
-              class="btn opacity-25 hover:opacity-100 transition"
-              navigate={~p"/#{@ctx.current_group.slug}/versions"}
-            >
-              Versions
-            </.link>
-          <% end %>
         </div>
       <% end %>
     </header>

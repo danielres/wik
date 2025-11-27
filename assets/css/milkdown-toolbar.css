@@ -1,0 +1,56 @@
+.milkdown {
+	&:has(.milkdown-link-preview[data-show="true"]) .milkdown-toolbar,
+	&:has(.milkdown-link-edit[data-show="true"]) .milkdown-toolbar {
+		display: none;
+	}
+	.milkdown-toolbar {
+		&[data-show="false"] {
+			display: none;
+		}
+		z-index: 10;
+		position: absolute;
+		display: flex;
+		background: var(--color-base-200);
+		@apply shadow;
+		border-radius: 8px;
+		overflow: hidden;
+
+		.divider {
+			width: 1px;
+			background: color-mix(in oklab, green, transparent 30%);
+			height: 24px;
+			margin: 10px;
+		}
+
+		.toolbar-item {
+			width: 32px;
+			height: 32px;
+			margin: 6px;
+			padding: 4px;
+			cursor: pointer;
+			border-radius: 4px;
+
+			&:hover {
+				background: var(--color-base-100);
+			}
+
+			&:active {
+				background: var(--color-info);
+			}
+
+			svg {
+				height: 24px;
+				width: 24px;
+				color: var(--color-error);
+				fill: var(--color-success);
+			}
+
+			&.active {
+				svg {
+					color: var(--color-info);
+					fill: var(--color-success);
+				}
+			}
+		}
+	}
+}

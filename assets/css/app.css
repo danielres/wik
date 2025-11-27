@@ -134,6 +134,19 @@
 }
 
 [data-theme="dark"] {
+	.toast {
+		border-width: 3px;
+		--toast-bg: color-mix(in oklab, var(--bg) 70%, var(--color-neutral));
+		--toast-color: var(--fg);
+		--toast-icon-color: color-mix(in oklab, var(--fg) 50%, var(--bg));
+		--toast-border: color-mix(in oklab, var(--bg) 90%, var(--color-neutral));
+		&:hover {
+			--toast-bg: color-mix(in oklab, var(--bg) 90%, var(--color-neutral));
+			--toast-border: color-mix(in oklab, var(--bg) 100%, var(--color-neutral));
+		}
+		animation: toast-fade-out 600ms ease-out 5s forwards;
+	}
+
 	.toast-success {
 		--bg: var(--color-success);
 		--fg: var(--color-success-content);
@@ -147,18 +160,7 @@
 		--bg: var(--color-error);
 		--fg: var(--color-error-content);
 	}
-	.toast {
-		border-width: 3px;
-		--toast-bg: color-mix(in oklab, var(--bg) 70%, var(--color-neutral));
-		--toast-color: var(--fg);
-		--toast-icon-color: color-mix(in oklab, var(--fg) 50%, var(--bg));
-		--toast-border: color-mix(in oklab, var(--bg) 90%, var(--color-neutral));
-		&:hover {
-			--toast-bg: color-mix(in oklab, var(--bg) 90%, var(--color-neutral));
-			--toast-border: color-mix(in oklab, var(--bg) 100%, var(--color-neutral));
-		}
-		animation: toast-fade-out 600ms ease-out 5s forwards;
-	}
+
 	.toast-close {
 		color: var(--fg);
 		@apply opacity-50 hover:opacity-100 transition-opacity;

@@ -95,7 +95,7 @@ class ToolbarView implements PluginView {
 				},
 			},
 			{
-				label: "`",
+				label: "</>",
 				title: "Inline code",
 				active: (ctx) => {
 					const commands = ctx.get(commandsCtx);

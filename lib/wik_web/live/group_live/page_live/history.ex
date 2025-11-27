@@ -57,7 +57,13 @@ defmodule WikWeb.GroupLive.PageLive.History do
       </.header>
 
       <%= if @version.data["text"] do %>
-        {@version.data["text"]}
+        <div
+          id={"milkdown-editor-#{@v}"}
+          phx-hook="MilkdownEditor"
+          phx-update="ignore"
+          data-markdown={@version.data["text"]}
+          data-editable={false}
+        />
       <% else %>
         <div class="opacity-50">(Empty)</div>
       <% end %>

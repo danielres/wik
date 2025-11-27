@@ -1,7 +1,10 @@
 // milkdown-editor.ts
 import { tableBlock } from "@milkdown/components/table-block";
 import { Ctx, SliceType } from "@milkdown/ctx";
-import { listItemBlockComponent } from "@milkdown/kit/component/list-item-block";
+import {
+	listItemBlockComponent,
+	listItemBlockConfig,
+} from "@milkdown/kit/component/list-item-block";
 import {
 	DefaultValue,
 	defaultValueCtx,
@@ -34,6 +37,16 @@ const MilkdownEditor = {
 						if (!this.editorInstance) return;
 						this.editorInstance.action(fn);
 					}),
+				});
+
+				ctx.set(listItemBlockConfig.key, {
+					renderLabel: ({ label, listType, checked, readonly: readonly }) => {
+						if (checked == null) {
+							if (listType === "bullet")
+								return `<span class="ml-1 mr-1">-</span>`;
+							return label;
+						}
+					},
 				});
 			})
 			.use(commonmark)

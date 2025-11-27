@@ -185,11 +185,3 @@ li::marker {
 .layout-main {
 	@apply py-20 lg:px-8 max-w-4xl mx-auto;
 }
-
-::selection {
-	background-color: color-mix(
-		in oklab,
-		var(--color-primary) 90%,
-		var(--color-info)
-	);
-}

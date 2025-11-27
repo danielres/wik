@@ -4,6 +4,10 @@
 
 .milkdown-editor-container.editable-true {
 	@apply pl-6 min-h-48 border-l-2 border-primary/20;
+
+	::selection {
+		@apply bg-primary;
+	}
 }
 
 .ProseMirror.editor {

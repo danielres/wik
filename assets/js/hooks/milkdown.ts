@@ -16,8 +16,11 @@ import { slashFactory } from "@milkdown/kit/plugin/slash";
 import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { getMarkdown } from "@milkdown/utils";
+import { block } from "@milkdown/kit/plugin/block";
+
 import { createSlashView } from "./milkdown/slash-view";
 import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
+import { setupBlockHandle } from "./milkdown/block-handle";
 
 const slash = slashFactory("Commands");
 
@@ -41,6 +44,7 @@ const MilkdownEditor = {
 				});
 
 				setupToolbar(ctx);
+				setupBlockHandle(ctx, this.el as HTMLElement);
 
 				ctx.set(listItemBlockConfig.key, {
 					renderLabel: ({ label, listType, checked, readonly: readonly }) => {
@@ -56,6 +60,7 @@ const MilkdownEditor = {
 			.use(gfm)
 			.use(listItemBlockComponent)
 			.use(tableBlock)
+			.use(block)
 			.use(slash)
 			.use(toolbarTooltip) // <- register the tooltip plugin
 			.create()

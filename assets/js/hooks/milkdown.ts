@@ -1,6 +1,6 @@
 // milkdown-editor.ts
 import { tableBlock } from "@milkdown/components/table-block";
-import { Ctx, SliceType } from "@milkdown/ctx";
+import type { Ctx, SliceType } from "@milkdown/ctx";
 import {
 	listItemBlockComponent,
 	listItemBlockConfig,
@@ -47,7 +47,7 @@ const MilkdownEditor = {
 				setupBlockHandle(ctx, this.el as HTMLElement);
 
 				ctx.set(listItemBlockConfig.key, {
-					renderLabel: ({ label, listType, checked, readonly: readonly }) => {
+					renderLabel: ({ label, listType, checked, readonly: _readonly }) => {
 						if (checked == null) {
 							if (listType === "bullet")
 								return `<span class="ml-1 mr-1">-</span>`;
@@ -62,7 +62,7 @@ const MilkdownEditor = {
 			.use(tableBlock)
 			.use(block)
 			.use(slash)
-			.use(toolbarTooltip) // <- register the tooltip plugin
+			.use(toolbarTooltip)
 			.create()
 			.then((editor) => {
 				this.editorInstance = editor;

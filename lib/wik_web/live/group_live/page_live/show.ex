@@ -13,6 +13,8 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
+    <% editable = @live_action == :edit and connected?(@socket) %>
+
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
         <div class={[:title in @updated_fields && "animate-reload"]}>
@@ -25,15 +27,13 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
         <:actions>
           <WikWeb.Components.ButtonEdit.button
-            :if={Ash.can?({@page, :update}, @current_user)}
+            :if={Ash.can?({@page, :update}, @current_user) and !editable}
             link={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/edit?return_to=show"}
             watch_path={@current_path <> "/edit"}
             presences={@ctx.presences}
           />
         </:actions>
       </.header>
-
-      <% editable = @live_action == :edit and connected?(@socket) %>
 
       <.live_component
         module={WikWeb.Components.Page.FormMarkdown}

@@ -13,39 +13,24 @@ defmodule WikWeb.Components.Page.FormMarkdown do
         phx-change="validate"
         phx-target={@myself}
       >
-        <% text_value =
-          Phoenix.HTML.Form.normalize_value(
-            "textarea",
-            @form[:text].value || @page.text || ""
-          ) %>
+        <% text_value = @form[:text].value || @page.text || "" %>
 
-        <textarea
-          id={"page_text_#{@id}"}
-          name={@form[:text].name}
-          hidden
-        >
-          { text_value }
-        </textarea>
+        <textarea id={"page_text_#{@id}"} name={@form[:text].name} hidden>{text_value}</textarea>
 
-        <div class={ "milkdown-editor-container editable-#{( @editable && "true" ) || "false"}" }>
+        <div class={"milkdown-editor-container editable-#{@editable}"}>
           <div
             id={"milkdown-editor-#{@id}"}
             phx-hook="MilkdownEditor"
             phx-update="ignore"
             data-markdown={text_value}
             data-input-id={"page_text_#{@id}"}
-            data-editable={@editable && "true"}
+            data-editable={@editable}
           />
         </div>
 
-        <div class="flex gap-2 mt-4">
-          <.button :if={@editable} phx-disable-with="Saving..." variant="primary">
-            Save
-          </.button>
-
-          <.button :if={@editable} patch={@return_to}>
-            Cancel
-          </.button>
+        <div :if={@editable} class="flex gap-2 mt-4">
+          <.button phx-disable-with="Saving..." variant="primary">Save</.button>
+          <.button patch={@return_to}>Cancel</.button>
         </div>
       </.form>
     </div>

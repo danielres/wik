@@ -2,16 +2,8 @@
 	outline: none !important;
 }
 
-.ProseMirror.editor {
-}
 .milkdown-editor-container.editable-true {
-	@apply pl-4 min-h-48;
-	@apply border-l-2 border-neutral-content/20;
-}
-
-.editable-false {
-	.ProseMirror.editor {
-	}
+	@apply pl-4 min-h-48 border-l-2 border-neutral-content/20;
 }
 
 .ProseMirror.editor {
@@ -24,6 +16,7 @@
 	h1 {
 		@apply text-3xl;
 	}
+
 	h2 {
 		@apply text-2xl;
 	}

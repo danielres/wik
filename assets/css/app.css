@@ -3,6 +3,7 @@
 
 @import "tailwindcss" source(none);
 @import "../../deps/toast/assets/css/toast.css";
+@import "./prose-markdown.css";
 @source "../../deps/ash_authentication_phoenix";
 @source "../css";
 @source "../js";

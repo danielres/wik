@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@milkdown/kit": "^7.17.2"
+  }
+}

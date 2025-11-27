@@ -1,0 +1,36 @@
+.milkdown *:focus {
+	outline: none !important;
+}
+
+.ProseMirror.editor {
+}
+
+.editable-true {
+	.ProseMirror.editor {
+		@apply pl-4 min-h-48;
+		@apply border-l-2 border-neutral-content/20;
+	}
+}
+
+.editable-false {
+	.ProseMirror.editor {
+	}
+}
+
+.ProseMirror.editor {
+	white-space: pre-wrap;
+
+	> * {
+		@apply mb-4;
+	}
+
+	h1 {
+		@apply text-3xl;
+	}
+	h2 {
+		@apply text-2xl;
+	}
+	ul {
+		@apply ml-4 list list-disc;
+	}
+}

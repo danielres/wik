@@ -126,24 +126,25 @@
 	display: none;
 }
 
-th,
-td {
-	border: 1px solid
-		color-mix(in srgb, var(--color-base-content), transparent 80%);
-	padding: 4px 16px;
-	.ProseMirror-selectednode {
-		background-color: transparent !important;
-	}
-	&:has(.ProseMirror-selectednode) {
-		outline: 1px solid #a8a8a8;
-		outline-offset: -1px;
-	}
+.milkdown-table-block {
+	th,
+	td {
+		border: 1px solid
+			color-mix(in srgb, var(--color-base-content), transparent 80%);
+		padding: 4px 16px;
+		.ProseMirror-selectednode {
+			background-color: transparent !important;
+		}
+		&:has(.ProseMirror-selectednode) {
+			outline: 1px solid #a8a8a8;
+			outline-offset: -1px;
+		}
 
-	.ProseMirror-selectednode {
-		outline: none;
+		.ProseMirror-selectednode {
+			outline: none;
+		}
 	}
 }
-
 .selectedCell {
 	&::after {
 		background-color: #d5d5d5;

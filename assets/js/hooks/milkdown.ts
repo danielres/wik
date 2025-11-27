@@ -1,3 +1,4 @@
+import { tableBlock, tableBlockConfig } from "@milkdown/components/table-block";
 import { listItemBlockComponent } from "@milkdown/kit/component/list-item-block";
 import { SliceType } from "@milkdown/ctx";
 import {
@@ -27,6 +28,7 @@ const MilkdownEditor = {
 			.use(commonmark)
 			.use(gfm)
 			.use(listItemBlockComponent)
+			.use(tableBlock)
 			.create()
 			.then((editor) => {
 				this.editorInstance = editor;

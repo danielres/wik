@@ -179,6 +179,5 @@ defmodule Wik.Calculations.LastUpdatedPages do
     end)
   end
 
-  @impl true
   def type(_opts), do: {:array, :map}
 end

@@ -17,6 +17,7 @@ defmodule WikWeb.Components.Page.Form do
     """
   end
 
+  @impl true
   def update(assigns, socket) do
     socket = socket |> assign(assigns) |> assign_form()
     {:ok, socket}

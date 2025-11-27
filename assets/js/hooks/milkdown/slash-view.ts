@@ -11,8 +11,7 @@ type EditorAction = (fn: (ctx: Ctx) => void) => void;
 export const createSlashView =
 	(rootEl: HTMLElement, editorAction: EditorAction) => (_view: any) => {
 		const container = document.createElement("div");
-		container.className =
-			"absolute hidden data-[show='true']:grid w-64 gap-1 p-2 bg-base-300 rounded";
+		container.className = "milkdown-slash-view";
 		rootEl.appendChild(container);
 
 		const provider = new SlashProvider({
@@ -43,8 +42,7 @@ export const createSlashView =
 			const button = document.createElement("button");
 			button.type = "button";
 			button.textContent = label;
-			button.className =
-				"btn btn-base hover:bg-base-100 border border-base-300 shadow";
+			button.className = "";
 			button.addEventListener("mousedown", handler);
 			container.appendChild(button);
 			return button;

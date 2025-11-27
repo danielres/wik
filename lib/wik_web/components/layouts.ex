@@ -38,7 +38,7 @@ defmodule WikWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="px-4 sm:px-6 lg:px-8 pt-0 space-y-2 mt-2">
+    <header class="layout-header">
       <div class="flex justify-between w-full">
         <div class="flex items-center gap-2 mt-2 font-bold text-sm">
           <%= if @ctx[:current_group] do %>
@@ -104,20 +104,11 @@ defmodule WikWeb.Layouts do
       <% end %>
     </header>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class={["mx-auto space-y-4 grid gap-8", @ctx[:presences] && "grid-cols-[1fr_auto]"]}>
-        <div>
-          {render_slot(@inner_block)}
-        </div>
+    <main class="layout-main">
+      {render_slot(@inner_block)}
 
+      <div class="mt-8 border-t-4 border-base-content/10 pt-8">
         <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
-
-        <div
-          :if={WikWeb.Helpers.slot_has_content?(@aside)}
-          class="border-l border-base-content/30 pl-8 w-64  text-sm"
-        >
-          {render_slot(@aside)}
-        </div>
       </div>
     </main>
 

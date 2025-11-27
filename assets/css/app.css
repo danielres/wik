@@ -170,3 +170,17 @@
 li::marker {
 	color: color-mix(in oklab, var(--color-base-content) 20%, transparent);
 }
+
+.layout-header,
+.layout-main {
+	@apply px-4 sm:px-6 lg:px-8;
+}
+
+.layout-header {
+	@apply bg-base-300 pb-4 mt-0;
+	@apply space-y-2;
+}
+
+.layout-main {
+	@apply py-20 lg:px-8 max-w-4xl mx-auto;
+}

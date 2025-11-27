@@ -37,7 +37,7 @@
 	}
 
 	pre {
-		@apply rounded bg-base-200 w-128 p-4;
+		@apply rounded bg-base-200 p-4;
 		@apply overflow-x-auto;
 	}
 

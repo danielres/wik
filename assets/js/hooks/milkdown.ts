@@ -53,67 +53,49 @@ const MilkdownEditor = {
 			"absolute hidden data-[show='true']:grid w-64 gap-1 p-2 bg-base-300 rounded";
 		this.el.appendChild(container);
 
-		const button_code = document.createElement("button");
-		button_code.type = "button";
-		button_code.textContent = "Code Block";
-		button_code.className =
-			"btn btn-base hover:bg-base-100 border border-base-300 shadow";
-		container.appendChild(button_code);
-
-		const button_table = document.createElement("button");
-		button_table.type = "button";
-		button_table.textContent = "Table";
-		button_table.className =
-			"btn btn-base hover:bg-base-100 border border-base-300 shadow";
-		container.appendChild(button_table);
-
 		const provider = new SlashProvider({
 			content: container,
 		});
 
-		const addCodeBlock = (e: MouseEvent | KeyboardEvent) => {
-			e.preventDefault();
-			e.stopPropagation();
+		// helper: delete "/" and run a Milkdown command
+		const makeSlashHandler =
+			(commandKey: any, payload?: any) => (e: MouseEvent | KeyboardEvent) => {
+				e.preventDefault();
+				e.stopPropagation();
 
-			if (!this.editorInstance) return;
+				if (!this.editorInstance) return;
 
-			this.editorInstance.action((ctx: Ctx) => {
-				const view = ctx.get(editorViewCtx);
-				const { dispatch, state } = view;
-				const { tr, selection } = state;
-				const { from } = selection;
+				this.editorInstance.action((ctx: Ctx) => {
+					const view = ctx.get(editorViewCtx);
+					const { dispatch, state } = view;
+					const { tr, selection } = state;
+					const { from } = selection;
 
-				// delete the trigger `/`
-				dispatch(tr.deleteRange(from - 1, from));
+					// delete the trigger `/`
+					dispatch(tr.deleteRange(from - 1, from));
 
-				return callCommand(createCodeBlockCommand.key)(ctx);
-			});
+					return payload
+						? callCommand(commandKey, payload)(ctx)
+						: callCommand(commandKey)(ctx);
+				});
+			};
+
+		// helper: create a styled button with handler
+		const createButton = (label: string, handler: (e: any) => void) => {
+			const button = document.createElement("button");
+			button.type = "button";
+			button.textContent = label;
+			button.className =
+				"btn btn-base hover:bg-base-100 border border-base-300 shadow";
+			button.addEventListener("mousedown", handler);
+			container.appendChild(button);
+			return button;
 		};
 
-		const addTableBlock = (e: MouseEvent | KeyboardEvent) => {
-			e.preventDefault();
-			e.stopPropagation();
-
-			if (!this.editorInstance) return;
-
-			this.editorInstance.action((ctx: Ctx) => {
-				const view = ctx.get(editorViewCtx);
-				const { dispatch, state } = view;
-				const { tr, selection } = state;
-				const { from } = selection;
-
-				// delete the trigger `/`
-				dispatch(tr.deleteRange(from - 1, from));
-
-				// insert a table (GFM preset)
-				return callCommand(insertTableCommand.key)(ctx);
-				// for custom size:
-				// return callCommand(insertTableCommand.key, { rowCount: 3, colCount: 3 })(ctx);
-			});
-		};
-
-		button_code.addEventListener("mousedown", addCodeBlock);
-		button_table.addEventListener("mousedown", addTableBlock);
+		const handleCodeBlock = makeSlashHandler(createCodeBlockCommand.key);
+		const handleTable = makeSlashHandler(insertTableCommand.key);
+		const button_code = createButton("Code Block", handleCodeBlock);
+		const button_table = createButton("Table", handleTable);
 
 		return {
 			update: (updatedView: any, prevState: any) => {
@@ -121,8 +103,8 @@ const MilkdownEditor = {
 			},
 			destroy: () => {
 				provider.destroy();
-				button_code.removeEventListener("mousedown", addCodeBlock);
-				button_table.removeEventListener("mousedown", addTableBlock);
+				button_code.removeEventListener("mousedown", handleCodeBlock);
+				button_table.removeEventListener("mousedown", handleTable);
 				container.remove();
 			},
 		};

@@ -1,3 +1,4 @@
+import { listItemBlockComponent } from "@milkdown/kit/component/list-item-block";
 import { SliceType } from "@milkdown/ctx";
 import {
 	defaultValueCtx,
@@ -8,6 +9,8 @@ import {
 } from "@milkdown/kit/core";
 import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { getMarkdown } from "@milkdown/utils";
+
+import { gfm } from "@milkdown/kit/preset/gfm";
 
 const MilkdownEditor = {
 	mounted() {
@@ -22,6 +25,8 @@ const MilkdownEditor = {
 				ctx.set(defaultValueCtx, markdown);
 			})
 			.use(commonmark)
+			.use(gfm)
+			.use(listItemBlockComponent)
 			.create()
 			.then((editor) => {
 				this.editorInstance = editor;

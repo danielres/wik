@@ -13,7 +13,7 @@ import {
 	commonmark,
 	createCodeBlockCommand,
 } from "@milkdown/kit/preset/commonmark";
-import { gfm } from "@milkdown/kit/preset/gfm";
+import { gfm, insertTableCommand } from "@milkdown/kit/preset/gfm";
 import { callCommand } from "@milkdown/kit/utils";
 import { getMarkdown } from "@milkdown/utils";
 
@@ -54,11 +54,18 @@ const MilkdownEditor = {
 		this.el.appendChild(container);
 
 		const button_code = document.createElement("button");
-		button_code.type = "button"; // avoid form submit
+		button_code.type = "button";
 		button_code.textContent = "Code Block";
 		button_code.className =
 			"btn btn-base hover:bg-base-100 border border-base-300 shadow";
 		container.appendChild(button_code);
+
+		const button_table = document.createElement("button");
+		button_table.type = "button";
+		button_table.textContent = "Table";
+		button_table.className =
+			"btn btn-base hover:bg-base-100 border border-base-300 shadow";
+		container.appendChild(button_table);
 
 		const provider = new SlashProvider({
 			content: container,
@@ -83,7 +90,30 @@ const MilkdownEditor = {
 			});
 		};
 
+		const addTableBlock = (e: MouseEvent | KeyboardEvent) => {
+			e.preventDefault();
+			e.stopPropagation();
+
+			if (!this.editorInstance) return;
+
+			this.editorInstance.action((ctx: Ctx) => {
+				const view = ctx.get(editorViewCtx);
+				const { dispatch, state } = view;
+				const { tr, selection } = state;
+				const { from } = selection;
+
+				// delete the trigger `/`
+				dispatch(tr.deleteRange(from - 1, from));
+
+				// insert a table (GFM preset)
+				return callCommand(insertTableCommand.key)(ctx);
+				// for custom size:
+				// return callCommand(insertTableCommand.key, { rowCount: 3, colCount: 3 })(ctx);
+			});
+		};
+
 		button_code.addEventListener("mousedown", addCodeBlock);
+		button_table.addEventListener("mousedown", addTableBlock);
 
 		return {
 			update: (updatedView: any, prevState: any) => {
@@ -92,6 +122,7 @@ const MilkdownEditor = {
 			destroy: () => {
 				provider.destroy();
 				button_code.removeEventListener("mousedown", addCodeBlock);
+				button_table.removeEventListener("mousedown", addTableBlock);
 				container.remove();
 			},
 		};

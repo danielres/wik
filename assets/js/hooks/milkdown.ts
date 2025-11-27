@@ -22,8 +22,8 @@ const slash = slashFactory("Commands");
 
 const MilkdownEditor = {
 	mounted() {
-		const { markdown = "", editable, inputId } = this.el.dataset;
-
+		const { markdown = "", editable: _editable, inputId } = this.el.dataset;
+		const editable = _editable !== undefined;
 		this.hiddenInput = inputId ? document.getElementById(inputId) : null;
 		this.form = this.el.closest("form");
 
@@ -57,7 +57,7 @@ const MilkdownEditor = {
 			.create()
 			.then((editor) => {
 				this.editorInstance = editor;
-				this.setEditable(editable !== undefined);
+				this.setEditable(editable);
 				this.setupFormSync();
 			});
 	},

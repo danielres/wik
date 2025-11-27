@@ -33,6 +33,11 @@
 		@apply ml-4 list list-disc;
 	}
 
+	pre {
+		@apply rounded bg-base-200 w-128 p-4;
+		@apply overflow-x-auto;
+	}
+
 	.milkdown-list-item-block {
 		& > .list-item {
 			gap: 8px;

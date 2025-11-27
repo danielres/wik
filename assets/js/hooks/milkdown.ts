@@ -1,17 +1,23 @@
-import { tableBlock, tableBlockConfig } from "@milkdown/components/table-block";
+import { tableBlock } from "@milkdown/components/table-block";
+import { Ctx, SliceType } from "@milkdown/ctx";
 import { listItemBlockComponent } from "@milkdown/kit/component/list-item-block";
-import { SliceType } from "@milkdown/ctx";
 import {
+	DefaultValue,
 	defaultValueCtx,
 	Editor,
-	rootCtx,
 	editorViewCtx,
-	DefaultValue,
+	rootCtx,
 } from "@milkdown/kit/core";
-import { commonmark } from "@milkdown/kit/preset/commonmark";
+import { slashFactory, SlashProvider } from "@milkdown/kit/plugin/slash";
+import {
+	commonmark,
+	createCodeBlockCommand,
+} from "@milkdown/kit/preset/commonmark";
+import { gfm } from "@milkdown/kit/preset/gfm";
+import { callCommand } from "@milkdown/kit/utils";
 import { getMarkdown } from "@milkdown/utils";
 
-import { gfm } from "@milkdown/kit/preset/gfm";
+const slash = slashFactory("Commands");
 
 const MilkdownEditor = {
 	mounted() {
@@ -24,17 +30,71 @@ const MilkdownEditor = {
 			.config((ctx) => {
 				ctx.set(rootCtx, this.el);
 				ctx.set(defaultValueCtx, markdown);
+				ctx.set(slash.key, {
+					view: (view: any) => this.createSlashView(view),
+				});
 			})
 			.use(commonmark)
 			.use(gfm)
 			.use(listItemBlockComponent)
 			.use(tableBlock)
+			.use(slash)
 			.create()
 			.then((editor) => {
 				this.editorInstance = editor;
 				this.setEditable(editable !== undefined);
 				this.setupFormSync();
 			});
+	},
+
+	createSlashView(_view: any) {
+		const container = document.createElement("div");
+		container.className =
+			"absolute hidden data-[show='true']:grid w-64 gap-1 p-2 bg-base-300 rounded";
+		this.el.appendChild(container);
+
+		const button_code = document.createElement("button");
+		button_code.type = "button"; // avoid form submit
+		button_code.textContent = "Code Block";
+		button_code.className =
+			"btn btn-base hover:bg-base-100 border border-base-300 shadow";
+		container.appendChild(button_code);
+
+		const provider = new SlashProvider({
+			content: container,
+		});
+
+		const addCodeBlock = (e: MouseEvent | KeyboardEvent) => {
+			e.preventDefault();
+			e.stopPropagation();
+
+			if (!this.editorInstance) return;
+
+			this.editorInstance.action((ctx: Ctx) => {
+				const view = ctx.get(editorViewCtx);
+				const { dispatch, state } = view;
+				const { tr, selection } = state;
+				const { from } = selection;
+
+				// delete the trigger `/`
+				dispatch(tr.deleteRange(from - 1, from));
+
+				return callCommand(createCodeBlockCommand.key)(ctx);
+			});
+		};
+
+		button_code.addEventListener("mousedown", addCodeBlock);
+
+		return {
+			update: (updatedView: any, prevState: any) => {
+				provider.update(updatedView, prevState);
+			},
+			destroy: () => {
+				provider.destroy();
+				button_code.removeEventListener("mousedown", addCodeBlock);
+				container.remove();
+			},
+		};
 	},
 
 	setEditable(editable: any) {

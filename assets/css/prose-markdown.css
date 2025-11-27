@@ -38,6 +38,10 @@
 		@apply overflow-x-auto;
 	}
 
+  table {
+    @apply w-full;
+  }
+
 	.milkdown-list-item-block {
 		& > .list-item {
 			gap: 8px;

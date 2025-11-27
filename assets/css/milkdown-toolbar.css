@@ -1,53 +1,37 @@
+/* assets/css/milkdown-toolbar.css */
+
 .milkdown {
+	/* Makes absolutely positioned toolbar anchor to the editor root */
+	@apply relative;
+
+	/* Hide toolbar when link preview/edit is visible */
 	&:has(.milkdown-link-preview[data-show="true"]) .milkdown-toolbar,
 	&:has(.milkdown-link-edit[data-show="true"]) .milkdown-toolbar {
-		display: none;
+		@apply hidden;
 	}
-	.milkdown-toolbar {
-		&[data-show="false"] {
-			display: none;
-		}
-		z-index: 10;
-		position: absolute;
-		display: flex;
-		background: var(--color-base-200);
-		@apply shadow;
-		border-radius: 8px;
-		overflow: hidden;
 
-		.divider {
-			width: 1px;
-			background: color-mix(in oklab, green, transparent 30%);
-			height: 24px;
-			margin: 10px;
+	.milkdown-toolbar {
+		/* Controlled by TooltipProvider via data-show */
+		&[data-show="false"] {
+			@apply hidden;
 		}
+
+		@apply z-10 absolute flex bg-base-300 shadow rounded-lg overflow-hidden;
 
 		.toolbar-item {
-			width: 32px;
-			height: 32px;
-			margin: 6px;
-			padding: 4px;
-			cursor: pointer;
-			border-radius: 4px;
+			@apply min-w-8 h-8 m-1.5 p-1 cursor-pointer rounded transition-colors;
 
 			&:hover {
-				background: var(--color-base-100);
+				@apply bg-base-100;
 			}
 
 			&:active {
-				background: var(--color-info);
-			}
-
-			svg {
-				height: 24px;
-				width: 24px;
-				color: var(--color-error);
-				fill: var(--color-success);
+				@apply bg-info;
 			}
 
 			&.active {
 				svg {
-					color: var(--color-info);
+					@apply text-info;
 					fill: var(--color-success);
 				}
 			}

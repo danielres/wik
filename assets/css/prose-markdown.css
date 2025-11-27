@@ -44,4 +44,9 @@
 	table {
 		@apply w-full;
 	}
+
+	a {
+		@apply underline underline-offset-4;
+		@apply decoration-base-content/50 hover:decoration-base-content transition;
+	}
 }

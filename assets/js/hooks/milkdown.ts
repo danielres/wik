@@ -91,10 +91,7 @@ const MilkdownEditor = {
 		if (markdown !== this.lastMarkdown) {
 			this.editorInstance.action(
 				(ctx: {
-					set: (
-						arg0: SliceType<DefaultValue, "defaultValue">,
-						arg1: any,
-					) => any;
+					set: (key: SliceType<DefaultValue, "defaultValue">, v: any) => any;
 				}) => ctx.set(defaultValueCtx, markdown),
 			);
 			this.lastMarkdown = markdown;

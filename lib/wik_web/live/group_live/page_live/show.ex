@@ -33,42 +33,17 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         </:actions>
       </.header>
 
-      {# <.live_component }
-      {#   module={WikWeb.Components.Generic.Modal} }
-      {#   mandatory? }
-      {#   id={ "modal-form-page-#{@page.id}" } }
-      {#   open?={@live_action == :edit and connected?(@socket)} }
-      {#   phx-click-close={JS.patch(~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}")} }
-      {# > }
-      {#   <.live_component }
-      {#     module={WikWeb.Components.Page.Form} }
-      {#     id={ "form-page-#{@page.id}" } }
-      {#     page={@page} }
-      {#     actor={@current_user} }
-      {#     group={@ctx.current_group} }
-      {#     return_to={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"} }
-      {#   > }
-      {#   </.live_component> }
-      {# </.live_component> }
-
       <% editable = @live_action == :edit and connected?(@socket) %>
 
-      <div class={if editable, do: "editable-true", else: "editable-false"}>
-        <div
-          class={["h-24"]}
-          id="milkdown-editor"
-          class="prose-markdown"
-          phx-hook="MilkdownEditor"
-          phx-update="ignore"
-          data-markdown={@page.text}
-          data-editable={editable}
-        >
-        </div>
-      </div>
-
-      {# <main class={[:text in @updated_fields && "animate-reload"]}> }
-      {#   {@page.text} }
-      {# </main> }
+      <.live_component
+        module={WikWeb.Components.Page.FormMarkdown}
+        id={"form-page-#{@page.id}"}
+        page={@page}
+        actor={@current_user}
+        group={@ctx.current_group}
+        editable={editable}
+        return_to={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+      />
     </Layouts.app>
     """
   end

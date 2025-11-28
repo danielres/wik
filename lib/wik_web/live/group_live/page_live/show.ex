@@ -37,7 +37,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
       <.live_component
         module={WikWeb.Components.Page.FormMarkdown}
-        id={"form-page-#{@page.id}-#{@page.versions_count}"}
+        id={"form-page-#{@page.id}-#{@page.versions_count}-#{@live_action}"}
         page={@page}
         actor={@current_user}
         group={@ctx.current_group}

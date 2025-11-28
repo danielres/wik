@@ -85,6 +85,10 @@ const MilkdownEditor = {
 				this.editorInstance = editor;
 				this.setEditable(editable);
 				this.setupFormSync();
+				if (editable) {
+					const view = editor.ctx.get(editorViewCtx);
+					view.focus();
+				}
 			});
 	},
 

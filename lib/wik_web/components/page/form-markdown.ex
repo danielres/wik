@@ -25,6 +25,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-markdown={text_value}
             data-input-id={"page_text_#{@id}"}
             data-editable={@editable}
+            data-root-path={"/#{ @group.slug }/pages"}
           />
         </div>
 

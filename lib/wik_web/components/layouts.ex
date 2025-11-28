@@ -58,7 +58,6 @@ defmodule WikWeb.Layouts do
             </.link>
           <% end %>
         </div>
-
         <div>
           <div class="dropdown dropdown-end mt-2 text-sm">
             <div
@@ -97,7 +96,13 @@ defmodule WikWeb.Layouts do
       <%= if(@ctx[:current_group]) do %>
         <div class="flex gap-2 items-center justify-between">
           <div>
-            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/pages/home"}>Pages</.link>
+            <.link
+              class="btn"
+              navigate={~p"/#{@ctx.current_group.slug}/pages/home"}
+            >
+              Home
+            </.link>
+
             <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/members"}>Members</.link>
           </div>
         </div>
@@ -107,8 +112,15 @@ defmodule WikWeb.Layouts do
     <main class="layout-main">
       {render_slot(@inner_block)}
 
-      <div class="mt-8 border-t-4 border-base-content/10 pt-8">
+      <div class="mt-8 border-t-4 border-base-content/10 pt-8 flex justify-between">
         <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
+        <.link
+          :if={@ctx[:page_slug]}
+          class="btn btn-xs"
+          navigate={~p"/#{@ctx.current_group.slug}/pages"}
+        >
+          All pages
+        </.link>
       </div>
     </main>
 

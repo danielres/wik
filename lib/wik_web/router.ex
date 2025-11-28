@@ -82,7 +82,8 @@ defmodule WikWeb.Router do
         on_mount: [
           {WikWeb.LiveUserAuth, :live_user_required},
           {WikWeb.LiveUserAuth, :group_membership_required},
-          {WikWeb.LiveUserAuth, :subscribe_presence}
+          {WikWeb.LiveUserAuth, :subscribe_presence},
+          {WikWeb.CtxAdditions, :ctx_additions}
         ] do
         live "/", GroupLive.Show, :show
         live "/edit", GroupLive.Show, :edit

@@ -13,6 +13,10 @@ import {
 	rootCtx,
 } from "@milkdown/kit/core";
 import { slashFactory } from "@milkdown/kit/plugin/slash";
+import {
+	cursor as cursorPlugin,
+	dropIndicatorConfig,
+} from "@milkdown/kit/plugin/cursor";
 import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { getMarkdown } from "@milkdown/utils";
@@ -55,6 +59,11 @@ const MilkdownEditor = {
 						}
 					},
 				});
+
+				// Drop indicator config (line shown while dragging)
+				ctx.update(dropIndicatorConfig.key, () => ({
+					width: 1,
+				}));
 			})
 			.use(commonmark)
 			.use(gfm)
@@ -63,6 +72,7 @@ const MilkdownEditor = {
 			.use(block)
 			.use(slash)
 			.use(toolbarTooltip)
+			.use(cursorPlugin) // gap cursor + drop indicator
 			.create()
 			.then((editor) => {
 				this.editorInstance = editor;

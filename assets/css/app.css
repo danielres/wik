@@ -9,6 +9,7 @@
 @import "./milkdown-toolbar.css";
 @import "./milkdown-slash-view.css";
 @import "./milkdown-block-handle.css";
+@import "./milkdown-cursor.css";
 @source "../../deps/ash_authentication_phoenix";
 @source "../css";
 @source "../js";

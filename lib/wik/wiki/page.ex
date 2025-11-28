@@ -79,6 +79,11 @@ defmodule Wik.Wiki.Page do
                cs |> set_header()
              end,
              on: [:create, :update]
+
+      change fn cs, _ctx ->
+               cs |> update_title_from_header()
+             end,
+             on: [:update]
     end
 
     create :create do
@@ -182,6 +187,24 @@ defmodule Wik.Wiki.Page do
     else
       title = Ash.Changeset.get_attribute(changeset, :title)
       Ash.Changeset.change_attribute(changeset, :text, "# #{title}\n\n#{text || "<br />"}")
+    end
+  end
+
+  def update_title_from_header(changeset) do
+    text = Ash.Changeset.get_attribute(changeset, :text)
+    has_header? = (text || "") |> String.slice(0, 2) == "# "
+
+    if has_header? do
+      header =
+        text
+        |> String.split("\n", parts: 2)
+        |> hd()
+        |> String.trim_leading("# ")
+        |> String.trim()
+
+      Ash.Changeset.change_attribute(changeset, :title, header)
+    else
+      changeset
     end
   end
 

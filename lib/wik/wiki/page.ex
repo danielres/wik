@@ -69,6 +69,16 @@ defmodule Wik.Wiki.Page do
                end
              end,
              on: [:create, :update]
+
+      change fn cs, _ctx ->
+               cs |> trim_text()
+             end,
+             on: [:create, :update]
+
+      change fn cs, _ctx ->
+               cs |> set_header()
+             end,
+             on: [:create, :update]
     end
 
     create :create do
@@ -155,6 +165,24 @@ defmodule Wik.Wiki.Page do
 
   identities do
     identity :unique_group_slug, [:group_id, :slug], eager_check_with: Wik.Accounts
+  end
+
+  def trim_text(cs) do
+    text = Ash.Changeset.get_attribute(cs, :text)
+    trimmed = (text || "") |> String.trim()
+    Ash.Changeset.change_attribute(cs, :text, trimmed)
+  end
+
+  def set_header(changeset) do
+    text = Ash.Changeset.get_attribute(changeset, :text)
+    has_header? = (text || "") |> String.slice(0, 2) == "# "
+
+    if has_header? do
+      changeset
+    else
+      title = Ash.Changeset.get_attribute(changeset, :title)
+      Ash.Changeset.change_attribute(changeset, :text, "# #{title}\n\n#{text || "<br />"}")
+    end
   end
 
   def set_slug(changeset) do

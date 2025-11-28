@@ -1,5 +1,7 @@
 // milkdown-editor.ts
+import { selectTextNearPosCommand } from "@milkdown/kit/preset/commonmark";
 import { tableBlock } from "@milkdown/components/table-block";
+import { CommandManager, commandsCtx, editorViewCtx } from "@milkdown/core";
 import type { Ctx, SliceType } from "@milkdown/ctx";
 import {
 	listItemBlockComponent,
@@ -9,7 +11,6 @@ import {
 	DefaultValue,
 	defaultValueCtx,
 	Editor,
-	editorViewCtx,
 	rootCtx,
 } from "@milkdown/kit/core";
 import { block } from "@milkdown/kit/plugin/block";
@@ -27,6 +28,7 @@ import { setupBlockHandle } from "./milkdown/block-handle";
 import { inputRuleWikilink } from "./milkdown/input-rule-wikilink";
 import { createSlashView } from "./milkdown/slash-view";
 import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
+import { EditorView } from "@milkdown/kit/prose/view";
 
 const slash = slashFactory("Commands");
 
@@ -87,11 +89,30 @@ const MilkdownEditor = {
 				this.editorInstance = editor;
 				this.setEditable(editable);
 				this.setupFormSync();
-				if (editable) {
-					const view = editor.ctx.get(editorViewCtx);
-					view.focus();
-				}
+				if (editable) this.setFocusAndCursorPos(editor);
 			});
+	},
+
+	setFocusAndCursorPos() {
+		// Autofocus
+		const view = this.editorInstance.ctx.get(editorViewCtx);
+		view.focus();
+
+		// Calculate position for second node
+		const doc = view.state.doc;
+		let cursorPos = 0;
+		doc.content.forEach((_node: any, offset: number) => {
+			cursorPos = offset;
+			return false; // stop iteration
+		});
+
+		// Set cursor position
+		this.editorInstance.action(
+			(ctx: { get: (arg0: SliceType<CommandManager, "commands">) => any }) => {
+				const commands = ctx.get(commandsCtx);
+				commands.call(selectTextNearPosCommand.key, { pos: cursorPos });
+			},
+		);
 	},
 
 	setEditable(editable: any) {

@@ -48,7 +48,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     """
   end
 
-  defp page_url(group, page) do
+  def page_url(group, page) do
     ~p"/#{group.slug}/pages/#{page.slug}"
   end
 

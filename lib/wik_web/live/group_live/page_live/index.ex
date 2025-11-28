@@ -13,41 +13,54 @@ defmodule WikWeb.GroupLive.PageLive.Index do
         <:actions></:actions>
       </.header>
 
-      <.table
-        id="pages"
-        rows={@streams.pages}
-        row_click={
-          fn {_id, page} -> JS.navigate(~p"/#{@ctx.current_group.slug}/pages/#{page.slug}") end
-        }
-        row_class={
-          fn {_id, page} ->
-            (page.id in @highlighted_page_ids && "animate-reload") ||
-              "hover:bg-base-200 transition"
-          end
-        }
+      <div
+        class="grid gap-1"
+        phx-update="stream"
+        id="pages-stream"
       >
-        <:col :let={{_id, page}} label="Title">{page.title}</:col>
-        <:col :let={{_id, page}} label="Slug">{page.slug}</:col>
-        <:col :let={{_id, page}} label="Text">{page.text}</:col>
-        <:col :let={{_id, page}} label="Version">
-          <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={page} />
-        </:col>
-        <:col :let={{_id, page}} label="Updated">
-          <WikWeb.Components.Time.pretty
-            datetime={page.updated_at}
-            class="opacity-80 hover:opacity-100 transition"
-          />
-        </:col>
+        <div
+          :for={{id, page} <- @streams.pages}
+          id={id}
+          class="card rounded bg-base-200/50 space-y-0 px-4 py-2 has-[a.title:hover]:bg-base-300/60 transition"
+        >
+          <div class="grid grid-cols-[3fr_2fr_1fr_auto_1fr] gap-x-8 items-baseline">
+            <.link
+              navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, page)}
+              class="title hover:text-white text-sm text-balance"
+            >
+              {page.title}
+            </.link>
 
-        <:action :let={{id, page}}>
-          <.link
-            phx-click={JS.push("delete", value: %{id: page.id}) |> hide("##{id}")}
-            data-confirm="Are you sure?"
-          >
-            Delete
-          </.link>
-        </:action>
-      </.table>
+            <div class="flex items-baseline gap-2">
+              <i class="hero-clock-solid size-4 self-center"></i>
+              <WikWeb.Components.Time.pretty
+                datetime={page.updated_at}
+                class="opacity-80 hover:opacity-100 transition text-xs whitespace-nowrap"
+              />
+            </div>
+
+            <div class="text-xs">
+              {(page.text || "")
+              |> String.split("\n")
+              |> Enum.filter(fn str -> str != "" end)
+              |> length()} lines
+            </div>
+
+            <.link
+              phx-click={JS.push("delete", value: %{id: page.id}) |> hide("##{id}")}
+              data-confirm="Are you sure?"
+              class="opacity-40 hover:opacity-100 transition"
+            >
+              <i class="hero-trash size-4">
+                delete
+              </i>
+            </.link>
+            <div class="flex justify-end">
+              <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={page} />
+            </div>
+          </div>
+        </div>
+      </div>
     </Layouts.app>
     """
   end
@@ -81,6 +94,7 @@ defmodule WikWeb.GroupLive.PageLive.Index do
 
     Wik.Wiki.Page
     |> Ash.Query.filter(group_id == ^current_group_id)
+    |> Ash.Query.sort(updated_at: :desc)
     |> Ash.read!(actor: socket.assigns[:current_user], load: [:versions_count])
   end
 
@@ -115,12 +129,10 @@ defmodule WikWeb.GroupLive.PageLive.Index do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
     if payload.data.group_id == socket.assigns.ctx.current_group.id do
-      socket =
-        socket
-        |> stream_delete(:pages, payload.data)
-        |> RealtimeToast.put_delete_toast(payload)
-
-      {:noreply, socket}
+      {:noreply,
+       socket
+       |> stream_delete(:pages, payload.data)
+       |> RealtimeToast.put_delete_toast(payload)}
     else
       {:noreply, socket}
     end
@@ -128,17 +140,14 @@ defmodule WikWeb.GroupLive.PageLive.Index do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
-    # Only show pages for the current group
     if payload.data.group_id == socket.assigns.ctx.current_group.id do
       Process.send_after(self(), {:clear_highlight, payload.data.id}, 2000)
 
-      socket =
-        socket
-        |> stream_insert(:pages, reload_page!(socket, payload.data.id))
-        |> update(:highlighted_page_ids, &MapSet.put(&1, payload.data.id))
-        |> RealtimeToast.put_update_toast(payload)
-
-      {:noreply, socket}
+      {:noreply,
+       socket
+       |> stream_insert(:pages, reload_page!(socket, payload.data.id))
+       |> update(:highlighted_page_ids, &MapSet.put(&1, payload.data.id))
+       |> RealtimeToast.put_update_toast(payload)}
     else
       {:noreply, socket}
     end

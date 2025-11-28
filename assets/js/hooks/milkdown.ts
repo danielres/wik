@@ -12,20 +12,21 @@ import {
 	editorViewCtx,
 	rootCtx,
 } from "@milkdown/kit/core";
-import { slashFactory } from "@milkdown/kit/plugin/slash";
+import { block } from "@milkdown/kit/plugin/block";
 import {
 	cursor as cursorPlugin,
 	dropIndicatorConfig,
 } from "@milkdown/kit/plugin/cursor";
+import { history } from "@milkdown/kit/plugin/history";
+import { slashFactory } from "@milkdown/kit/plugin/slash";
 import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { getMarkdown } from "@milkdown/utils";
-import { block } from "@milkdown/kit/plugin/block";
 
-import { createSlashView } from "./milkdown/slash-view";
-import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
 import { setupBlockHandle } from "./milkdown/block-handle";
 import { inputRuleWikilink } from "./milkdown/input-rule-wikilink";
+import { createSlashView } from "./milkdown/slash-view";
+import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
 
 const slash = slashFactory("Commands");
 
@@ -73,6 +74,7 @@ const MilkdownEditor = {
 			})
 			.use(commonmark)
 			.use(gfm)
+			.use(history)
 			.use(listItemBlockComponent)
 			.use(tableBlock)
 			.use(block)

@@ -48,12 +48,20 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     """
   end
 
+  defp page_url(group, page) do
+    ~p"/#{group.slug}/pages/#{page.slug}"
+  end
+
   @impl true
   def mount(%{"page_slug" => page_slug}, _session, socket) do
+    current_group = socket.assigns.ctx.current_group
+    current_user = socket.assigns.current_user
+    live_action = socket.assigns.live_action
+
     case Wik.Wiki.Page
          |> Ash.get(
-           %{group_id: socket.assigns.ctx.current_group.id, slug: page_slug},
-           actor: socket.assigns.current_user,
+           %{group_id: current_group.id, slug: page_slug},
+           actor: current_user,
            load: [:versions_count]
          ) do
       {:ok, page} ->
@@ -62,11 +70,18 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           Phoenix.PubSub.subscribe(Wik.PubSub, "page:destroyed:#{page.id}")
         end
 
-        {:ok,
-         socket
-         |> assign(:page_title, page.title)
-         |> assign(:page, page)
-         |> assign(:updated_fields, [])}
+        can_update? = Ash.can?({page, :update}, current_user)
+        should_redirect? = page.text == nil and live_action == :show and can_update?
+
+        if(should_redirect?) do
+          {:ok, socket |> push_navigate(to: page_url(current_group, page) <> "/edit")}
+        else
+          {:ok,
+           socket
+           |> assign(:page_title, page.title)
+           |> assign(:page, page)
+           |> assign(:updated_fields, [])}
+        end
 
       {:error, _error} ->
         page =
@@ -74,14 +89,14 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           |> Ash.Changeset.for_create(
             :create,
             %{title: page_slug},
-            actor: socket.assigns.current_user,
-            context: %{shared: %{current_group_id: socket.assigns.ctx.current_group.id}}
+            actor: current_user,
+            context: %{shared: %{current_group_id: current_group.id}}
           )
           |> Ash.create!()
 
         {:ok,
          socket
-         |> push_navigate(to: ~p"/#{socket.assigns.ctx.current_group.slug}/pages/#{page.slug}")}
+         |> push_navigate(to: page_url(current_group, page))}
     end
   end
 

@@ -76,6 +76,11 @@ defmodule Wik.Wiki.Page do
              on: [:create, :update]
 
       change fn cs, _ctx ->
+               cs |> collapse_blank_lines()
+             end,
+             on: [:update]
+
+      change fn cs, _ctx ->
                cs |> set_header()
              end,
              on: [:create, :update]
@@ -176,6 +181,12 @@ defmodule Wik.Wiki.Page do
     text = Ash.Changeset.get_attribute(cs, :text)
     trimmed = (text || "") |> String.trim()
     Ash.Changeset.change_attribute(cs, :text, trimmed)
+  end
+
+  def collapse_blank_lines(cs) do
+    text = Ash.Changeset.get_attribute(cs, :text)
+    collapsed = (text || "") |> String.replace("<br />\n\n", "")
+    Ash.Changeset.change_attribute(cs, :text, collapsed)
   end
 
   def set_header(changeset) do

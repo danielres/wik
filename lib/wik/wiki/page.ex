@@ -94,7 +94,7 @@ defmodule Wik.Wiki.Page do
       end
 
       change fn cs, _ctx ->
-        cs |> Utils.Slugify.maybe_set_and_ensure_unique_slug()
+        cs |> set_slug()
       end
     end
 
@@ -155,5 +155,14 @@ defmodule Wik.Wiki.Page do
 
   identities do
     identity :unique_group_slug, [:group_id, :slug], eager_check_with: Wik.Accounts
+  end
+
+  def set_slug(changeset) do
+    slug =
+      Ash.Changeset.get_attribute(changeset, :title)
+      |> String.capitalize()
+      |> URI.encode_www_form()
+
+    Ash.Changeset.change_attribute(changeset, :slug, slug)
   end
 end

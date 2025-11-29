@@ -1,6 +1,7 @@
 // assets/js/milkdown/toolbar.ts
 import type { Ctx } from "@milkdown/ctx";
 import { commandsCtx, editorCtx, EditorStatus } from "@milkdown/kit/core";
+import { tooltipFactory, TooltipProvider } from "@milkdown/kit/plugin/tooltip";
 import {
 	emphasisSchema,
 	inlineCodeSchema,
@@ -14,14 +15,14 @@ import {
 	strikethroughSchema,
 	toggleStrikethroughCommand,
 } from "@milkdown/kit/preset/gfm";
-import { tooltipFactory, TooltipProvider } from "@milkdown/kit/plugin/tooltip";
+import type { PluginView } from "@milkdown/kit/prose/state";
 import {
-	TextSelection,
 	EditorState,
 	Selection,
+	TextSelection,
 } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import type { PluginView } from "@milkdown/kit/prose/state";
+import { toggleWikilinkCommand } from "./toolbar/command-toggle-wiki-link";
 
 // 1) Create a tooltip plugin
 export const toolbarTooltip = tooltipFactory("WIK_TOOLBAR");
@@ -107,6 +108,17 @@ class ToolbarView implements PluginView {
 				run: (ctx) => {
 					const commands = ctx.get(commandsCtx);
 					commands.call(toggleInlineCodeCommand.key);
+				},
+			},
+
+			{
+				label: "W",
+				title: "Wikilink",
+				active: () => false, // Wikilinks are converted to links by input rule
+				run: (ctx) => {
+					const editor = ctx.get(editorCtx);
+					if (editor.status !== EditorStatus.Created) return;
+					toggleWikilinkCommand(ctx);
 				},
 			},
 		];

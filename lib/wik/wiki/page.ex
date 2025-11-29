@@ -81,6 +81,11 @@ defmodule Wik.Wiki.Page do
              on: [:update]
 
       change fn cs, _ctx ->
+               cs |> set_slug()
+             end,
+             on: [:create]
+
+      change fn cs, _ctx ->
                cs |> set_header()
              end,
              on: [:create, :update]
@@ -112,7 +117,6 @@ defmodule Wik.Wiki.Page do
           Ash.Changeset.add_error(changeset, "No current group set")
         end
       end
-
     end
 
     destroy :destroy do
@@ -186,6 +190,11 @@ defmodule Wik.Wiki.Page do
     Ash.Changeset.change_attribute(cs, :text, collapsed)
   end
 
+  def set_slug(changeset) do
+    title = Ash.Changeset.get_attribute(changeset, :title)
+    Ash.Changeset.change_attribute(changeset, :slug, title)
+  end
+
   def set_header(changeset) do
     text = Ash.Changeset.get_attribute(changeset, :text)
     has_header? = (text || "") |> String.slice(0, 2) == "# "
@@ -215,5 +224,4 @@ defmodule Wik.Wiki.Page do
       changeset
     end
   end
-
 end

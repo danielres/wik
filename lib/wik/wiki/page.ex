@@ -48,7 +48,7 @@ defmodule Wik.Wiki.Page do
     defaults []
 
     update :update do
-      accept [:title, :text, :slug]
+      accept [:title, :text]
       primary? true
       require_atomic? false
     end
@@ -113,9 +113,6 @@ defmodule Wik.Wiki.Page do
         end
       end
 
-      change fn cs, _ctx ->
-        cs |> set_slug()
-      end
     end
 
     destroy :destroy do
@@ -219,12 +216,4 @@ defmodule Wik.Wiki.Page do
     end
   end
 
-  def set_slug(changeset) do
-    slug =
-      Ash.Changeset.get_attribute(changeset, :title)
-      |> String.capitalize()
-      |> URI.encode_www_form()
-
-    Ash.Changeset.change_attribute(changeset, :slug, slug)
-  end
 end

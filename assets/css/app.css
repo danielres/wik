@@ -3,13 +3,14 @@
 
 @import "tailwindcss" source(none);
 @import "../../deps/toast/assets/css/toast.css";
+@import "./milkdown/table-block.css";
+@import "./milkdown/list-item-block.css";
+@import "./milkdown/toolbar.css";
+@import "./milkdown/slash-view.css";
+@import "./milkdown/block-handle.css";
+@import "./milkdown/cursor.css";
 @import "./prose-markdown.css";
-@import "./milkdown-table-block.css";
-@import "./milkdown-list-item-block.css";
-@import "./milkdown-toolbar.css";
-@import "./milkdown-slash-view.css";
-@import "./milkdown-block-handle.css";
-@import "./milkdown-cursor.css";
+
 @source "../../deps/ash_authentication_phoenix";
 @source "../css";
 @source "../js";

@@ -29,6 +29,11 @@ import { inputRuleWikilink } from "./milkdown/input-rule-wikilink";
 import { createSlashView } from "./milkdown/slash-view";
 import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
 import { EditorView } from "@milkdown/kit/prose/view";
+import {
+	configureWikiLinkMenu,
+	insertWikiLinkCommand,
+	wikiLinkMenu,
+} from "./milkdown/slash-pages";
 
 const slash = slashFactory("Commands");
 
@@ -56,6 +61,8 @@ const MilkdownEditor = {
 					}),
 				});
 
+				configureWikiLinkMenu(ctx);
+
 				setupToolbar(ctx);
 				setupBlockHandle(ctx, this.el as HTMLElement);
 
@@ -81,6 +88,8 @@ const MilkdownEditor = {
 			.use(tableBlock)
 			.use(block)
 			.use(slash)
+			.use(insertWikiLinkCommand) // Add the wikilink command
+			.use(wikiLinkMenu) // Add the wikilink menu plugin
 			.use(toolbarTooltip)
 			.use(cursorPlugin) // gap cursor + drop indicator
 			.use(inputRuleWikilink(rootPath))

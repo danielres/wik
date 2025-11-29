@@ -50,7 +50,7 @@ defmodule WikWeb.HomeLive do
         <.table
           id="groups"
           rows={@streams.groups}
-          row_click={fn {_id, group} -> JS.navigate(~p"/#{group.slug}") end}
+          row_click={fn {_id, group} -> JS.navigate(~p"/#{group.slug}/pages/Home") end}
           row_class={
             fn {_id, group} ->
               (group.id in @highlighted_group_ids && "animate-reload") ||

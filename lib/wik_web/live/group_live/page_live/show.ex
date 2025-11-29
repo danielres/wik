@@ -80,7 +80,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           Wik.Wiki.Page
           |> Ash.Changeset.for_create(
             :create,
-            %{title: page_slug, slug: page_slug},
+            %{title: page_slug},
             actor: current_user,
             context: %{shared: %{current_group_id: current_group.id}}
           )

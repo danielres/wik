@@ -74,7 +74,7 @@ defmodule WikWeb.Router do
       # If an authenticated user must *not* be present:
       # on_mount {WikWeb.LiveUserAuth, :live_no_user}
       live "/", HomeLive, :index
-      live "/new-group", GroupLive.Index, :new
+      live "/new-group", HomeLive, :new
     end
 
     scope "/:slug" do

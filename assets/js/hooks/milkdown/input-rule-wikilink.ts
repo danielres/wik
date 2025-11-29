@@ -1,5 +1,6 @@
-import { $inputRule } from "@milkdown/utils";
 import { InputRule } from "@milkdown/prose/inputrules";
+import { $inputRule } from "@milkdown/utils";
+import { capitalize } from "../../utils";
 
 export const inputRuleWikilink = (rootPath: string) =>
 	$inputRule(
@@ -11,7 +12,7 @@ export const inputRuleWikilink = (rootPath: string) =>
 
 				const { schema } = state;
 
-				const linkNode = schema.text(pageName, [
+				const linkNode = schema.text(capitalize(pageName), [
 					schema.mark("link", {
 						href: `${rootPath}/${pageSlug}`,
 					}),
@@ -20,7 +21,3 @@ export const inputRuleWikilink = (rootPath: string) =>
 				return state.tr.replaceWith(start, end, linkNode);
 			}),
 	);
-
-function capitalize(str: string): string {
-	return str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
-}

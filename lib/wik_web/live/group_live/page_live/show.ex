@@ -56,7 +56,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   def mount(%{"page_slug" => page_slug}, _session, socket) do
     current_group = socket.assigns.ctx.current_group
     current_user = socket.assigns.current_user
-    live_action = socket.assigns.live_action
 
     case Wik.Wiki.Page
          |> Ash.get(
@@ -70,33 +69,33 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           Phoenix.PubSub.subscribe(Wik.PubSub, "page:destroyed:#{page.id}")
         end
 
-        can_update? = Ash.can?({page, :update}, current_user)
-        should_redirect? = page.text == nil and live_action == :show and can_update?
-
-        if(should_redirect?) do
-          {:ok, socket |> push_navigate(to: page_url(current_group, page) <> "/edit")}
-        else
-          {:ok,
-           socket
-           |> assign(:page_title, page.title)
-           |> assign(:page, page)
-           |> assign(:updated_fields, [])}
-        end
+        {:ok,
+         socket
+         |> assign(:page_title, page.title)
+         |> assign(:page, page)
+         |> assign(:updated_fields, [])}
 
       {:error, _error} ->
         page =
           Wik.Wiki.Page
           |> Ash.Changeset.for_create(
             :create,
-            %{title: page_slug},
+            %{title: page_slug, slug: page_slug},
             actor: current_user,
             context: %{shared: %{current_group_id: current_group.id}}
           )
           |> Ash.create!()
 
+        redirect_url =
+          if Ash.can?({page, :update}, socket.assigns.current_user) do
+            page_url(current_group, page) <> "/edit"
+          else
+            page_url(current_group, page)
+          end
+
         {:ok,
          socket
-         |> push_navigate(to: page_url(current_group, page))}
+         |> push_navigate(to: redirect_url)}
     end
   end
 

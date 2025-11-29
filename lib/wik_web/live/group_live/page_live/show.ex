@@ -43,6 +43,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         group={@ctx.current_group}
         editable={editable}
         return_to={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+        pages_map={@ctx.pages_map}
       />
     </Layouts.app>
     """

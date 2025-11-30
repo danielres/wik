@@ -4,6 +4,10 @@ defmodule Utils.Time do
     Timex.from_now(datetime)
   end
 
+  def relative(date) when is_nil(date) do
+    "unknown"
+  end
+
   def relative(%DateTime{} = date) do
     Timex.from_now(date)
     |> String.replace(" seconds", " sec")

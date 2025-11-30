@@ -23,15 +23,8 @@ defmodule WikWeb.CtxAdditions do
 
     socket =
       socket
-      |> ctx_add(:page_slug, params["page_slug"])
-      |> ctx_add(:pages_map, pages_map)
+      |> Utils.Ctx.add(:pages_map, pages_map)
 
     {:cont, socket}
-  end
-
-  defp ctx_add(socket, key, value) do
-    socket = socket |> assign_new(:ctx, fn -> %{} end)
-    ctx = Map.put(socket.assigns.ctx, key, value)
-    socket |> assign(ctx: ctx)
   end
 end

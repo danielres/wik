@@ -112,16 +112,30 @@ defmodule WikWeb.Layouts do
     <main class="layout-main">
       {render_slot(@inner_block)}
 
-      <div class="mt-8 border-t-4 border-base-content/10 pt-8 flex justify-between">
+      <footer
+        :if={@ctx[:page]}
+        class="mt-8 border-t-4 border-base-content/10 pt-8 flex justify-between"
+      >
         <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
-        <.link
-          :if={@ctx[:page_slug]}
-          class="btn btn-xs"
-          navigate={~p"/#{@ctx.current_group.slug}/pages"}
-        >
-          All pages
-        </.link>
-      </div>
+
+        <div class="gap-2 flex flex-col items-end">
+          <.link
+            :if={@ctx.page.slug}
+            class="btn btn-xs"
+            navigate={~p"/#{@ctx.current_group.slug}/pages"}
+          >
+            All pages
+          </.link>
+
+          <dl
+            :if={Mix.env() == :dev}
+            class="text-xs px-1 py-0.5 rounded grid grid-cols-[auto_auto] gap-x-2 opacity-40"
+          >
+            <dt>Page title:</dt>
+            <dd>{@ctx.page.title}</dd>
+          </dl>
+        </div>
+      </footer>
     </main>
 
     <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />

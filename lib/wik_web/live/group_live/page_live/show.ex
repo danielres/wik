@@ -66,6 +66,8 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           Phoenix.PubSub.subscribe(Wik.PubSub, "page:destroyed:#{page.id}")
         end
 
+        socket = socket |> Utils.Ctx.add(:page, page)
+
         {:ok,
          socket
          |> assign(:page_title, page.title)

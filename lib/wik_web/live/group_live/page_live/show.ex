@@ -17,10 +17,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
-        <div class={[:title in @updated_fields && "animate-reload"]}>
-          {@page.title}
-        </div>
-
         <:subtitle>
           <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={@page} />
         </:subtitle>
@@ -43,6 +39,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         group={@ctx.current_group}
         editable={editable}
         return_to={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+        pages_map={@ctx.pages_map}
       />
     </Layouts.app>
     """
@@ -68,6 +65,8 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           Phoenix.PubSub.subscribe(Wik.PubSub, "page:updated:#{page.id}")
           Phoenix.PubSub.subscribe(Wik.PubSub, "page:destroyed:#{page.id}")
         end
+
+        socket = socket |> Utils.Ctx.add(:page, page)
 
         {:ok,
          socket

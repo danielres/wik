@@ -36,6 +36,7 @@ defmodule Utils.Slugify do
     |> String.downcase()
     |> normalize_unicode()
     |> String.replace(~r/[^\w\s-]/u, "")
+    |> String.replace(~r/_/u, "-")
     |> String.replace(~r/\s+/u, "-")
     |> String.replace(~r/-+/u, "-")
     |> String.trim("-")
@@ -121,4 +122,3 @@ defmodule Utils.Slugify do
     :io_lib.format("~*..0B", [n, x]) |> IO.iodata_to_binary()
   end
 end
-

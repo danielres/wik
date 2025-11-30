@@ -6,6 +6,7 @@
 @import "./milkdown/table-block.css";
 @import "./milkdown/list-item-block.css";
 @import "./milkdown/toolbar.css";
+@import "./milkdown/slash-menu-wikilinks.css";
 @import "./milkdown/slash-view.css";
 @import "./milkdown/block-handle.css";
 @import "./milkdown/cursor.css";

@@ -1,5 +1,4 @@
-// milkdown-editor.ts
-import { selectTextNearPosCommand } from "@milkdown/kit/preset/commonmark";
+// assets/js/milkdown.ts
 import { tableBlock } from "@milkdown/components/table-block";
 import { CommandManager, commandsCtx, editorViewCtx } from "@milkdown/core";
 import type { Ctx, SliceType } from "@milkdown/ctx";
@@ -20,15 +19,22 @@ import {
 } from "@milkdown/kit/plugin/cursor";
 import { history } from "@milkdown/kit/plugin/history";
 import { slashFactory } from "@milkdown/kit/plugin/slash";
-import { commonmark } from "@milkdown/kit/preset/commonmark";
+import {
+	commonmark,
+	selectTextNearPosCommand,
+} from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { getMarkdown } from "@milkdown/utils";
 
 import { setupBlockHandle } from "./milkdown/block-handle";
 import { inputRuleWikilink } from "./milkdown/input-rule-wikilink";
+import {
+	slashMenuWikilinks,
+	slashMenuWikilinksRegister,
+	type SlashMenuWikilinksPage,
+} from "./milkdown/slash-menu-wikilinks";
 import { createSlashView } from "./milkdown/slash-view";
 import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
-import { EditorView } from "@milkdown/kit/prose/view";
 
 const slash = slashFactory("Commands");
 
@@ -38,9 +44,36 @@ const MilkdownEditor = {
 			markdown = "",
 			editable: _editable,
 			inputId,
-			rootPath,
+			rootPath = "",
 		} = this.el.dataset;
+
+		const pagesJson = this.el.dataset.pagesJson;
 		const editable = _editable !== undefined;
+
+		let pages: SlashMenuWikilinksPage[] = [];
+
+		if (pagesJson) {
+			try {
+				const parsed = JSON.parse(pagesJson) as Record<
+					string,
+					{ id: string; slug: string; title?: string; updated_at?: string }
+				>;
+
+				pages = Object.values(parsed).map((p, i) => ({
+					id: String(p.id ?? i),
+					label: String(p.title ?? p.slug ?? ""),
+					slug: String(p.slug ?? ""),
+					updatedAtMs: p.updated_at ? Date.parse(p.updated_at) : null,
+				}));
+			} catch (e) {
+				console.error(
+					"Invalid data-pages-json for MilkdownEditor:",
+					e,
+					pagesJson,
+				);
+			}
+		}
+
 		this.hiddenInput = inputId ? document.getElementById(inputId) : null;
 		this.form = this.el.closest("form");
 
@@ -56,20 +89,22 @@ const MilkdownEditor = {
 					}),
 				});
 
+				slashMenuWikilinksRegister(ctx, pages, rootPath);
+
 				setupToolbar(ctx);
 				setupBlockHandle(ctx, this.el as HTMLElement);
 
 				ctx.set(listItemBlockConfig.key, {
-					renderLabel: ({ label, listType, checked, readonly: _readonly }) => {
+					renderLabel: ({ label, listType, checked }) => {
 						if (checked == null) {
-							if (listType === "bullet")
+							if (listType === "bullet") {
 								return `<span class="ml-1 mr-1">-</span>`;
+							}
 							return label;
 						}
 					},
 				});
 
-				// Drop indicator config (line shown while dragging)
 				ctx.update(dropIndicatorConfig.key, () => ({
 					width: 1,
 				}));
@@ -81,8 +116,9 @@ const MilkdownEditor = {
 			.use(tableBlock)
 			.use(block)
 			.use(slash)
+			.use(slashMenuWikilinks)
 			.use(toolbarTooltip)
-			.use(cursorPlugin) // gap cursor + drop indicator
+			.use(cursorPlugin)
 			.use(inputRuleWikilink(rootPath))
 			.create()
 			.then((editor) => {
@@ -94,19 +130,16 @@ const MilkdownEditor = {
 	},
 
 	setFocusAndCursorPos() {
-		// Autofocus
 		const view = this.editorInstance.ctx.get(editorViewCtx);
 		view.focus();
 
-		// Calculate position for second node
 		const doc = view.state.doc;
 		let cursorPos = 0;
 		doc.content.forEach((_node: any, offset: number) => {
 			cursorPos = offset;
-			return false; // stop iteration
+			return false; // Stop after first node (ProseMirror forEach convention)
 		});
 
-		// Set cursor position
 		this.editorInstance.action(
 			(ctx: { get: (arg0: SliceType<CommandManager, "commands">) => any }) => {
 				const commands = ctx.get(commandsCtx);

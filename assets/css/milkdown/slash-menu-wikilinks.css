@@ -1,0 +1,26 @@
+/* Slash menu container */
+.slash-menu-wikilinks-container {
+	@apply hidden; /* initial hidden */
+	@apply z-50 w-64 max-h-60 overflow-y-auto; /* layout */
+	@apply bg-base-300 border border-base-300; /* colors + border */
+	@apply rounded shadow-lg p-2; /* spacing */
+	@apply data-[show='true']:block; /* shown when active */
+}
+
+/* Option */
+.slash-menu-wikilinks-option {
+	@apply px-2 py-1 cursor-pointer rounded;
+	@apply bg-base-200 border border-base-300 shadow-sm;
+	@apply hover:bg-base-100 transition-colors;
+	@apply text-base-content/70;
+}
+
+/* Active keyboard option */
+.slash-menu-wikilinks-option-active {
+	@apply bg-primary/20 text-primary-content border-primary;
+}
+
+/* Empty state */
+.slash-menu-wikilinks-option-empty {
+	@apply px-2 py-1 italic text-base-content/50;
+}

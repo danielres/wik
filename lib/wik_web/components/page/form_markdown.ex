@@ -16,7 +16,6 @@ defmodule WikWeb.Components.Page.FormMarkdown do
         <% text_value = @form[:text].value || @page.text || "" %>
 
         <textarea id={"page_text_#{@id}"} name={@form[:text].name} hidden>{text_value}</textarea>
-
         <div class={"milkdown-editor-container editable-#{@editable}"}>
           <div
             id={"milkdown-editor-#{@id}"}
@@ -26,6 +25,14 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-input-id={"page_text_#{@id}"}
             data-editable={@editable}
             data-root-path={"/#{ @group.slug }/pages"}
+            data-pages-json={
+              @pages_map
+              |> Enum.map(fn page ->
+                {page.id, %{id: page.id, slug: page.slug, updated_at: page.updated_at}}
+              end)
+              |> Enum.into(%{})
+              |> Jason.encode!()
+            }
           />
         </div>
 

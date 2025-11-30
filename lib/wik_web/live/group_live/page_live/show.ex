@@ -17,10 +17,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
-        <div class={[:title in @updated_fields && "animate-reload"]}>
-          {@page.title}
-        </div>
-
         <:subtitle>
           <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={@page} />
         </:subtitle>

@@ -3,6 +3,7 @@
 import type { Ctx } from "@milkdown/ctx";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { SlashProvider, slashFactory } from "@milkdown/kit/plugin/slash";
+import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
 export type SlashMenuWikilinksPage = {
@@ -291,11 +292,17 @@ class SlashMenuWikilinksView {
 		const start = Math.max(0, from - deleteLen);
 
 		const { schema } = state;
-		const mark = schema.marks["link"];
+		const linkMark = schema.marks["link"];
 		const href = `${this.rootPath}/${encodeURIComponent(page.slug)}`;
-		const linkNode = schema.text(page.label, [mark.create({ href })]);
+		const linkNode = schema.text(page.label, [linkMark.create({ href })]);
 
 		const tr = state.tr.replaceWith(start, from, linkNode);
+
+		// Move cursor after the inserted link and clear stored marks
+		const posAfter = start + linkNode.nodeSize;
+		tr.setSelection(TextSelection.create(tr.doc, posAfter));
+		tr.setStoredMarks([]);
+
 		view.dispatch(tr);
 
 		this.closeMenu();

@@ -1,4 +1,4 @@
-// milkdown-editor.ts
+// assets/js/milkdown.ts
 import { selectTextNearPosCommand } from "@milkdown/kit/preset/commonmark";
 import { tableBlock } from "@milkdown/components/table-block";
 import { CommandManager, commandsCtx, editorViewCtx } from "@milkdown/core";
@@ -28,12 +28,14 @@ import { setupBlockHandle } from "./milkdown/block-handle";
 import { inputRuleWikilink } from "./milkdown/input-rule-wikilink";
 import { createSlashView } from "./milkdown/slash-view";
 import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
-import { EditorView } from "@milkdown/kit/prose/view";
+
+/* ------------------ CONSISTENT NAMES START HERE ------------------ */
 import {
-	configureWikiLinkMenu,
-	insertWikiLinkCommand,
-	wikiLinkMenu,
-} from "./milkdown/slash-pages";
+	slashMenuWikilinks,
+	slashMenuWikilinksRegister,
+	type SlashMenuWikilinksPage,
+} from "./milkdown/slash-menu-wikilinks";
+/* --------------------------------------------------------------- */
 
 const slash = slashFactory("Commands");
 
@@ -43,9 +45,35 @@ const MilkdownEditor = {
 			markdown = "",
 			editable: _editable,
 			inputId,
-			rootPath,
+			rootPath = "",
 		} = this.el.dataset;
+
+		const pagesJson = this.el.dataset.pagesJson;
 		const editable = _editable !== undefined;
+
+		let pages: SlashMenuWikilinksPage[] = [];
+
+		if (pagesJson) {
+			try {
+				const parsed = JSON.parse(pagesJson) as Record<
+					string,
+					{ id: string; slug: string; title?: string }
+				>;
+
+				pages = Object.values(parsed).map((p, i) => ({
+					id: String(p.id ?? i),
+					label: String(p.title ?? p.slug ?? ""),
+					slug: String(p.slug ?? ""),
+				}));
+			} catch (e) {
+				console.error(
+					"Invalid data-pages-json for MilkdownEditor:",
+					e,
+					pagesJson,
+				);
+			}
+		}
+
 		this.hiddenInput = inputId ? document.getElementById(inputId) : null;
 		this.form = this.el.closest("form");
 
@@ -61,22 +89,24 @@ const MilkdownEditor = {
 					}),
 				});
 
-				configureWikiLinkMenu(ctx);
+				/* ------------------ CONSISTENT NAME ------------------ */
+				slashMenuWikilinksRegister(ctx, pages, rootPath);
+				/* ----------------------------------------------------- */
 
 				setupToolbar(ctx);
 				setupBlockHandle(ctx, this.el as HTMLElement);
 
 				ctx.set(listItemBlockConfig.key, {
-					renderLabel: ({ label, listType, checked, readonly: _readonly }) => {
+					renderLabel: ({ label, listType, checked }) => {
 						if (checked == null) {
-							if (listType === "bullet")
+							if (listType === "bullet") {
 								return `<span class="ml-1 mr-1">-</span>`;
+							}
 							return label;
 						}
 					},
 				});
 
-				// Drop indicator config (line shown while dragging)
 				ctx.update(dropIndicatorConfig.key, () => ({
 					width: 1,
 				}));
@@ -88,10 +118,9 @@ const MilkdownEditor = {
 			.use(tableBlock)
 			.use(block)
 			.use(slash)
-			.use(insertWikiLinkCommand) // Add the wikilink command
-			.use(wikiLinkMenu) // Add the wikilink menu plugin
+			.use(slashMenuWikilinks) // ← consistent
 			.use(toolbarTooltip)
-			.use(cursorPlugin) // gap cursor + drop indicator
+			.use(cursorPlugin)
 			.use(inputRuleWikilink(rootPath))
 			.create()
 			.then((editor) => {
@@ -103,19 +132,16 @@ const MilkdownEditor = {
 	},
 
 	setFocusAndCursorPos() {
-		// Autofocus
 		const view = this.editorInstance.ctx.get(editorViewCtx);
 		view.focus();
 
-		// Calculate position for second node
 		const doc = view.state.doc;
 		let cursorPos = 0;
 		doc.content.forEach((_node: any, offset: number) => {
 			cursorPos = offset;
-			return false; // stop iteration
+			return false;
 		});
 
-		// Set cursor position
 		this.editorInstance.action(
 			(ctx: { get: (arg0: SliceType<CommandManager, "commands">) => any }) => {
 				const commands = ctx.get(commandsCtx);

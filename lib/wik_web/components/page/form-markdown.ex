@@ -25,7 +25,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-input-id={"page_text_#{@id}"}
             data-editable={@editable}
             data-root-path={"/#{ @group.slug }/pages"}
-            data-pages-map-json={
+            data-pages-json={
               @pages_map
               |> Enum.map(fn page ->
                 {page.id, %{id: page.id, slug: page.slug}}

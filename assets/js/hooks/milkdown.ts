@@ -137,7 +137,7 @@ const MilkdownEditor = {
 		let cursorPos = 0;
 		doc.content.forEach((_node: any, offset: number) => {
 			cursorPos = offset;
-			return false;
+			return false; // Stop after first node (ProseMirror forEach convention)
 		});
 
 		this.editorInstance.action(

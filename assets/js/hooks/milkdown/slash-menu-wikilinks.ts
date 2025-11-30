@@ -236,22 +236,34 @@ class SlashMenuWikilinksView {
 	private onKeyDown(e: KeyboardEvent) {
 		if (!this.isOpen) return;
 
-		const count = this.filteredPages.length;
-		if (count === 0) return;
+		const hasOptions = this.filteredPages.length > 0;
+		if (!hasOptions) return;
 
-		switch (e.key) {
-			case "ArrowDown":
-				e.preventDefault();
-				this.activeIndex = (this.activeIndex + 1) % count;
-				this.updateActiveVisual();
-				break;
+		const key = e.key;
 
-			case "ArrowUp":
-				e.preventDefault();
-				this.activeIndex = (this.activeIndex - 1 + count) % count;
-				this.updateActiveVisual();
-				break;
+		const isNext =
+			key === "ArrowDown" || (e.ctrlKey && (key === "j" || key === "J"));
 
+		const isPrev =
+			key === "ArrowUp" || (e.ctrlKey && (key === "k" || key === "K"));
+
+		if (isNext) {
+			e.preventDefault();
+			this.activeIndex = (this.activeIndex + 1) % this.filteredPages.length;
+			this.updateActiveVisual();
+			return;
+		}
+
+		if (isPrev) {
+			e.preventDefault();
+			this.activeIndex =
+				(this.activeIndex - 1 + this.filteredPages.length) %
+				this.filteredPages.length;
+			this.updateActiveVisual();
+			return;
+		}
+
+		switch (key) {
 			case "Enter":
 				e.preventDefault();
 				this.selectOption(this.activeIndex);

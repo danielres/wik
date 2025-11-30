@@ -1,5 +1,4 @@
 // assets/js/milkdown.ts
-import { selectTextNearPosCommand } from "@milkdown/kit/preset/commonmark";
 import { tableBlock } from "@milkdown/components/table-block";
 import { CommandManager, commandsCtx, editorViewCtx } from "@milkdown/core";
 import type { Ctx, SliceType } from "@milkdown/ctx";
@@ -20,19 +19,22 @@ import {
 } from "@milkdown/kit/plugin/cursor";
 import { history } from "@milkdown/kit/plugin/history";
 import { slashFactory } from "@milkdown/kit/plugin/slash";
-import { commonmark } from "@milkdown/kit/preset/commonmark";
+import {
+	commonmark,
+	selectTextNearPosCommand,
+} from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { getMarkdown } from "@milkdown/utils";
 
 import { setupBlockHandle } from "./milkdown/block-handle";
 import { inputRuleWikilink } from "./milkdown/input-rule-wikilink";
-import { createSlashView } from "./milkdown/slash-view";
-import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
 import {
 	slashMenuWikilinks,
 	slashMenuWikilinksRegister,
 	type SlashMenuWikilinksPage,
 } from "./milkdown/slash-menu-wikilinks";
+import { createSlashView } from "./milkdown/slash-view";
+import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
 
 const slash = slashFactory("Commands");
 

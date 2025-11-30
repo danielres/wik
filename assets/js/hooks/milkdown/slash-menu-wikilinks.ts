@@ -306,6 +306,11 @@ class SlashMenuWikilinksView {
 
 		const { schema } = state;
 		const linkMark = schema.marks["link"];
+		if (!linkMark) {
+			console.error("🔴 Link mark not found in schema");
+			this.closeMenu();
+			return;
+		}
 		const href = `${this.rootPath}/${encodeURIComponent(page.slug)}`;
 		const linkNode = schema.text(page.label, [linkMark.create({ href })]);
 

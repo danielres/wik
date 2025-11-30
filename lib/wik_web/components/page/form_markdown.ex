@@ -28,7 +28,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-pages-json={
               @pages_map
               |> Enum.map(fn page ->
-                {page.id, %{id: page.id, slug: page.slug}}
+                {page.id, %{id: page.id, slug: page.slug, updated_at: page.updated_at}}
               end)
               |> Enum.into(%{})
               |> Jason.encode!()

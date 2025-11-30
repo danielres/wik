@@ -28,14 +28,11 @@ import { setupBlockHandle } from "./milkdown/block-handle";
 import { inputRuleWikilink } from "./milkdown/input-rule-wikilink";
 import { createSlashView } from "./milkdown/slash-view";
 import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
-
-/* ------------------ CONSISTENT NAMES START HERE ------------------ */
 import {
 	slashMenuWikilinks,
 	slashMenuWikilinksRegister,
 	type SlashMenuWikilinksPage,
 } from "./milkdown/slash-menu-wikilinks";
-/* --------------------------------------------------------------- */
 
 const slash = slashFactory("Commands");
 
@@ -57,13 +54,14 @@ const MilkdownEditor = {
 			try {
 				const parsed = JSON.parse(pagesJson) as Record<
 					string,
-					{ id: string; slug: string; title?: string }
+					{ id: string; slug: string; title?: string; updated_at?: string }
 				>;
 
 				pages = Object.values(parsed).map((p, i) => ({
 					id: String(p.id ?? i),
 					label: String(p.title ?? p.slug ?? ""),
 					slug: String(p.slug ?? ""),
+					updatedAtMs: p.updated_at ? Date.parse(p.updated_at) : null,
 				}));
 			} catch (e) {
 				console.error(
@@ -89,9 +87,7 @@ const MilkdownEditor = {
 					}),
 				});
 
-				/* ------------------ CONSISTENT NAME ------------------ */
 				slashMenuWikilinksRegister(ctx, pages, rootPath);
-				/* ----------------------------------------------------- */
 
 				setupToolbar(ctx);
 				setupBlockHandle(ctx, this.el as HTMLElement);
@@ -118,7 +114,7 @@ const MilkdownEditor = {
 			.use(tableBlock)
 			.use(block)
 			.use(slash)
-			.use(slashMenuWikilinks) // ← consistent
+			.use(slashMenuWikilinks)
 			.use(toolbarTooltip)
 			.use(cursorPlugin)
 			.use(inputRuleWikilink(rootPath))

@@ -10,6 +10,7 @@ export type SlashMenuWikilinksPage = {
 	id: string;
 	label: string;
 	slug: string;
+	updatedAtMs: number | null;
 };
 
 export const slashMenuWikilinks = slashFactory("SLASH_MENU_WIKILINKS");
@@ -27,6 +28,7 @@ export function slashMenuWikilinksRegister(
 
 /* ---------------- FUZZY MATCH ---------------- */
 
+// Simple subsequence fuzzy score
 function fuzzyScore(text: string, query: string): number {
 	const t = text.toLowerCase();
 	const q = query.toLowerCase();
@@ -45,6 +47,7 @@ function fuzzyScore(text: string, query: string): number {
 }
 
 /* ---------------- VIEW ---------------- */
+const RECENT_LIMIT = 5;
 
 class SlashMenuWikilinksView {
 	private ctx: Ctx;
@@ -68,7 +71,6 @@ class SlashMenuWikilinksView {
 		this.ctx = ctx;
 		this.view = view;
 		this.allPages = pages.slice();
-		this.filteredPages = this.allPages.slice(0, 20);
 		this.rootPath = rootPath.replace(/\/+$/, "");
 
 		this.container = document.createElement("div");
@@ -149,10 +151,18 @@ class SlashMenuWikilinksView {
 
 	private updateQuery(query: string) {
 		this.currentQuery = query;
-
 		const q = query.trim();
+
 		if (q === "") {
-			this.filteredPages = this.allPages.slice(0, 20);
+			// No search term yet → show most recently updated pages (top 5)
+			this.filteredPages = this.allPages
+				.slice()
+				.sort((a, b) => {
+					const av = a.updatedAtMs ?? 0;
+					const bv = b.updatedAtMs ?? 0;
+					return bv - av;
+				})
+				.slice(0, RECENT_LIMIT);
 		} else {
 			this.filteredPages = this.allPages
 				.map((p) => ({

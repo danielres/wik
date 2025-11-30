@@ -18,7 +18,7 @@ defmodule WikWeb.CtxAdditions do
       Wik.Wiki.Page
       |> Ash.Query.filter(group_id == ^current_group_id)
       |> Ash.Query.sort(updated_at: :desc)
-      |> Ash.Query.select([:id, :title, :slug])
+      |> Ash.Query.select([:id, :title, :slug, :updated_at])
       |> Ash.read!(actor: socket.assigns[:current_user])
 
     socket =

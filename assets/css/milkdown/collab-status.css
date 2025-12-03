@@ -1,5 +1,4 @@
 [data-editor-synced="true"] [data-status-button-save] {
 	pointer-events: none;
-	opacity: 0;
-	@apply transition;
+	@apply transition btn-neutral text-base-content/50;
 }

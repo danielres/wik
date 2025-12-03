@@ -59,7 +59,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             <a
               id={"collab-done-#{@page.id}"}
               data-done-target
-              class="btn btn-sm btn-ghost opacity-50 hover:opacity-100 transition bg-transparent"
+              class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100 transition "
               href={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
             >
               <i class="hero-arrow-left-micro size-5">Back</i>

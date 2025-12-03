@@ -48,7 +48,7 @@
 	left: -3px;
 	display: inline-block;
 	border: 8px solid transparent;
-	border-top-color: inherit;
+	border-top-color: color-mix(in oklab, var(--color-info, #3b82f6) 90%, transparent);
 	transform: rotate(-90deg);
 	content: "";
 }

@@ -16,71 +16,66 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     <% editable = @live_action == :edit and connected?(@socket) %>
 
     <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        <:subtitle></:subtitle>
+      <div class="flex justify-between mb-16">
+        <div class="flex items-center">
+          <.link
+            class="btn btn-sm opacity-70 hover:opacity-100 transition"
+            patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@page.versions_count}"}
+          >
+            v. {@page.versions_count}
+          </.link>
 
-        <:actions>
-          <div class="space-y-2">
-            <div class="flex items-center gap-3 justify-end">
-              <WikWeb.Components.ButtonEdit.button
-                :if={Ash.can?({@page, :update}, @current_user) and !editable}
-                link={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/edit?return_to=show"}
-                watch_path={@current_path <> "/edit"}
-                presences={@ctx.presences}
-              />
-
-              <div :if={editable} class="flex items-center gap-2">
-                <a
-                  id={"collab-done-#{@page.id}"}
-                  data-done-target
-                  class="btn btn-sm btn-ghost opacity-50 hover:opacity-100 transition bg-transparent"
-                  href={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+          <%= if editable do %>
+            <div class="tooltip tooltip-right">
+              <div class="tooltip-content">
+                <span
+                  class="text-xs opacity-80"
+                  id={"collab-status-label-#{@page.id}"}
                 >
-                  <i class="hero-arrow-left-micro size-5">Back</i>
-                </a>
-                <.button
-                  form={"page-form-#{@page.id}"}
-                  phx-disable-with="Saving Version..."
-                  variant="primary"
-                  data-status-button-save
-                  class="btn btn-sm btn-primary"
-                >
-                  Save
-                </.button>
+                  Synced
+                </span>
               </div>
+              <button class="btn btn-sm btn-ghost bg-transparent">
+                <span
+                  id={"collab-status-dot-#{@page.id}"}
+                  class="size-2 rounded-full bg-emerald-500"
+                >
+                </span>
+              </button>
             </div>
-            <div class="flex text-xs justify-end text-base-content/70 items-center">
-              <%= if editable do %>
-                <div class="flex justify-end">
-                  <div class="tooltip tooltip-left">
-                    <div class="tooltip-content -mr-4 bg-transparent">
-                      <span
-                        class="text-xs opacity-50"
-                        id={"collab-status-label-#{@page.id}"}
-                      >
-                        Synced
-                      </span>
-                    </div>
-                    <button class="btn btn-sm border btn-ghost bg-transparent">
-                      <span
-                        id={"collab-status-dot-#{@page.id}"}
-                        class="size-2 rounded-full bg-emerald-500"
-                      >
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              <% end %>
-              <.link
-                class="btn btn-xs opacity-70 hover:opacity-100 transition"
-                patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@page.versions_count}"}
-              >
-                v. {@page.versions_count}
-              </.link>
-            </div>
+          <% end %>
+        </div>
+
+        <%= if Ash.can?({@page, :update}, @current_user) and !editable do %>
+          <WikWeb.Components.ButtonEdit.button
+            link={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/edit?return_to=show"}
+            watch_path={@current_path <> "/edit"}
+            presences={@ctx.presences}
+          />
+        <% end %>
+
+        <%= if editable do %>
+          <div class="flex items-center gap-2">
+            <a
+              id={"collab-done-#{@page.id}"}
+              data-done-target
+              class="btn btn-sm btn-ghost opacity-50 hover:opacity-100 transition bg-transparent"
+              href={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+            >
+              <i class="hero-arrow-left-micro size-5">Back</i>
+            </a>
+            <.button
+              form={"page-form-#{@page.id}"}
+              phx-disable-with="Saving Version..."
+              variant="primary"
+              data-status-button-save
+              class=""
+            >
+              Save
+            </.button>
           </div>
-        </:actions>
-      </.header>
+        <% end %>
+      </div>
 
       <.live_component
         module={WikWeb.Components.Page.FormMarkdown}

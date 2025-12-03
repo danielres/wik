@@ -44,7 +44,7 @@ defmodule WikWeb.Components.ButtonEdit do
           {# </.link> }
 
           <.link
-            class="btn btn-sm btn-primary text-base-content/50"
+            class="btn btn-sm btn-primary text-base-content"
             patch={@link}
           >
             Edit

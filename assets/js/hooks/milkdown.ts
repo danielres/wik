@@ -52,12 +52,24 @@ const MilkdownEditor = {
 			editable: _editable,
 			inputId,
 			rootPath = "",
-			collabDisabled,
+			mode = "view",
 		} = this.el.dataset;
 
 		const pagesJson = this.el.dataset.pagesJson;
 		const editable = _editable !== undefined;
-		const isCollabDisabled = collabDisabled !== undefined;
+		const isStatic = mode === "static";
+		const isEdit = mode === "edit";
+		const isView = mode === "view";
+		this.statusReady = false;
+		this.statusDot = this.el.dataset.statusDotId
+			? document.getElementById(this.el.dataset.statusDotId)
+			: null;
+		this.statusLabel = this.el.dataset.statusLabelId
+			? document.getElementById(this.el.dataset.statusLabelId)
+			: null;
+		this.lastSavedContent = this.normalize(markdown);
+		this.currentContent = this.lastSavedContent;
+		this.statusTimer = null;
 
 		let pages: SlashMenuWikilinksPage[] = [];
 
@@ -93,12 +105,16 @@ const MilkdownEditor = {
 		this.yDoc = new Doc();
 		this.wsProvider = null;
 		this.collabService = null;
+		this.handleDocUpdate = () => {
+			if (!this.statusReady) return;
+			this.scheduleStatusRefresh();
+		};
 
 		Editor.make()
 			.config((ctx) => {
 				ctx.set(rootCtx, this.el);
 
-				if (isCollabDisabled) {
+				if (isStatic) {
 					ctx.set(defaultValueCtx, markdown);
 				}
 
@@ -145,13 +161,23 @@ const MilkdownEditor = {
 			.then((editor) => {
 				this.editorInstance = editor;
 				this.collabService = editor.ctx.get(collabServiceCtx);
-
-				if (!isCollabDisabled) {
-					this.setupCollaboration(pageId, markdown, editable);
+				if (isStatic) {
+					this.setEditable(false);
+					this.statusReady = true;
+					this.refreshStatus(true);
 				} else {
-					this.setEditable(editable);
+					const allowEdit = isEdit && editable;
+					this.setupCollaboration(pageId, markdown, allowEdit);
 				}
 				this.setupFormSync();
+
+				this.yDoc.on("update", this.handleDocUpdate);
+				this.handleEvent("collab_saved_version", ({ markdown }) => {
+					this.lastSavedContent = this.normalize(markdown);
+					if (this.statusReady) {
+						this.refreshStatus(true);
+					}
+				});
 			});
 	},
 
@@ -198,6 +224,13 @@ const MilkdownEditor = {
 				if (editable) {
 					this.setFocusAndCursorPos();
 				}
+
+				this.statusReady = true;
+				// Align saved/current to the synced doc to avoid initial flicker
+				const syncedContent = this.normalize(this.editorInstance.action(getMarkdown()));
+				this.lastSavedContent = syncedContent;
+				this.currentContent = syncedContent;
+				this.refreshStatus(true);
 			}
 		});
 	},
@@ -239,6 +272,38 @@ const MilkdownEditor = {
 		}
 	},
 
+	scheduleStatusRefresh() {
+		if (this.statusTimer || !this.statusReady) {
+			return;
+		}
+
+		this.statusTimer = window.setTimeout(() => {
+			this.statusTimer = null;
+			this.refreshStatus();
+		}, 200);
+	},
+
+	refreshStatus(force = false) {
+		if (!this.editorInstance) return;
+		const nextContent = this.normalize(this.editorInstance.action(getMarkdown()));
+		this.currentContent = nextContent;
+
+		if (!force && this.currentContent === this.lastSavedContent) {
+			// no change
+		}
+
+		const dirty = this.currentContent !== this.lastSavedContent;
+		this.setStatusIndicator(dirty);
+	},
+
+	setStatusIndicator(dirty: boolean) {
+		if (!this.statusDot || !this.statusLabel) return;
+
+		this.statusDot.classList.toggle("bg-emerald-500", !dirty);
+		this.statusDot.classList.toggle("bg-rose-500", dirty);
+		this.statusLabel.textContent = dirty ? "Unsaved changes" : "Synced";
+	},
+
 	updated() {
 		if (!this.editorInstance) return;
 
@@ -262,6 +327,9 @@ const MilkdownEditor = {
 		}
 
 		if (this.yDoc) {
+			if (this.handleDocUpdate) {
+				this.yDoc.off("update", this.handleDocUpdate);
+			}
 			this.yDoc.destroy();
 			this.yDoc = null;
 		}
@@ -271,6 +339,12 @@ const MilkdownEditor = {
 		this.editorInstance = null;
 		this.form = null;
 		this.hiddenInput = null;
+		this.statusDot = null;
+		this.statusLabel = null;
+	},
+
+	normalize(content: string | undefined | null) {
+		return (content || "").trim();
 	},
 };
 

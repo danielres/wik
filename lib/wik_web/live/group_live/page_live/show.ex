@@ -125,6 +125,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           updated_fields: updated_fields
         )
         |> RealtimeToast.put_update_toast(payload)
+        |> maybe_push_saved_version(updated_fields, updated_page)
 
       {:noreply, socket}
     end
@@ -175,5 +176,18 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       :info,
       "Aready being edited by #{current_editor}, please try again later."
     )
+  end
+
+  defp maybe_push_saved_version(socket, updated_fields, updated_page) do
+    text_changed? =
+      Enum.any?(updated_fields, fn field ->
+        to_string(field) == "text"
+      end)
+
+    if text_changed? do
+      push_event(socket, "collab_saved_version", %{markdown: updated_page.text || ""})
+    else
+      socket
+    end
   end
 end

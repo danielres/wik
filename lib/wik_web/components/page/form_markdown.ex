@@ -16,6 +16,11 @@ defmodule WikWeb.Components.Page.FormMarkdown do
         <% text_value = @form[:text].value || @page.text || "" %>
 
         <textarea id={"page_text_#{@id}"} name={@form[:text].name} hidden>{text_value}</textarea>
+        <div class="flex items-center justify-end text-xs text-zinc-500 gap-2 mb-2">
+          <span id={"collab-status-dot-#{@id}"} class="h-2 w-2 rounded-full bg-emerald-500"></span>
+          <span id={"collab-status-label-#{@id}"}>Synced</span>
+        </div>
+
         <div class={"milkdown-editor-container editable-#{@editable}"}>
           <div
             id={"milkdown-editor-#{@id}"}
@@ -25,6 +30,9 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-page-id={@page && @page.id}
             data-input-id={"page_text_#{@id}"}
             data-editable={@editable}
+            data-mode={if(@editable, do: "edit", else: "view")}
+            data-status-dot-id={"collab-status-dot-#{@id}"}
+            data-status-label-id={"collab-status-label-#{@id}"}
             data-root-path={"/#{ @group.slug }/pages"}
             data-pages-json={
               @pages_map

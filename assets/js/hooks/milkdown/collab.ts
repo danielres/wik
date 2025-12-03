@@ -27,7 +27,7 @@ export function initCollab({
 }: CollabOpts): CollabHandles {
 	if (!pageId) {
 		console.error("Milkdown collaboration requires pageId for room naming");
-		return { destroy: () => {}, wsProvider: null };
+		return { destroy: () => {}, wsProvider: null, awareness: null };
 	}
 
 	const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";

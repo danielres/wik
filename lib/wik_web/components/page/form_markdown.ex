@@ -22,6 +22,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             phx-hook="MilkdownEditor"
             phx-update="ignore"
             data-markdown={text_value}
+            data-page-id={@page && @page.id}
             data-input-id={"page_text_#{@id}"}
             data-editable={@editable}
             data-root-path={"/#{ @group.slug }/pages"}
@@ -37,7 +38,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
         </div>
 
         <div :if={@editable} class="flex gap-2 mt-4">
-          <.button phx-disable-with="Saving..." variant="primary">Save</.button>
+          <.button phx-disable-with="Saving Version..." variant="primary">Save Version</.button>
           <.button patch={@return_to}>Cancel</.button>
         </div>
       </.form>

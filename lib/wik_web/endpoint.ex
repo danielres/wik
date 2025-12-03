@@ -26,6 +26,9 @@ defmodule WikWeb.Endpoint do
     gzip: not code_reloading?,
     only: WikWeb.static_paths()
 
+  # Y.js WebSocket collaboration endpoint
+  plug WikWeb.CollabPlug
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

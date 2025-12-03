@@ -190,3 +190,57 @@ li::marker {
 .layout-main {
 	@apply py-20 lg:px-8 max-w-4xl mx-auto;
 }
+
+.remote-cursor-block {
+	position: relative;
+	background-color: color-mix(
+		in oklab,
+		var(--color-info, #3b82f6) 60%,
+		transparent
+	);
+	border-left: 3px solid
+		color-mix(in oklab, var(--color-info, #3b82f6) 80%, transparent);
+}
+
+.remote-cursor-caret {
+	position: relative;
+	display: inline-block;
+	width: 0;
+	height: 1em;
+	border-left: 2px solid
+		color-mix(in oklab, var(--color-info, #3b82f6) 90%, transparent);
+	margin: 0;
+	vertical-align: text-bottom;
+	pointer-events: none;
+}
+
+/* Yjs awareness cursors */
+.ProseMirror-yjs-cursor {
+	position: relative;
+	margin-left: 0;
+	margin-right: 0;
+	border-left: 2px solid rgba(59, 130, 246, 0.9);
+}
+
+.ProseMirror-yjs-cursor > div {
+	position: absolute;
+	top: -1.4em;
+	left: -2px;
+	background: rgba(59, 130, 246, 0.9);
+	color: white;
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-size: 12px;
+	white-space: nowrap;
+	transform: translateY(-2px);
+}
+
+.ProseMirror-yjs-cursor::after {
+	position: absolute;
+	top: -0.25em;
+	left: -2px;
+	display: inline-block;
+	border: 4px solid transparent;
+	border-top-color: rgba(59, 130, 246, 0.9);
+	content: "";
+}

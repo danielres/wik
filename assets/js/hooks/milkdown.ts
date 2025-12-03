@@ -36,6 +36,13 @@ import {
 import { createSlashView } from "./milkdown/slash-view";
 import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
 
+import { Doc } from "yjs";
+import {
+	collab,
+	CollabService,
+	collabServiceCtx,
+} from "@milkdown/plugin-collab";
+import { WebsocketProvider } from "y-websocket";
 const slash = slashFactory("Commands");
 
 const MilkdownEditor = {
@@ -77,10 +84,18 @@ const MilkdownEditor = {
 		this.hiddenInput = inputId ? document.getElementById(inputId) : null;
 		this.form = this.el.closest("form");
 
+		// Identify the page for the collaboration room (prefer stable DB id)
+		const pageId = this.el.dataset.pageId;
+
+		// Create Y.js document and WebSocket provider for collaboration
+		this.yDoc = new Doc();
+		this.wsProvider = null;
+		this.collabService = null;
+
 		Editor.make()
 			.config((ctx) => {
 				ctx.set(rootCtx, this.el);
-				ctx.set(defaultValueCtx, markdown);
+				// Don't set defaultValueCtx here - we'll handle seeding via Y.js
 
 				ctx.set(slash.key, {
 					view: createSlashView(this.el, (fn: (ctx: Ctx) => void) => {
@@ -112,6 +127,7 @@ const MilkdownEditor = {
 			.use(commonmark)
 			.use(gfm)
 			.use(history)
+			.use(collab)
 			.use(listItemBlockComponent)
 			.use(tableBlock)
 			.use(block)
@@ -123,10 +139,58 @@ const MilkdownEditor = {
 			.create()
 			.then((editor) => {
 				this.editorInstance = editor;
-				this.setEditable(editable);
+				this.collabService = editor.ctx.get(collabServiceCtx);
+
+				this.setupCollaboration(pageId, markdown, editable);
 				this.setupFormSync();
-				if (editable) this.setFocusAndCursorPos(editor);
 			});
+	},
+
+	setupCollaboration(pageId, seedMarkdown, editable) {
+		if (!pageId) {
+			console.error("Milkdown collaboration requires pageId for room naming");
+			return;
+		}
+
+		// Create WebSocket connection to collaboration server
+		const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+		const wsUrl = `${protocol}//${window.location.host}/collab`;
+		const roomName = `page-${pageId}`;
+
+		this.wsProvider = new WebsocketProvider(wsUrl, roomName, this.yDoc);
+
+		// Set up collaboration service
+		this.collabService
+			.bindDoc(this.yDoc)
+			.setAwareness(this.wsProvider.awareness);
+
+		// Wait for initial sync, then handle seeding
+		this.wsProvider.once("synced", (isSynced) => {
+			if (isSynced) {
+				// Deterministic seeding using UUID protocol
+				const metaMap = this.yDoc.getMap("meta");
+				const seededVersion = metaMap.get("seeded_version_uuid");
+
+				if (!seededVersion) {
+					// First client to connect - seed the document
+					const myUUID = crypto.randomUUID();
+					metaMap.set("seeded_version_uuid", myUUID);
+
+					// Apply template if we have seed markdown
+					if (seedMarkdown && seedMarkdown.trim()) {
+						this.collabService.applyTemplate(seedMarkdown);
+					}
+				}
+
+				// Connect to collaboration and set editable state
+				this.collabService.connect();
+				this.setEditable(editable);
+
+				if (editable) {
+					this.setFocusAndCursorPos();
+				}
+			}
+		});
 	},
 
 	setFocusAndCursorPos() {
@@ -157,7 +221,9 @@ const MilkdownEditor = {
 	setupFormSync() {
 		if (this.form && this.hiddenInput) {
 			this.handleSubmit = () => {
-				this.hiddenInput.value = this.editorInstance.action(getMarkdown());
+				// Extract current markdown from collaborative state for saving
+				const currentMarkdown = this.editorInstance.action(getMarkdown());
+				this.hiddenInput.value = currentMarkdown;
 				this.hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
 			};
 			this.form.addEventListener("submit", this.handleSubmit);
@@ -167,20 +233,31 @@ const MilkdownEditor = {
 	updated() {
 		if (!this.editorInstance) return;
 
+		// Update editable state (for switching between view/edit modes)
 		this.setEditable(this.el.dataset.editable !== undefined);
 
-		const markdown = this.el.dataset.markdown || "";
-		if (markdown !== this.lastMarkdown) {
-			this.editorInstance.action(
-				(ctx: {
-					set: (key: SliceType<DefaultValue, "defaultValue">, v: any) => any;
-				}) => ctx.set(defaultValueCtx, markdown),
-			);
-			this.lastMarkdown = markdown;
-		}
+		// Note: We don't update markdown content here since Y.js manages the collaborative state
+		// The collaborative document is the single source of truth
 	},
 
 	destroyed() {
+		// Clean up collaboration resources
+		if (this.collabService) {
+			this.collabService.disconnect();
+			this.collabService = null;
+		}
+
+		if (this.wsProvider) {
+			this.wsProvider.destroy();
+			this.wsProvider = null;
+		}
+
+		if (this.yDoc) {
+			this.yDoc.destroy();
+			this.yDoc = null;
+		}
+
+		// Clean up form event listeners
 		this.form?.removeEventListener("submit", this.handleSubmit);
 		this.editorInstance = null;
 		this.form = null;

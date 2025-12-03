@@ -104,13 +104,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     current_path = URI.parse(url).path
     socket = socket |> assign(current_path: current_path)
 
-    socket =
-      if socket.assigns.live_action == :edit and has_editors?(socket, current_path) do
-        redirect_from_edit(socket)
-      else
-        socket
-      end
-
     {:noreply, socket}
   end
 

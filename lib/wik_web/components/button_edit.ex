@@ -23,6 +23,8 @@ defmodule WikWeb.Components.ButtonEdit do
         @presences |> WikWeb.Presence.users_at_path(@watch_path)
 
       locked? = watch_path_presences |> length() > 0
+      # TODO: cleanup
+      locked? = false
       # %>
 
       <span class={["cursor-pointer"]}>

@@ -32,7 +32,6 @@ defmodule Wik.Accounts.GroupUserRelation do
     end
 
     policy action_type(:destroy) do
-
       # TODO: authorize only if actor is group author 
       authorize_if always()
     end

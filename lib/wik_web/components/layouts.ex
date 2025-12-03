@@ -118,18 +118,10 @@ defmodule WikWeb.Layouts do
       >
         <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
 
-        <div class="gap-2 flex flex-col items-end">
-          <.link
-            :if={@ctx.page.slug}
-            class="btn btn-xs"
-            navigate={~p"/#{@ctx.current_group.slug}/pages"}
-          >
-            All pages
-          </.link>
-
+        <div class="">
           <dl
             :if={Mix.env() == :dev}
-            class="text-xs px-1 py-0.5 rounded grid grid-cols-[auto_auto] gap-x-2 opacity-40"
+            class="text-xs grid grid-cols-[auto_auto] gap-x-2 opacity-40"
           >
             <dt>Page title:</dt>
             <dd>{@ctx.page.title}</dd>

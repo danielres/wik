@@ -35,30 +35,33 @@ defmodule WikWeb.GroupLive.Show do
         </.live_component>
       </.live_component>
 
+      <% heading_class = "font-bold" %>
+      <% content_class = "opacity-70 text-sm" %>
+
       <div class="space-y-4">
         <div class="card bg-base-200 p-4 space-y-2">
-          <h2 class="font-bold">
-            Author
+          <h2 class={heading_class}>
+            Created by
           </h2>
-          <div class="opacity-70">
+          <div class={content_class}>
             {@group.author |> to_string}
           </div>
         </div>
 
         <div class="card bg-base-200 p-4 space-y-2">
-          <h2 class="font-bold">
+          <h2 class={heading_class}>
             Description
           </h2>
-          <div class={[:text in @updated_fields && "animate-reload", "opacity-70"]}>
+          <div class={[:text in @updated_fields && "animate-reload", content_class]}>
             {@group.text || "(no description)"}
           </div>
         </div>
 
         <div class="card bg-base-200 p-4 space-y-2">
-          <h2 class="font-bold">
+          <h2 class={heading_class}>
             Members<sup class="opacity-75 ml-1">{@group.users |> length()}</sup>
           </h2>
-          <ul class="list list-disc ml-4 opacity-70">
+          <ul class={[content_class, "list list-disc ml-4"]}>
             <li :for={member <- @group.users}>
               {member |> to_string()}
             </li>
@@ -66,18 +69,29 @@ defmodule WikWeb.GroupLive.Show do
         </div>
 
         <div class="card bg-base-200 p-4 space-y-2">
-          <h2 class="font-bold">
-            Pages<sup class="opacity-75 ml-1">{@group.pages_count}</sup>
-          </h2>
+          <div class="flex justify-between">
+            <h2 class={heading_class}>
+              Pages
+            </h2>
+            <.link
+              class="indicator btn btn-xs btn-neutral opacity-60 hover:opacity-100 transition"
+              navigate={~p"/#{@ctx.current_group.slug}/pages"}
+            >
+              All pages
+              <span class="indicator-item badge badge-neutral border text-base-content/70 rounded-full text-xs p-0 aspect-square">
+                {@group.pages_count}
+              </span>
+            </.link>
+          </div>
 
-          <h3 class="font-bold text-sm opacity-75">
-            Recent updates
+          <h3 class={[heading_class, "text-sm opacity-60"]}>
+            Recently updated
           </h3>
 
-          <div class="text-sm">
+          <div>
             <.link
               :for={p <- @group.last_updated_pages}
-              class="grid grid-cols-3 opacity-60 hover:opacity-100"
+              class={[content_class, "grid grid-cols-3 hover:opacity-100"]}
               navigate={~p"/#{@group.slug}/pages/#{p.slug}"}
             >
               <div>{p.title}</div>

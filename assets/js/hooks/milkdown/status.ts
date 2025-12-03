@@ -1,0 +1,54 @@
+export class StatusIndicator {
+	private dot: HTMLElement | null;
+	private label: HTMLElement | null;
+	private lastSaved: string;
+	private current: string;
+	private ready = false;
+	private timer: number | null = null;
+
+	constructor(
+		dot: HTMLElement | null,
+		label: HTMLElement | null,
+		initial: string,
+	) {
+		this.dot = dot;
+		this.label = label;
+		this.lastSaved = initial;
+		this.current = initial;
+	}
+
+	setReady() {
+		this.ready = true;
+		this.render();
+	}
+
+	markSaved(content: string) {
+		this.lastSaved = content;
+		if (!this.ready) return;
+		this.render();
+	}
+
+	updateCurrent(content: string) {
+		this.current = content;
+		if (!this.ready) return;
+		this.render();
+	}
+
+	scheduleRefresh(fetchCurrent: () => string, delay = 200) {
+		if (!this.ready || this.timer) return;
+
+		this.timer = window.setTimeout(() => {
+			this.timer = null;
+			this.updateCurrent(fetchCurrent());
+		}, delay);
+	}
+
+	private render() {
+		if (!this.dot || !this.label) return;
+
+		const dirty = this.current !== this.lastSaved;
+		this.dot.classList.toggle("bg-emerald-500", !dirty);
+		this.dot.classList.toggle("bg-rose-500", dirty);
+		this.label.textContent = dirty ? "Unsaved changes" : "Synced";
+	}
+}

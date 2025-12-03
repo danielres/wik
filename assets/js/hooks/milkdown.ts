@@ -65,6 +65,7 @@ const MilkdownEditor = {
 		this.handleDocUpdate = null;
 		this.doneLink = null;
 		this.doneHandler = null;
+		this.awareness = null;
 
 		const statusTargetEl = document.querySelector("main") as HTMLElement | null;
 		this.status = new StatusIndicator(
@@ -77,6 +78,9 @@ const MilkdownEditor = {
 			normalize(markdown),
 			statusTargetEl,
 		);
+		this.userMeta = this.el.dataset.userMeta
+			? JSON.parse(this.el.dataset.userMeta)
+			: {};
 		this.doneLink = document.querySelector("[data-done-target]") as
 			| HTMLAnchorElement
 			| HTMLButtonElement
@@ -114,8 +118,10 @@ const MilkdownEditor = {
 						const syncedContent = fetchCurrent();
 						this.status.updateCurrent(syncedContent);
 						this.status.setReady();
+						this.applyAwarenessMeta();
 					},
 				});
+				this.awareness = this.collabHandles?.awareness;
 			}
 
 			this.setupFormSync();
@@ -218,6 +224,13 @@ const MilkdownEditor = {
 		}
 		this.doneLink = null;
 		this.doneHandler = null;
+		this.userMeta = null;
+		this.awareness = null;
+	},
+
+	applyAwarenessMeta() {
+		if (!this.awareness || !this.userMeta) return;
+		this.awareness.setLocalStateField("user", this.userMeta);
 	},
 
 	async undoUntilSaved(fetchCurrent: () => string) {

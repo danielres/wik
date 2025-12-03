@@ -14,6 +14,7 @@ type CollabOpts = {
 export type CollabHandles = {
 	destroy: () => void;
 	wsProvider: WebsocketProvider | null;
+	awareness: WebsocketProvider["awareness"] | null;
 };
 
 export function initCollab({
@@ -62,6 +63,7 @@ export function initCollab({
 
 	return {
 		wsProvider,
+		awareness: wsProvider.awareness,
 		destroy: () => {
 			wsProvider.destroy();
 		},

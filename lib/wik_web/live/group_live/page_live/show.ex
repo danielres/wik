@@ -21,15 +21,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
         <:actions>
           <div class="space-y-2">
-            <div class="flex text-xs justify-end text-base-content/70">
-              <.link
-                class="btn btn-xs opacity-70 hover:opacity-100 transition"
-                patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@page.versions_count}"}
-              >
-                v. {@page.versions_count}
-              </.link>
-            </div>
-
             <div class="flex items-center gap-3 justify-end">
               <WikWeb.Components.ButtonEdit.button
                 :if={Ash.can?({@page, :update}, @current_user) and !editable}
@@ -56,16 +47,35 @@ defmodule WikWeb.GroupLive.PageLive.Show do
                 </.button>
               </div>
             </div>
-            <%= if editable do %>
-              <div class="flex text-xs justify-end text-base-content/70 items-center gap-2">
-                <span id={"collab-status-label-#{@page.id}"}>Synced</span>
-                <span
-                  id={"collab-status-dot-#{@page.id}"}
-                  class="h-2 w-2 rounded-full bg-emerald-500"
-                >
-                </span>
-              </div>
-            <% end %>
+            <div class="flex text-xs justify-end text-base-content/70 items-center">
+              <%= if editable do %>
+                <div class="flex justify-end">
+                  <div class="tooltip tooltip-left">
+                    <div class="tooltip-content -mr-4 bg-transparent">
+                      <span
+                        class="text-xs opacity-50"
+                        id={"collab-status-label-#{@page.id}"}
+                      >
+                        Synced
+                      </span>
+                    </div>
+                    <button class="btn btn-sm border btn-ghost bg-transparent">
+                      <span
+                        id={"collab-status-dot-#{@page.id}"}
+                        class="size-2 rounded-full bg-emerald-500"
+                      >
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              <% end %>
+              <.link
+                class="btn btn-xs opacity-70 hover:opacity-100 transition"
+                patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@page.versions_count}"}
+              >
+                v. {@page.versions_count}
+              </.link>
+            </div>
           </div>
         </:actions>
       </.header>

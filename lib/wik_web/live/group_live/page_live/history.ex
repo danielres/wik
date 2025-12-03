@@ -62,6 +62,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
           phx-hook="MilkdownEditor"
           phx-update="ignore"
           data-markdown={@version.data["text"]}
+          data-collab-disabled={true}
           data-editable={false}
         />
       <% else %>

@@ -52,10 +52,12 @@ const MilkdownEditor = {
 			editable: _editable,
 			inputId,
 			rootPath = "",
+			collabDisabled,
 		} = this.el.dataset;
 
 		const pagesJson = this.el.dataset.pagesJson;
 		const editable = _editable !== undefined;
+		const isCollabDisabled = collabDisabled !== undefined;
 
 		let pages: SlashMenuWikilinksPage[] = [];
 
@@ -95,7 +97,10 @@ const MilkdownEditor = {
 		Editor.make()
 			.config((ctx) => {
 				ctx.set(rootCtx, this.el);
-				// Don't set defaultValueCtx here - we'll handle seeding via Y.js
+
+				if (isCollabDisabled) {
+					ctx.set(defaultValueCtx, markdown);
+				}
 
 				ctx.set(slash.key, {
 					view: createSlashView(this.el, (fn: (ctx: Ctx) => void) => {
@@ -141,7 +146,11 @@ const MilkdownEditor = {
 				this.editorInstance = editor;
 				this.collabService = editor.ctx.get(collabServiceCtx);
 
-				this.setupCollaboration(pageId, markdown, editable);
+				if (!isCollabDisabled) {
+					this.setupCollaboration(pageId, markdown, editable);
+				} else {
+					this.setEditable(editable);
+				}
 				this.setupFormSync();
 			});
 	},

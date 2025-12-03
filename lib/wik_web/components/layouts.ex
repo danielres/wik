@@ -40,7 +40,7 @@ defmodule WikWeb.Layouts do
     ~H"""
     <header class="layout-header">
       <div class="flex justify-between w-full">
-        <div class="flex items-center gap-2 mt-2 font-bold text-sm">
+        <div class="flex items-center gap-1 mt-2 font-bold text-xs">
           <%= if @ctx[:current_group] do %>
             <.link
               class="opacity-50 hover:opacity-100 transition"
@@ -49,21 +49,23 @@ defmodule WikWeb.Layouts do
               Groups
             </.link>
 
-            <span class="opacity-50">/</span>
+            <span class="opacity-40 hero-chevron-right-micro size-4">/</span>
+
             <.link
-              class="opacity-50 hover:opacity-100 transition"
-              navigate={~p"/#{@ctx.current_group.slug}"}
+              class={[link_class(@ctx, "", false)]}
+              navigate={~p"/#{@ctx[:current_group].slug}"}
             >
-              {@ctx.current_group.title}
+              {@ctx[:current_group].title}
             </.link>
           <% end %>
         </div>
+
         <div>
-          <div class="dropdown dropdown-end mt-2 text-sm">
+          <div class="dropdown dropdown-end mt-2 text-xs">
             <div
               tabindex="0"
               role="button"
-              class="opacity-50 hover:opacity-100 transition cursor-pointer font-bold"
+              class="opacity-50 hover:opacity-100 transition cursor-pointer font-semibold"
             >
               {@ctx.current_user |> to_string}
             </div>
@@ -94,17 +96,20 @@ defmodule WikWeb.Layouts do
       </div>
 
       <%= if(@ctx[:current_group]) do %>
-        <div class="flex gap-2 items-center justify-between">
-          <div>
-            <.link
-              class="btn"
-              navigate={~p"/#{@ctx.current_group.slug}/pages/Home"}
-            >
-              Home
-            </.link>
+        <div class="flex gap-3 text-sm">
+          <.link
+            class={[link_class(@ctx, "/wiki")]}
+            navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}
+          >
+            Wiki
+          </.link>
 
-            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/members"}>Members</.link>
-          </div>
+          <.link
+            class={[link_class(@ctx, "/members")]}
+            navigate={~p"/#{@ctx[:current_group].slug}/members"}
+          >
+            Members
+          </.link>
         </div>
       <% end %>
     </header>
@@ -118,18 +123,10 @@ defmodule WikWeb.Layouts do
       >
         <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
 
-        <div class="gap-2 flex flex-col items-end">
-          <.link
-            :if={@ctx.page.slug}
-            class="btn btn-xs"
-            navigate={~p"/#{@ctx.current_group.slug}/pages"}
-          >
-            All pages
-          </.link>
-
+        <div class="">
           <dl
             :if={Mix.env() == :dev}
-            class="text-xs px-1 py-0.5 rounded grid grid-cols-[auto_auto] gap-x-2 opacity-40"
+            class="text-xs grid grid-cols-[auto_auto] gap-x-2 opacity-40"
           >
             <dt>Page title:</dt>
             <dd>{@ctx.page.title}</dd>
@@ -140,6 +137,37 @@ defmodule WikWeb.Layouts do
 
     <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
     """
+  end
+
+  defp link_class(ctx, suffix, subpaths? \\ true) do
+    path = ctx[:current_path] || ""
+
+    base =
+      case ctx[:current_group] do
+        %{slug: slug} -> "/#{slug}#{suffix}"
+        _ -> nil
+      end
+
+    active? =
+      if subpaths? do
+        (path != "" and base) && String.starts_with?(path, base)
+      else
+        (path != "" and base) && path == base
+      end
+
+    base_class =
+      "font-semibold transition hover:opacity-100"
+
+    active_class =
+      "#{base_class} pointer-events-none "
+
+    inactive_class = "#{base_class} opacity-50"
+
+    if active? do
+      active_class
+    else
+      inactive_class
+    end
   end
 
   @doc """

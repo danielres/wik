@@ -1,0 +1,9 @@
+[data-status-button-save],
+[data-editor-synced="true"] [data-status-button-save] {
+	pointer-events: none;
+	@apply btn btn-sm transition btn-neutral text-base-content/50;
+}
+[data-editor-synced="false"] [data-status-button-save] {
+	pointer-events: auto;
+	@apply btn-primary;
+}

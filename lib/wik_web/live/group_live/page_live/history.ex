@@ -7,62 +7,62 @@ defmodule WikWeb.GroupLive.PageLive.History do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        {@version.data["title"]}
-
-        <:subtitle>
-          <div class="space-y-1">
-            <div class="join mt-4">
-              <.button
-                disabled={@v == 1}
-                patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@v - 1}"}
-                class="btn btn-sm btn-square btn-primary rounded-l-lg"
-              >
-                <i class="hero-arrow-left size-4"></i>
-              </.button>
-              <span class="btn btn-sm btn-outline btn-neutral pointer-events-none text-white">
-                {@v}
-                <span class="opacity-75">/</span>
-                {@page.versions_count}
-              </span>
-              <.button
-                disabled={@v == @page.versions_count}
-                patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@v + 1}"}
-                class="btn btn-sm btn-square btn-primary rounded-r-lg"
-              >
-                <i class="hero-arrow-right size-4"></i>
-              </.button>
-            </div>
-
-            <div class="text-xs">
-              <WikWeb.Components.Time.pretty
-                datetime={@version.occurred_at}
-                class="opacity-80 hover:opacity-100 transition"
-              />
-
-              <span class="opacity-50">by</span>
-
-              <.link class="opacity-80 hover:opacity-100 transition">
-                {@author |> to_string()}
-              </.link>
-            </div>
-          </div>
-        </:subtitle>
-
-        <:actions>
-          <.button navigate={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}>
-            <.icon name="hero-arrow-left" />
+      <div class="flex grid grid-cols-3 mb-12">
+        <div>
+          <.button
+            navigate={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
+            class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100 transition "
+          >
+            <.icon name="hero-arrow-left-micro size-5" />
           </.button>
-        </:actions>
-      </.header>
+        </div>
 
+        <div class="space-y-0">
+          <div class="join w-full flex justify-center">
+            <.button
+              disabled={@v == 1}
+              patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v - 1}"}
+              class="btn btn-sm btn-circle btn-ghost"
+            >
+              <i class="hero-chevron-left size-4"></i>
+            </.button>
+
+            <span class="btn btn-sm btn-ghost pointer-events-none text-white">
+              {@v}
+              <span class="opacity-75">/</span>
+              {@page.versions_count}
+            </span>
+
+            <.button
+              disabled={@v == @page.versions_count}
+              patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v + 1}"}
+              class="btn btn-sm btn-circle btn-ghost"
+            >
+              <i class="hero-chevron-right size-4"></i>
+            </.button>
+          </div>
+
+          <div class="text-xs flex justify-center gap-1.5">
+            <WikWeb.Components.Time.pretty
+              datetime={@version.occurred_at}
+              class="opacity-80 hover:opacity-100 transition"
+            />
+
+            <span class="opacity-50">by</span>
+
+            <.link class="opacity-80 hover:opacity-100 transition">
+              {@author |> to_string()}
+            </.link>
+          </div>
+        </div>
+      </div>
       <%= if @version.data["text"] do %>
         <div
           id={"milkdown-editor-#{@v}"}
           phx-hook="MilkdownEditor"
           phx-update="ignore"
           data-markdown={@version.data["text"]}
-          data-editable={false}
+          data-mode="static"
         />
       <% else %>
         <div class="opacity-50">(Empty)</div>
@@ -98,6 +98,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
 
   @impl true
   def handle_params(%{"version" => v}, url, socket) do
+    socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
     WikWeb.Presence.track_in_liveview(socket, url)
 
     v = v |> String.to_integer()

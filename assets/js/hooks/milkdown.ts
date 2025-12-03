@@ -1,42 +1,20 @@
-// assets/js/milkdown.ts
-import { tableBlock } from "@milkdown/components/table-block";
-import { CommandManager, commandsCtx, editorViewCtx } from "@milkdown/core";
-import type { Ctx, SliceType } from "@milkdown/ctx";
+import { CommandManager, commandsCtx } from "@milkdown/core";
+import type { SliceType } from "@milkdown/ctx";
+import { selectTextNearPosCommand } from "@milkdown/kit/preset/commonmark";
+import { Doc } from "yjs";
+import { undo } from "y-prosemirror";
+import { initCollab, type CollabHandles } from "./milkdown/collab";
 import {
-	listItemBlockComponent,
-	listItemBlockConfig,
-} from "@milkdown/kit/component/list-item-block";
-import {
-	DefaultValue,
-	defaultValueCtx,
-	Editor,
-	rootCtx,
-} from "@milkdown/kit/core";
-import { block } from "@milkdown/kit/plugin/block";
-import {
-	cursor as cursorPlugin,
-	dropIndicatorConfig,
-} from "@milkdown/kit/plugin/cursor";
-import { history } from "@milkdown/kit/plugin/history";
-import { slashFactory } from "@milkdown/kit/plugin/slash";
-import {
-	commonmark,
-	selectTextNearPosCommand,
-} from "@milkdown/kit/preset/commonmark";
-import { gfm } from "@milkdown/kit/preset/gfm";
-import { getMarkdown } from "@milkdown/utils";
+	createMilkdownEditor,
+	editorViewCtx,
+	getMarkdown,
+} from "./milkdown/setup";
+import type { SlashMenuWikilinksPage } from "./milkdown/slash-menu-wikilinks";
+import { StatusIndicator } from "./milkdown/status";
 
-import { setupBlockHandle } from "./milkdown/block-handle";
-import { inputRuleWikilink } from "./milkdown/input-rule-wikilink";
-import {
-	slashMenuWikilinks,
-	slashMenuWikilinksRegister,
-	type SlashMenuWikilinksPage,
-} from "./milkdown/slash-menu-wikilinks";
-import { createSlashView } from "./milkdown/slash-view";
-import { setupToolbar, toolbarTooltip } from "./milkdown/toolbar";
-
-const slash = slashFactory("Commands");
+function normalize(content: string | undefined | null) {
+	return (content || "").trim();
+}
 
 const MilkdownEditor = {
 	mounted() {
@@ -45,10 +23,13 @@ const MilkdownEditor = {
 			editable: _editable,
 			inputId,
 			rootPath = "",
+			mode = "view",
 		} = this.el.dataset;
 
 		const pagesJson = this.el.dataset.pagesJson;
 		const editable = _editable !== undefined;
+		const isStatic = mode === "static";
+		const isEdit = mode === "edit";
 
 		let pages: SlashMenuWikilinksPage[] = [];
 
@@ -77,56 +58,97 @@ const MilkdownEditor = {
 		this.hiddenInput = inputId ? document.getElementById(inputId) : null;
 		this.form = this.el.closest("form");
 
-		Editor.make()
-			.config((ctx) => {
-				ctx.set(rootCtx, this.el);
-				ctx.set(defaultValueCtx, markdown);
+		const pageId = this.el.dataset.pageId;
+		this.yDoc = new Doc();
+		this.collabHandles = null as CollabHandles | null;
+		this.editorInstance = null;
+		this.handleDocUpdate = null;
+		this.doneLink = null;
+		this.doneHandler = null;
+		this.awareness = null;
 
-				ctx.set(slash.key, {
-					view: createSlashView(this.el, (fn: (ctx: Ctx) => void) => {
-						if (!this.editorInstance) return;
-						this.editorInstance.action(fn);
-					}),
-				});
+		const statusTargetEl = document.querySelector("main") as HTMLElement | null;
+		this.status = new StatusIndicator(
+			this.el.dataset.statusDotId
+				? document.getElementById(this.el.dataset.statusDotId)
+				: null,
+			this.el.dataset.statusLabelId
+				? document.getElementById(this.el.dataset.statusLabelId)
+				: null,
+			normalize(markdown),
+			statusTargetEl,
+		);
+		this.userMeta = this.el.dataset.userMeta
+			? JSON.parse(this.el.dataset.userMeta)
+			: {};
+		this.doneLink = document.querySelector("[data-done-target]") as
+			| HTMLAnchorElement
+			| HTMLButtonElement
+			| null;
 
-				slashMenuWikilinksRegister(ctx, pages, rootPath);
+		createMilkdownEditor({
+			root: this.el as HTMLElement,
+			markdown,
+			pages,
+			rootPath,
+			isStatic,
+		}).then(({ editor, collabService }) => {
+			this.editorInstance = editor;
+			this.collabService = collabService;
 
-				setupToolbar(ctx);
-				setupBlockHandle(ctx, this.el as HTMLElement);
+			const fetchCurrent = () =>
+				normalize(this.editorInstance.action(getMarkdown()));
 
-				ctx.set(listItemBlockConfig.key, {
-					renderLabel: ({ label, listType, checked }) => {
-						if (checked == null) {
-							if (listType === "bullet") {
-								return `<span class="ml-1 mr-1">-</span>`;
-							}
-							return label;
-						}
+			if (isStatic) {
+				this.setEditable(false);
+				const content = fetchCurrent();
+				this.status.updateCurrent(content);
+				this.status.setReady();
+			} else {
+				const allowEdit = isEdit && editable;
+				this.collabHandles = initCollab({
+					pageId,
+					seedMarkdown: markdown,
+					editable: allowEdit,
+					yDoc: this.yDoc,
+					collabService: this.collabService,
+					onReady: () => {
+						this.setEditable(allowEdit);
+						if (allowEdit) this.setFocusAndCursorPos();
+						const syncedContent = fetchCurrent();
+						this.status.updateCurrent(syncedContent);
+						this.status.setReady();
+						this.applyAwarenessMeta();
 					},
 				});
+				this.awareness = this.collabHandles?.awareness;
+				this.applyAwarenessMeta();
+			}
 
-				ctx.update(dropIndicatorConfig.key, () => ({
-					width: 1,
-				}));
-			})
-			.use(commonmark)
-			.use(gfm)
-			.use(history)
-			.use(listItemBlockComponent)
-			.use(tableBlock)
-			.use(block)
-			.use(slash)
-			.use(slashMenuWikilinks)
-			.use(toolbarTooltip)
-			.use(cursorPlugin)
-			.use(inputRuleWikilink(rootPath))
-			.create()
-			.then((editor) => {
-				this.editorInstance = editor;
-				this.setEditable(editable);
-				this.setupFormSync();
-				if (editable) this.setFocusAndCursorPos(editor);
+			this.setupFormSync();
+
+			this.handleDocUpdate = () => {
+				this.status.scheduleRefresh(fetchCurrent);
+			};
+			this.yDoc.on("update", this.handleDocUpdate);
+
+			this.handleEvent("collab_saved_version", ({ markdown }) => {
+				this.status.markSaved(normalize(markdown));
+				this.status.scheduleRefresh(fetchCurrent);
 			});
+
+			if (this.doneLink) {
+				this.doneHandler = (event: Event) => {
+					event.preventDefault();
+					this.undoUntilSaved(fetchCurrent).finally(() => {
+						if (this.doneLink instanceof HTMLAnchorElement) {
+							window.location.href = this.doneLink.href;
+						}
+					});
+				};
+				this.doneLink.addEventListener("click", this.doneHandler);
+			}
+		});
 	},
 
 	setFocusAndCursorPos() {
@@ -137,7 +159,7 @@ const MilkdownEditor = {
 		let cursorPos = 0;
 		doc.content.forEach((_node: any, offset: number) => {
 			cursorPos = offset;
-			return false; // Stop after first node (ProseMirror forEach convention)
+			return false;
 		});
 
 		this.editorInstance.action(
@@ -157,7 +179,8 @@ const MilkdownEditor = {
 	setupFormSync() {
 		if (this.form && this.hiddenInput) {
 			this.handleSubmit = () => {
-				this.hiddenInput.value = this.editorInstance.action(getMarkdown());
+				const currentMarkdown = this.editorInstance.action(getMarkdown());
+				this.hiddenInput.value = currentMarkdown;
 				this.hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
 			};
 			this.form.addEventListener("submit", this.handleSubmit);
@@ -166,26 +189,87 @@ const MilkdownEditor = {
 
 	updated() {
 		if (!this.editorInstance) return;
-
 		this.setEditable(this.el.dataset.editable !== undefined);
-
-		const markdown = this.el.dataset.markdown || "";
-		if (markdown !== this.lastMarkdown) {
-			this.editorInstance.action(
-				(ctx: {
-					set: (key: SliceType<DefaultValue, "defaultValue">, v: any) => any;
-				}) => ctx.set(defaultValueCtx, markdown),
-			);
-			this.lastMarkdown = markdown;
+		// Re-apply status to restore data attributes after LiveView patches
+		if (this.status) {
+			this.status.refresh();
 		}
 	},
 
 	destroyed() {
+		if (this.collabService) {
+			this.collabService.disconnect();
+			this.collabService = null;
+		}
+
+		if (this.collabHandles) {
+			this.collabHandles.destroy();
+			this.collabHandles = null;
+		}
+
+		if (this.yDoc) {
+			if (this.handleDocUpdate) {
+				this.yDoc.off("update", this.handleDocUpdate);
+			}
+			this.yDoc.destroy();
+			this.yDoc = null;
+		}
+
 		this.form?.removeEventListener("submit", this.handleSubmit);
 		this.editorInstance = null;
 		this.form = null;
 		this.hiddenInput = null;
+		this.status = null;
+		if (this.doneLink && this.doneHandler) {
+			this.doneLink.removeEventListener("click", this.doneHandler);
+		}
+		this.doneLink = null;
+		this.doneHandler = null;
+		this.userMeta = null;
+		this.awareness = null;
+	},
+
+	applyAwarenessMeta() {
+		if (!this.awareness || !this.userMeta) return;
+		const withColor = {
+			...this.userMeta,
+			...pastelForName(this.userMeta.name || ""),
+		};
+		this.awareness.setLocalStateField("user", withColor);
+	},
+
+	async undoUntilSaved(fetchCurrent: () => string) {
+		const target = this.status ? this.status.getLastSaved() : null;
+		if (!target) return;
+
+		const view = this.editorInstance?.ctx.get(editorViewCtx);
+		if (!view) return;
+
+		const maxSteps = 1000;
+		let steps = 0;
+
+		while (steps < maxSteps) {
+			const current = fetchCurrent();
+			if (current === target) break;
+			const didUndo = undo(view.state, view.dispatch);
+			if (!didUndo) break;
+			steps += 1;
+			await new Promise((resolve) => requestAnimationFrame(resolve));
+		}
 	},
 };
 
 export default MilkdownEditor;
+
+function pastelForName(name: string) {
+	let hash = 0;
+	for (let i = 0; i < name.length; i++) {
+		hash = name.charCodeAt(i) + ((hash << 5) - hash);
+		hash |= 0;
+	}
+
+	const hue = Math.abs(hash) % 360;
+	const color = `hsl(${hue}, 60%, 55%)`;
+
+	return { color };
+}

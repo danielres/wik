@@ -88,10 +88,10 @@ defmodule WikWeb.Router do
         live "/", GroupLive.Show, :show
         live "/edit", GroupLive.Show, :edit
         live "/members", GroupLive.MemberLive.Index, :index
-        live "/pages", GroupLive.PageLive.Index, :index
-        live "/pages/:page_slug", GroupLive.PageLive.Show, :show
-        live "/pages/:page_slug/edit", GroupLive.PageLive.Show, :edit
-        live "/pages/:page_slug/v/:version", GroupLive.PageLive.History
+        live "/wiki", GroupLive.PageLive.Index, :index
+        live "/wiki/:page_slug", GroupLive.PageLive.Show, :show
+        live "/wiki/:page_slug/edit", GroupLive.PageLive.Show, :edit
+        live "/wiki/:page_slug/v/:version", GroupLive.PageLive.History
       end
     end
   end

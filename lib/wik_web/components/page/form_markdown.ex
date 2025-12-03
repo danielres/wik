@@ -8,7 +8,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
       <.form
         for={@form}
         class="space-y-8"
-        id={"page-form-#{@id}"}
+        id={@form_id || "page-form-#{@id}"}
         phx-submit="save"
         phx-change="validate"
         phx-target={@myself}
@@ -16,15 +16,21 @@ defmodule WikWeb.Components.Page.FormMarkdown do
         <% text_value = @form[:text].value || @page.text || "" %>
 
         <textarea id={"page_text_#{@id}"} name={@form[:text].name} hidden>{text_value}</textarea>
+
         <div class={"milkdown-editor-container editable-#{@editable}"}>
           <div
             id={"milkdown-editor-#{@id}"}
             phx-hook="MilkdownEditor"
             phx-update="ignore"
             data-markdown={text_value}
+            data-page-id={@page && @page.id}
             data-input-id={"page_text_#{@id}"}
             data-editable={@editable}
-            data-root-path={"/#{ @group.slug }/pages"}
+            data-mode={if(@editable, do: "edit", else: "view")}
+            data-status-dot-id={@status_dot_id}
+            data-status-label-id={@status_label_id}
+            data-user-meta={%{name: @actor |> to_string} |> Jason.encode!()}
+            data-root-path={"/#{ @group.slug }/wiki"}
             data-pages-json={
               @pages_map
               |> Enum.map(fn page ->
@@ -34,11 +40,6 @@ defmodule WikWeb.Components.Page.FormMarkdown do
               |> Jason.encode!()
             }
           />
-        </div>
-
-        <div :if={@editable} class="flex gap-2 mt-4">
-          <.button phx-disable-with="Saving..." variant="primary">Save</.button>
-          <.button patch={@return_to}>Cancel</.button>
         </div>
       </.form>
     </div>
@@ -62,7 +63,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
       {:ok, _page} ->
         socket =
           socket
-          |> push_navigate(to: socket.assigns.return_to)
+          # |> push_navigate(to: socket.assigns.return_to)
           |> Toast.put_toast(:success, "Page #{socket.assigns.form.source.type}d successfully")
 
         {:noreply, socket}

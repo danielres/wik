@@ -50,7 +50,7 @@ defmodule WikWeb.HomeLive do
         <.table
           id="groups"
           rows={@streams.groups}
-          row_click={fn {_id, group} -> JS.navigate(~p"/#{group.slug}/pages/Home") end}
+          row_click={fn {_id, group} -> JS.navigate(~p"/#{group.slug}/wiki/Home") end}
           row_class={
             fn {_id, group} ->
               (group.id in @highlighted_group_ids && "animate-reload") ||
@@ -98,6 +98,7 @@ defmodule WikWeb.HomeLive do
 
   @impl true
   def handle_params(_params, url, socket) do
+    socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
     WikWeb.Presence.track_in_liveview(socket, url)
     {:noreply, socket}
   end

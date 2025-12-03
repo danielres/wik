@@ -16,29 +16,78 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     <% editable = @live_action == :edit and connected?(@socket) %>
 
     <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        <:subtitle>
-          <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={@page} />
-        </:subtitle>
+      <div class="flex justify-between mb-16">
+        <div class="flex items-center">
+          <.link
+            class="btn btn-sm opacity-70 hover:opacity-100 transition"
+            patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"}
+          >
+            v. {@page.versions_count}
+          </.link>
 
-        <:actions>
+          <%= if editable do %>
+            <div class="tooltip tooltip-right">
+              <div class="tooltip-content">
+                <span
+                  class="text-xs opacity-80"
+                  id={"collab-status-label-#{@page.id}"}
+                >
+                  Synced
+                </span>
+              </div>
+              <button class="btn btn-sm btn-ghost bg-transparent">
+                <span
+                  id={"collab-status-dot-#{@page.id}"}
+                  class="size-2 rounded-full bg-emerald-500"
+                >
+                </span>
+              </button>
+            </div>
+          <% end %>
+        </div>
+
+        <%= if Ash.can?({@page, :update}, @current_user) and !editable do %>
           <WikWeb.Components.ButtonEdit.button
-            :if={Ash.can?({@page, :update}, @current_user) and !editable}
-            link={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/edit?return_to=show"}
+            link={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/edit?return_to=show"}
             watch_path={@current_path <> "/edit"}
             presences={@ctx.presences}
           />
-        </:actions>
-      </.header>
+        <% end %>
+
+        <%= if editable do %>
+          <div class="flex items-center gap-2">
+            <a
+              id={"collab-done-#{@page.id}"}
+              data-done-target
+              class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100 transition "
+              href={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
+            >
+              <i class="hero-arrow-left-micro size-5">Back</i>
+            </a>
+            <.button
+              form={"page-form-#{@page.id}"}
+              phx-disable-with="Saving Version..."
+              variant="primary"
+              data-status-button-save
+              class=""
+            >
+              Save
+            </.button>
+          </div>
+        <% end %>
+      </div>
 
       <.live_component
         module={WikWeb.Components.Page.FormMarkdown}
         id={"form-page-#{@page.id}-#{@page.versions_count}-#{@live_action}"}
+        form_id={"page-form-#{@page.id}"}
+        status_dot_id={"collab-status-dot-#{@page.id}"}
+        status_label_id={"collab-status-label-#{@page.id}"}
         page={@page}
         actor={@current_user}
         group={@ctx.current_group}
         editable={editable}
-        return_to={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+        return_to={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
         pages_map={@ctx.pages_map}
       />
     </Layouts.app>
@@ -46,7 +95,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   def page_url(group, page) do
-    ~p"/#{group.slug}/pages/#{page.slug}"
+    ~p"/#{group.slug}/wiki/#{page.slug}"
   end
 
   @impl true
@@ -100,16 +149,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   @impl true
   def handle_params(_params, url, socket) do
+    socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
     WikWeb.Presence.track_in_liveview(socket, url)
     current_path = URI.parse(url).path
     socket = socket |> assign(current_path: current_path)
-
-    socket =
-      if socket.assigns.live_action == :edit and has_editors?(socket, current_path) do
-        redirect_from_edit(socket)
-      else
-        socket
-      end
 
     {:noreply, socket}
   end
@@ -132,6 +175,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           updated_fields: updated_fields
         )
         |> RealtimeToast.put_update_toast(payload)
+        |> maybe_push_saved_version(updated_fields, updated_page)
 
       {:noreply, socket}
     end
@@ -147,7 +191,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     socket =
       socket
       |> RealtimeToast.put_delete_toast(payload)
-      |> push_navigate(to: ~p"/#{socket.assigns.ctx.current_group.slug}/pages")
+      |> push_navigate(to: ~p"/#{socket.assigns.ctx.current_group.slug}/wiki")
 
     {:noreply, socket}
   end
@@ -177,10 +221,23 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       |> List.first()
 
     socket
-    |> push_patch(to: ~p"/#{group_slug}/pages/#{page_slug}")
+    |> push_patch(to: ~p"/#{group_slug}/wiki/#{page_slug}")
     |> Toast.put_toast(
       :info,
       "Aready being edited by #{current_editor}, please try again later."
     )
+  end
+
+  defp maybe_push_saved_version(socket, updated_fields, updated_page) do
+    text_changed? =
+      Enum.any?(updated_fields, fn field ->
+        to_string(field) == "text"
+      end)
+
+    if text_changed? do
+      push_event(socket, "collab_saved_version", %{markdown: updated_page.text || ""})
+    else
+      socket
+    end
   end
 end

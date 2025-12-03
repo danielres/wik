@@ -40,7 +40,7 @@ defmodule WikWeb.Layouts do
     ~H"""
     <header class="layout-header">
       <div class="flex justify-between w-full">
-        <div class="flex items-center gap-2 mt-2 font-bold text-xs">
+        <div class="flex items-center gap-1 mt-2 font-bold text-xs">
           <%= if @ctx[:current_group] do %>
             <.link
               class="opacity-50 hover:opacity-100 transition"
@@ -49,9 +49,10 @@ defmodule WikWeb.Layouts do
               Groups
             </.link>
 
-            <span class="opacity-50">/</span>
+            <span class="opacity-40 hero-chevron-right-micro size-4">/</span>
+
             <.link
-              class="opacity-50 hover:opacity-100 transition"
+              class={[link_class(@ctx, "", false)]}
               navigate={~p"/#{@ctx[:current_group].slug}"}
             >
               {@ctx[:current_group].title}
@@ -95,7 +96,7 @@ defmodule WikWeb.Layouts do
       </div>
 
       <%= if(@ctx[:current_group]) do %>
-        <div class="flex gap-4">
+        <div class="flex gap-3 text-sm">
           <.link
             class={[link_class(@ctx, "/wiki")]}
             navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}
@@ -138,7 +139,7 @@ defmodule WikWeb.Layouts do
     """
   end
 
-  defp link_class(ctx, suffix) do
+  defp link_class(ctx, suffix, subpaths? \\ true) do
     path = ctx[:current_path] || ""
 
     base =
@@ -147,10 +148,15 @@ defmodule WikWeb.Layouts do
         _ -> nil
       end
 
-    active? = (path != "" and base) && String.starts_with?(path, base)
+    active? =
+      if subpaths? do
+        (path != "" and base) && String.starts_with?(path, base)
+      else
+        (path != "" and base) && path == base
+      end
 
     base_class =
-      "text-sm font-semibold transition hover:opacity-100"
+      "font-semibold transition hover:opacity-100"
 
     active_class =
       "#{base_class} pointer-events-none "

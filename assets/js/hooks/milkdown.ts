@@ -172,8 +172,9 @@ const MilkdownEditor = {
 
 	setEditable(editable: any) {
 		const view = this.editorInstance.ctx.get(editorViewCtx);
-		view.props.editable = () => editable;
-		view.updateState(view.state);
+		view.setProps({
+			editable: () => editable,
+		});
 	},
 
 	setupFormSync() {

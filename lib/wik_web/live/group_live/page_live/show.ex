@@ -18,7 +18,13 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
         <:subtitle>
-          <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={@page} />
+          <div class="flex items-center gap-3">
+            <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={@page} />
+            <div class="flex items-center gap-2 text-xs text-zinc-500">
+              <span id={"collab-status-dot-#{@page.id}"} class="h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span id={"collab-status-label-#{@page.id}"}>Synced</span>
+            </div>
+          </div>
         </:subtitle>
 
         <:actions>
@@ -28,12 +34,26 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             watch_path={@current_path <> "/edit"}
             presences={@ctx.presences}
           />
+
+          <div :if={editable} class="flex items-center gap-2">
+            <.button
+              form={"page-form-#{@page.id}"}
+              phx-disable-with="Saving Version..."
+              variant="primary"
+            >
+              Save Version
+            </.button>
+            <.button patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}>Cancel</.button>
+          </div>
         </:actions>
       </.header>
 
       <.live_component
         module={WikWeb.Components.Page.FormMarkdown}
         id={"form-page-#{@page.id}-#{@page.versions_count}-#{@live_action}"}
+        form_id={"page-form-#{@page.id}"}
+        status_dot_id={"collab-status-dot-#{@page.id}"}
+        status_label_id={"collab-status-label-#{@page.id}"}
         page={@page}
         actor={@current_user}
         group={@ctx.current_group}

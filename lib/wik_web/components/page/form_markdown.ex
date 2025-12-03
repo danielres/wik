@@ -8,7 +8,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
       <.form
         for={@form}
         class="space-y-8"
-        id={"page-form-#{@id}"}
+        id={@form_id || "page-form-#{@id}"}
         phx-submit="save"
         phx-change="validate"
         phx-target={@myself}
@@ -16,10 +16,6 @@ defmodule WikWeb.Components.Page.FormMarkdown do
         <% text_value = @form[:text].value || @page.text || "" %>
 
         <textarea id={"page_text_#{@id}"} name={@form[:text].name} hidden>{text_value}</textarea>
-        <div class="flex items-center justify-end text-xs text-zinc-500 gap-2 mb-2">
-          <span id={"collab-status-dot-#{@id}"} class="h-2 w-2 rounded-full bg-emerald-500"></span>
-          <span id={"collab-status-label-#{@id}"}>Synced</span>
-        </div>
 
         <div class={"milkdown-editor-container editable-#{@editable}"}>
           <div
@@ -31,8 +27,8 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-input-id={"page_text_#{@id}"}
             data-editable={@editable}
             data-mode={if(@editable, do: "edit", else: "view")}
-            data-status-dot-id={"collab-status-dot-#{@id}"}
-            data-status-label-id={"collab-status-label-#{@id}"}
+            data-status-dot-id={@status_dot_id}
+            data-status-label-id={@status_label_id}
             data-root-path={"/#{ @group.slug }/pages"}
             data-pages-json={
               @pages_map
@@ -43,11 +39,6 @@ defmodule WikWeb.Components.Page.FormMarkdown do
               |> Jason.encode!()
             }
           />
-        </div>
-
-        <div :if={@editable} class="flex gap-2 mt-4">
-          <.button phx-disable-with="Saving Version..." variant="primary">Save Version</.button>
-          <.button patch={@return_to}>Cancel</.button>
         </div>
       </.form>
     </div>
@@ -71,7 +62,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
       {:ok, _page} ->
         socket =
           socket
-          |> push_navigate(to: socket.assigns.return_to)
+          # |> push_navigate(to: socket.assigns.return_to)
           |> Toast.put_toast(:success, "Page #{socket.assigns.form.source.type}d successfully")
 
         {:noreply, socket}

@@ -13,12 +13,19 @@ defmodule WikWeb.CollabWebSocket do
   alias Yex.Sync.SharedDoc
 
   @impl true
-  def init(room: room) do
+  def init(room: room, page: page, actor: actor, can_edit?: can_edit?) do
     with {:ok, doc_server} <- CollabRoom.fetch_or_start(room),
          :ok <- SharedDoc.observe(doc_server) do
       Logger.debug("Y.js client connected to room: #{room}")
 
-      {:ok, %{room: room, doc_server: doc_server}}
+      {:ok,
+       %{
+         room: room,
+         doc_server: doc_server,
+         page: page,
+         actor: actor,
+         can_edit?: can_edit?
+       }}
     else
       {:error, reason} ->
         Logger.error("Failed to start collab room #{room}: #{inspect(reason)}")
@@ -28,13 +35,19 @@ defmodule WikWeb.CollabWebSocket do
 
   @impl true
   def handle_in({:binary, data}, state) do
-    SharedDoc.send_yjs_message(state.doc_server, data)
+    if state.can_edit? do
+      SharedDoc.send_yjs_message(state.doc_server, data)
+    end
+
     {:ok, state}
   end
 
   # Bandit will deliver frames as `{data, [opcode: :binary]}` too
   def handle_in({data, [opcode: :binary]}, state) when is_binary(data) do
-    SharedDoc.send_yjs_message(state.doc_server, data)
+    if state.can_edit? do
+      SharedDoc.send_yjs_message(state.doc_server, data)
+    end
+
     {:ok, state}
   end
 

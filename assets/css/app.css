@@ -188,7 +188,7 @@ li::marker {
 }
 
 .layout-main {
-	@apply py-20 lg:px-8 max-w-4xl mx-auto;
+	@apply py-4 lg:px-8 max-w-4xl mx-auto;
 }
 
 .remote-cursor-block {

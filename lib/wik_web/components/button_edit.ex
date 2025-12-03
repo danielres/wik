@@ -36,11 +36,18 @@ defmodule WikWeb.Components.ButtonEdit do
         </span>
 
         <span class={["cursor-pointer"]}>
+          {# <.link }
+          {#   class="btn btn-neutral btn-circle hover:btn-primary" }
+          {#   patch={@link} }
+          {# > }
+          {#   <.icon name="hero-pencil-square" /> }
+          {# </.link> }
+
           <.link
-            class="btn btn-neutral btn-circle hover:btn-primary"
+            class="btn btn-sm btn-primary text-base-content/50"
             patch={@link}
           >
-            <.icon name="hero-pencil-square" />
+            Edit
           </.link>
         </span>
       </div>

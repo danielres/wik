@@ -17,33 +17,54 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
     <Layouts.app flash={@flash} ctx={@ctx}>
       <.header>
-        <:subtitle>
-          <div class="flex items-center gap-3">
-            <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={@page} />
-            <div class="flex items-center gap-2 text-xs text-zinc-500">
-              <span id={"collab-status-dot-#{@page.id}"} class="h-2 w-2 rounded-full bg-emerald-500"></span>
-              <span id={"collab-status-label-#{@page.id}"}>Synced</span>
-            </div>
-          </div>
-        </:subtitle>
+        <:subtitle></:subtitle>
 
         <:actions>
-          <WikWeb.Components.ButtonEdit.button
-            :if={Ash.can?({@page, :update}, @current_user) and !editable}
-            link={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/edit?return_to=show"}
-            watch_path={@current_path <> "/edit"}
-            presences={@ctx.presences}
-          />
+          <div class="space-y-2">
+            <div class="flex gap-2 text-xs justify-end text-base-content/70">
+              <.link
+                class="hover:text-base-content"
+                patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@page.versions_count}"}
+              >
+                v. {@page.versions_count}
+              </.link>
 
-          <div :if={editable} class="flex items-center gap-2">
-            <.button
-              form={"page-form-#{@page.id}"}
-              phx-disable-with="Saving Version..."
-              variant="primary"
-            >
-              Save Version
-            </.button>
-            <.button patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}>Cancel</.button>
+              <%= if editable do %>
+                <span class="opacity-50">|</span>
+
+                <div class="flex items-center gap-2 justify-end">
+                <span id={"collab-status-label-#{@page.id}"}>Synced</span>
+                <span id={"collab-status-dot-#{@page.id}"} class="h-2 w-2 rounded-full bg-emerald-500">
+                </span>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="flex items-center gap-3 justify-end">
+              <WikWeb.Components.ButtonEdit.button
+                :if={Ash.can?({@page, :update}, @current_user) and !editable}
+                link={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/edit?return_to=show"}
+                watch_path={@current_path <> "/edit"}
+                presences={@ctx.presences}
+              />
+
+              <div :if={editable} class="flex items-center gap-2">
+                <.button
+                  class="btn btn-sm btn-primary btn-outline"
+                  patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+                >
+                  Done
+                </.button>
+                <.button
+                  form={"page-form-#{@page.id}"}
+                  phx-disable-with="Saving Version..."
+                  variant="primary"
+                  class="btn btn-sm btn-primary"
+                >
+                  Save
+                </.button>
+              </div>
+            </div>
           </div>
         </:actions>
       </.header>

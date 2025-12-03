@@ -30,6 +30,14 @@ defmodule WikWeb.GroupLive.PageLive.Show do
               />
 
               <div :if={editable} class="flex items-center gap-2">
+                <a
+                  id={"collab-done-#{@page.id}"}
+                  data-done-target
+                  class="btn btn-sm btn-ghost opacity-50 hover:opacity-100 transition bg-transparent"
+                  href={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+                >
+                  <i class="hero-arrow-left-micro size-5">Back</i>
+                </a>
                 <.button
                   form={"page-form-#{@page.id}"}
                   phx-disable-with="Saving Version..."
@@ -38,12 +46,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
                   class="btn btn-sm btn-primary"
                 >
                   Save
-                </.button>
-                <.button
-                  class="btn btn-sm btn-primary btn-outline"
-                  patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
-                >
-                  Done
                 </.button>
               </div>
             </div>

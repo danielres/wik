@@ -55,6 +55,10 @@ export class StatusIndicator {
 		this.render();
 	}
 
+	getLastSaved() {
+		return this.lastSaved;
+	}
+
 	private render() {
 		if (!this.dot || !this.label) return;
 

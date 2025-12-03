@@ -2,6 +2,7 @@ import { CommandManager, commandsCtx } from "@milkdown/core";
 import type { SliceType } from "@milkdown/ctx";
 import { selectTextNearPosCommand } from "@milkdown/kit/preset/commonmark";
 import { Doc } from "yjs";
+import { undo } from "y-prosemirror";
 import { initCollab, type CollabHandles } from "./milkdown/collab";
 import {
 	createMilkdownEditor,
@@ -62,6 +63,8 @@ const MilkdownEditor = {
 		this.collabHandles = null as CollabHandles | null;
 		this.editorInstance = null;
 		this.handleDocUpdate = null;
+		this.doneLink = null;
+		this.doneHandler = null;
 
 		const statusTargetEl = document.querySelector("main") as HTMLElement | null;
 		this.status = new StatusIndicator(
@@ -74,6 +77,10 @@ const MilkdownEditor = {
 			normalize(markdown),
 			statusTargetEl,
 		);
+		this.doneLink = document.querySelector("[data-done-target]") as
+			| HTMLAnchorElement
+			| HTMLButtonElement
+			| null;
 
 		createMilkdownEditor({
 			root: this.el as HTMLElement,
@@ -122,6 +129,18 @@ const MilkdownEditor = {
 				this.status.markSaved(normalize(markdown));
 				this.status.scheduleRefresh(fetchCurrent);
 			});
+
+			if (this.doneLink) {
+				this.doneHandler = (event: Event) => {
+					event.preventDefault();
+					this.undoUntilSaved(fetchCurrent).finally(() => {
+						if (this.doneLink instanceof HTMLAnchorElement) {
+							window.location.href = this.doneLink.href;
+						}
+					});
+				};
+				this.doneLink.addEventListener("click", this.doneHandler);
+			}
 		});
 	},
 
@@ -194,6 +213,31 @@ const MilkdownEditor = {
 		this.form = null;
 		this.hiddenInput = null;
 		this.status = null;
+		if (this.doneLink && this.doneHandler) {
+			this.doneLink.removeEventListener("click", this.doneHandler);
+		}
+		this.doneLink = null;
+		this.doneHandler = null;
+	},
+
+	async undoUntilSaved(fetchCurrent: () => string) {
+		const target = this.status ? this.status.getLastSaved() : null;
+		if (!target) return;
+
+		const view = this.editorInstance?.ctx.get(editorViewCtx);
+		if (!view) return;
+
+		const maxSteps = 1000;
+		let steps = 0;
+
+		while (steps < maxSteps) {
+			const current = fetchCurrent();
+			if (current === target) break;
+			const didUndo = undo(view.state, view.dispatch);
+			if (!didUndo) break;
+			steps += 1;
+			await new Promise((resolve) => requestAnimationFrame(resolve));
+		}
 	},
 };
 

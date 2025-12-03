@@ -63,6 +63,7 @@ const MilkdownEditor = {
 		this.editorInstance = null;
 		this.handleDocUpdate = null;
 
+		const statusTargetEl = document.querySelector("main") as HTMLElement | null;
 		this.status = new StatusIndicator(
 			this.el.dataset.statusDotId
 				? document.getElementById(this.el.dataset.statusDotId)
@@ -71,6 +72,7 @@ const MilkdownEditor = {
 				? document.getElementById(this.el.dataset.statusLabelId)
 				: null,
 			normalize(markdown),
+			statusTargetEl,
 		);
 
 		createMilkdownEditor({
@@ -88,8 +90,8 @@ const MilkdownEditor = {
 
 			if (isStatic) {
 				this.setEditable(false);
-				this.status.markSaved(fetchCurrent());
-				this.status.updateCurrent(fetchCurrent());
+				const content = fetchCurrent();
+				this.status.updateCurrent(content);
 				this.status.setReady();
 			} else {
 				const allowEdit = isEdit && editable;
@@ -103,7 +105,6 @@ const MilkdownEditor = {
 						this.setEditable(allowEdit);
 						if (allowEdit) this.setFocusAndCursorPos();
 						const syncedContent = fetchCurrent();
-						this.status.markSaved(syncedContent);
 						this.status.updateCurrent(syncedContent);
 						this.status.setReady();
 					},
@@ -163,6 +164,10 @@ const MilkdownEditor = {
 	updated() {
 		if (!this.editorInstance) return;
 		this.setEditable(this.el.dataset.editable !== undefined);
+		// Re-apply status to restore data attributes after LiveView patches
+		if (this.status) {
+			this.status.refresh();
+		}
 	},
 
 	destroyed() {

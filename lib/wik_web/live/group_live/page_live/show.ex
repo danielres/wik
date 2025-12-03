@@ -21,23 +21,13 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
         <:actions>
           <div class="space-y-2">
-            <div class="flex gap-2 text-xs justify-end text-base-content/70">
+            <div class="flex text-xs justify-end text-base-content/70">
               <.link
-                class="hover:text-base-content"
+                class="btn btn-xs opacity-70 hover:opacity-100 transition"
                 patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@page.versions_count}"}
               >
                 v. {@page.versions_count}
               </.link>
-
-              <%= if editable do %>
-                <span class="opacity-50">|</span>
-
-                <div class="flex items-center gap-2 justify-end">
-                <span id={"collab-status-label-#{@page.id}"}>Synced</span>
-                <span id={"collab-status-dot-#{@page.id}"} class="h-2 w-2 rounded-full bg-emerald-500">
-                </span>
-                </div>
-              <% end %>
             </div>
 
             <div class="flex items-center gap-3 justify-end">
@@ -50,21 +40,32 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
               <div :if={editable} class="flex items-center gap-2">
                 <.button
+                  form={"page-form-#{@page.id}"}
+                  phx-disable-with="Saving Version..."
+                  variant="primary"
+                  data-status-button-save
+                  class="btn btn-sm btn-primary"
+                >
+                  Save
+                </.button>
+                <.button
                   class="btn btn-sm btn-primary btn-outline"
                   patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
                 >
                   Done
                 </.button>
-                <.button
-                  form={"page-form-#{@page.id}"}
-                  phx-disable-with="Saving Version..."
-                  variant="primary"
-                  class="btn btn-sm btn-primary"
-                >
-                  Save
-                </.button>
               </div>
             </div>
+            <%= if editable do %>
+              <div class="flex text-xs justify-end text-base-content/70 items-center gap-2">
+                <span id={"collab-status-label-#{@page.id}"}>Synced</span>
+                <span
+                  id={"collab-status-dot-#{@page.id}"}
+                  class="h-2 w-2 rounded-full bg-emerald-500"
+                >
+                </span>
+              </div>
+            <% end %>
           </div>
         </:actions>
       </.header>

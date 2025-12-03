@@ -122,6 +122,7 @@ const MilkdownEditor = {
 					},
 				});
 				this.awareness = this.collabHandles?.awareness;
+				this.applyAwarenessMeta();
 			}
 
 			this.setupFormSync();
@@ -230,7 +231,11 @@ const MilkdownEditor = {
 
 	applyAwarenessMeta() {
 		if (!this.awareness || !this.userMeta) return;
-		this.awareness.setLocalStateField("user", this.userMeta);
+		const withColor = {
+			...this.userMeta,
+			...pastelForName(this.userMeta.name || ""),
+		};
+		this.awareness.setLocalStateField("user", withColor);
 	},
 
 	async undoUntilSaved(fetchCurrent: () => string) {
@@ -255,3 +260,16 @@ const MilkdownEditor = {
 };
 
 export default MilkdownEditor;
+
+function pastelForName(name: string) {
+	let hash = 0;
+	for (let i = 0; i < name.length; i++) {
+		hash = name.charCodeAt(i) + ((hash << 5) - hash);
+		hash |= 0;
+	}
+
+	const hue = Math.abs(hash) % 360;
+	const color = `hsl(${hue}, 60%, 55%)`;
+
+	return { color };
+}

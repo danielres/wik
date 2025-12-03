@@ -31,6 +31,15 @@ defmodule WikWeb.GroupLive.PageLive.Index do
               {page.title}
             </.link>
 
+            <div class="justify-self-end">
+              <.link
+                class="btn btn-sm opacity-70 hover:opacity-100 transition"
+                patch={~p"/#{@ctx.current_group.slug}/pages/#{page.slug}/v/#{page.versions_count}"}
+              >
+                v. {page.versions_count}
+              </.link>
+            </div>
+
             <div class="flex items-baseline gap-2">
               <i class="hero-clock-solid size-4 self-center"></i>
               <WikWeb.Components.Time.pretty
@@ -49,15 +58,12 @@ defmodule WikWeb.GroupLive.PageLive.Index do
             <.link
               phx-click={JS.push("delete", value: %{id: page.id}) |> hide("##{id}")}
               data-confirm="Are you sure?"
-              class="opacity-40 hover:opacity-100 transition"
+              class="opacity-40 hover:opacity-100 transition flex justify-end"
             >
               <i class="hero-trash size-4">
                 delete
               </i>
             </.link>
-            <div class="flex justify-end">
-              <WikWeb.Components.Page.Versions.badge ctx={@ctx} page={page} />
-            </div>
           </div>
         </div>
       </div>

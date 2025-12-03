@@ -20,7 +20,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         <div class="flex items-center">
           <.link
             class="btn btn-sm opacity-70 hover:opacity-100 transition"
-            patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@page.versions_count}"}
+            patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"}
           >
             v. {@page.versions_count}
           </.link>
@@ -48,7 +48,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
         <%= if Ash.can?({@page, :update}, @current_user) and !editable do %>
           <WikWeb.Components.ButtonEdit.button
-            link={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/edit?return_to=show"}
+            link={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/edit?return_to=show"}
             watch_path={@current_path <> "/edit"}
             presences={@ctx.presences}
           />
@@ -60,7 +60,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
               id={"collab-done-#{@page.id}"}
               data-done-target
               class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100 transition "
-              href={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+              href={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
             >
               <i class="hero-arrow-left-micro size-5">Back</i>
             </a>
@@ -87,7 +87,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         actor={@current_user}
         group={@ctx.current_group}
         editable={editable}
-        return_to={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+        return_to={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
         pages_map={@ctx.pages_map}
       />
     </Layouts.app>
@@ -95,7 +95,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   def page_url(group, page) do
-    ~p"/#{group.slug}/pages/#{page.slug}"
+    ~p"/#{group.slug}/wiki/#{page.slug}"
   end
 
   @impl true
@@ -190,7 +190,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     socket =
       socket
       |> RealtimeToast.put_delete_toast(payload)
-      |> push_navigate(to: ~p"/#{socket.assigns.ctx.current_group.slug}/pages")
+      |> push_navigate(to: ~p"/#{socket.assigns.ctx.current_group.slug}/wiki")
 
     {:noreply, socket}
   end
@@ -220,7 +220,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       |> List.first()
 
     socket
-    |> push_patch(to: ~p"/#{group_slug}/pages/#{page_slug}")
+    |> push_patch(to: ~p"/#{group_slug}/wiki/#{page_slug}")
     |> Toast.put_toast(
       :info,
       "Aready being edited by #{current_editor}, please try again later."

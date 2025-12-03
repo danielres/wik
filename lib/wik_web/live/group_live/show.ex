@@ -75,7 +75,7 @@ defmodule WikWeb.GroupLive.Show do
             </h2>
             <.link
               class="indicator btn btn-xs btn-neutral opacity-60 hover:opacity-100 transition"
-              navigate={~p"/#{@ctx.current_group.slug}/pages"}
+              navigate={~p"/#{@ctx.current_group.slug}/wiki"}
             >
               All pages
               <span class="indicator-item badge badge-neutral border text-base-content/70 rounded-full text-xs p-0 aspect-square">
@@ -92,7 +92,7 @@ defmodule WikWeb.GroupLive.Show do
             <.link
               :for={p <- @group.last_updated_pages}
               class={[content_class, "grid grid-cols-3 hover:opacity-100"]}
-              navigate={~p"/#{@group.slug}/pages/#{p.slug}"}
+              navigate={~p"/#{@group.slug}/wiki/#{p.slug}"}
             >
               <div>{p.title}</div>
               <div>

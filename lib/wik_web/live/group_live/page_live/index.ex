@@ -34,7 +34,7 @@ defmodule WikWeb.GroupLive.PageLive.Index do
             <div class="justify-self-end">
               <.link
                 class="btn btn-sm opacity-70 hover:opacity-100 transition"
-                patch={~p"/#{@ctx.current_group.slug}/pages/#{page.slug}/v/#{page.versions_count}"}
+                patch={~p"/#{@ctx.current_group.slug}/wiki/#{page.slug}/v/#{page.versions_count}"}
               >
                 v. {page.versions_count}
               </.link>

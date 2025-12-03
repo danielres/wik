@@ -10,7 +10,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
       <div class="flex grid grid-cols-3 mb-12">
         <div>
           <.button
-            navigate={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}"}
+            navigate={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
             class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100 transition "
           >
             <.icon name="hero-arrow-left-micro size-5" />
@@ -21,7 +21,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
           <div class="join w-full flex justify-center">
             <.button
               disabled={@v == 1}
-              patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@v - 1}"}
+              patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v - 1}"}
               class="btn btn-sm btn-circle btn-ghost"
             >
               <i class="hero-chevron-left size-4"></i>
@@ -35,7 +35,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
 
             <.button
               disabled={@v == @page.versions_count}
-              patch={~p"/#{@ctx.current_group.slug}/pages/#{@page.slug}/v/#{@v + 1}"}
+              patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v + 1}"}
               class="btn btn-sm btn-circle btn-ghost"
             >
               <i class="hero-chevron-right size-4"></i>

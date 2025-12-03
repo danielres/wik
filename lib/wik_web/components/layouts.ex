@@ -98,9 +98,9 @@ defmodule WikWeb.Layouts do
           <div>
             <.link
               class="btn"
-              navigate={~p"/#{@ctx.current_group.slug}/pages/Home"}
+              navigate={~p"/#{@ctx.current_group.slug}/wiki/Home"}
             >
-              Home
+              Wiki
             </.link>
 
             <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/members"}>Members</.link>

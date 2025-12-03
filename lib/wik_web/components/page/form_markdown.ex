@@ -30,7 +30,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-status-dot-id={@status_dot_id}
             data-status-label-id={@status_label_id}
             data-user-meta={%{name: @actor |> to_string} |> Jason.encode!()}
-            data-root-path={"/#{ @group.slug }/pages"}
+            data-root-path={"/#{ @group.slug }/wiki"}
             data-pages-json={
               @pages_map
               |> Enum.map(fn page ->

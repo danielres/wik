@@ -37,6 +37,7 @@ defmodule WikWeb.GroupLive.MemberLive.Index do
 
   @impl true
   def handle_params(_params, url, socket) do
+    socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
     WikWeb.Presence.track_in_liveview(socket, url)
     {:noreply, socket}
   end

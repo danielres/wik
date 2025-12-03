@@ -125,8 +125,12 @@ defmodule WikWeb.GroupLive.Show do
 
   @impl true
   def handle_params(_params, url, socket) do
+    socket =
+      socket
+      |> Utils.Ctx.add(:current_path, URI.parse(url).path)
+      |> assign(current_path: URI.parse(url).path)
+
     WikWeb.Presence.track_in_liveview(socket, url)
-    socket = socket |> assign(current_path: URI.parse(url).path)
     {:noreply, socket}
   end
 

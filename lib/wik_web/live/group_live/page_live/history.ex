@@ -98,6 +98,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
 
   @impl true
   def handle_params(%{"version" => v}, url, socket) do
+    socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
     WikWeb.Presence.track_in_liveview(socket, url)
 
     v = v |> String.to_integer()

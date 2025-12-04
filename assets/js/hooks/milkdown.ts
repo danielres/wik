@@ -241,7 +241,7 @@ const MilkdownEditor = {
 
 	async undoUntilSaved(fetchCurrent: () => string) {
 		const target = this.status ? this.status.getLastSaved() : null;
-		if (!target) return;
+		if (target == null) return;
 
 		const view = this.editorInstance?.ctx.get(editorViewCtx);
 		if (!view) return;

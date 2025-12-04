@@ -221,10 +221,18 @@ defmodule Wik.Wiki.Page do
       source_attribute :id
       filter expr(resource == Wik.Wiki.Page)
     end
+
+    has_many :backlinks, Wik.Wiki.Backlink do
+      destination_attribute :target_page_id
+    end
   end
 
   aggregates do
     count :versions_count, :versions do
+      public? true
+    end
+
+    count :backlinks_count, :backlinks do
       public? true
     end
   end

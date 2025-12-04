@@ -90,6 +90,33 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         return_to={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
         pages_map={@ctx.pages_map}
       />
+
+      <div class="mt-12 space-y-4">
+        <div class="flex items-center gap-2">
+          <i class="hero-link-solid size-4"></i>
+          <span class="uppercase tracking-wide text-xs opacity-70">Linked from</span>
+        </div>
+
+        <div class="grid gap-2">
+          <%= if Enum.empty?(@backlinks) do %>
+            <div class="text-sm opacity-70">No backlinks yet.</div>
+          <% else %>
+            <div :for={backlink <- @backlinks} class="flex items-center gap-3 text-sm">
+              <.link
+                navigate={~p"/#{@ctx.current_group.slug}/wiki/#{backlink.source_page.slug}"}
+                class="hover:text-white"
+              >
+                {backlink.source_page.title || backlink.target_slug}
+              </.link>
+              <span class="text-xs opacity-70">·</span>
+              <WikWeb.Components.Time.pretty
+                datetime={backlink.updated_at}
+                class="text-xs opacity-70"
+              />
+            </div>
+          <% end %>
+        </div>
+      </div>
     </Layouts.app>
     """
   end
@@ -117,11 +144,13 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
         socket = socket |> Utils.Ctx.add(:page, page)
 
-        {:ok,
-         socket
-         |> assign(:page_title, page.title)
-         |> assign(:page, page)
-         |> assign(:updated_fields, [])}
+      {:ok,
+       socket
+       |> assign(:page_title, page.title)
+       |> assign(:page, page)
+       |> assign(:updated_fields, [])
+       |> assign(:backlinks, load_backlinks(page))
+       |> maybe_subscribe_backlinks(page)}
 
       {:error, _error} ->
         page =
@@ -172,7 +201,8 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         |> assign(
           page: updated_page,
           page_title: updated_page.title,
-          updated_fields: updated_fields
+          updated_fields: updated_fields,
+          backlinks: load_backlinks(updated_page)
         )
         |> RealtimeToast.put_update_toast(payload)
         |> maybe_push_saved_version(updated_fields, updated_page)
@@ -196,6 +226,11 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     {:noreply, socket}
   end
 
+  @impl true
+  def handle_info(:backlinks_updated, socket) do
+    {:noreply, assign(socket, :backlinks, load_backlinks(socket.assigns.page))}
+  end
+
   defp reload_page!(page_slug, socket) do
     Wik.Wiki.Page
     |> Ash.get!(
@@ -203,6 +238,19 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       actor: socket.assigns.current_user,
       load: [:versions_count]
     )
+  end
+
+  defp load_backlinks(page) do
+    Wik.Wiki.Backlink.Utils.list_for_page(page)
+  end
+
+  defp maybe_subscribe_backlinks(socket, page) do
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Wik.PubSub, "backlinks:slug:#{page.group_id}:#{page.slug}")
+      Phoenix.PubSub.subscribe(Wik.PubSub, "backlinks:page:#{page.group_id}:#{page.id}")
+    end
+
+    socket
   end
 
   defp has_editors?(socket, path) do

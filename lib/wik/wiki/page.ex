@@ -51,6 +51,17 @@ defmodule Wik.Wiki.Page do
       accept [:title, :text]
       primary? true
       require_atomic? false
+
+      change fn changeset, _ctx ->
+        changeset
+        |> Ash.Changeset.after_action(fn changeset, page ->
+          if Ash.Changeset.changing_attribute?(changeset, :text) do
+            Wik.Wiki.Backlink.Utils.rebuild_for_page(page, changeset)
+          end
+
+          {:ok, page}
+        end)
+      end
     end
 
     read :read do
@@ -117,10 +128,30 @@ defmodule Wik.Wiki.Page do
           Ash.Changeset.add_error(changeset, "No current group set")
         end
       end
+
+      change fn changeset, _ctx ->
+        changeset
+        |> Ash.Changeset.after_action(fn changeset, page ->
+          if Ash.Changeset.changing_attribute?(changeset, :text) do
+            Wik.Wiki.Backlink.Utils.rebuild_for_page(page, changeset)
+          end
+
+          Wik.Wiki.Backlink.Utils.reconcile_new_target(page)
+          {:ok, page}
+        end)
+      end
     end
 
     destroy :destroy do
       primary? true
+
+      change fn changeset, _ctx ->
+        changeset
+        |> Ash.Changeset.after_action(fn changeset, page ->
+          Wik.Wiki.Backlink.Utils.delete_for_page(page)
+          {:ok, page}
+        end)
+      end
     end
   end
 

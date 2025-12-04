@@ -23,7 +23,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             phx-hook="MilkdownEditor"
             phx-update="ignore"
             data-markdown={text_value}
-            data-page-id={@page && @page.id}
+            data-page-id={@page.id}
             data-input-id={"page_text_#{@id}"}
             data-editable={@editable}
             data-mode={if(@editable, do: "edit", else: "view")}

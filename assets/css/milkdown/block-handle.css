@@ -1,0 +1,29 @@
+/* assets/css/milkdown-block-handle.css */
+
+.milkdown {
+	.milkdown-block-handle {
+		&[data-show="false"] {
+			@apply opacity-0 pointer-events-none;
+		}
+
+		/* @apply transition-all duration-200 absolute cursor-pointer flex items-center justify-center gap-[2px]; */
+		@apply transition-all duration-200 absolute cursor-pointer;
+
+		.operation-item {
+			/* @apply rounded w-8 h-8 p-1; */
+
+			svg {
+				/* @apply w-6 h-6; */
+				/* fill: var(--crepe-color-outline); */
+			}
+
+			&:hover {
+				/* @apply bg-[var(--crepe-color-hover)]; */
+			}
+
+			&.active {
+				/* @apply bg-[var(--crepe-color-selected)]; */
+			}
+		}
+	}
+}

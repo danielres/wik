@@ -6,6 +6,7 @@ defmodule WikWeb.Components.Time do
 
   attr :open?, :boolean, default: false
   attr :class, :string, default: ""
+  attr :datetime, :any, required: true
 
   def pretty(assigns) do
     ~H"""

@@ -12,6 +12,8 @@ defmodule Wik.Application do
       Wik.Repo,
       {DNSCluster, query: Application.get_env(:wik, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Wik.PubSub},
+      {Registry, keys: :unique, name: Wik.CollabRegistry},
+      {DynamicSupervisor, name: Wik.CollabDocSupervisor, strategy: :one_for_one},
       # Start a worker by calling: Wik.Worker.start_link(arg)
       # {Wik.Worker, arg},
       # Start to serve requests, typically the last entry

@@ -1,0 +1,7 @@
+.milkdown {
+	.milkdown-drop-indicator {
+		@apply bg-primary;
+		@apply transition-all duration-200;
+		@apply pointer-events-none;
+	}
+}

@@ -51,5 +51,6 @@ defmodule WikWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+  plug WikWeb.CollabPlug
   plug WikWeb.Router
 end

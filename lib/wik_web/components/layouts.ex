@@ -38,9 +38,9 @@ defmodule WikWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="px-4 sm:px-6 lg:px-8 pt-0 space-y-2 mt-2">
+    <header class="layout-header">
       <div class="flex justify-between w-full">
-        <div class="flex items-center gap-2 mt-2 font-bold text-sm">
+        <div class="flex items-center gap-1 mt-2 font-bold text-xs">
           <%= if @ctx[:current_group] do %>
             <.link
               class="opacity-50 hover:opacity-100 transition"
@@ -49,22 +49,23 @@ defmodule WikWeb.Layouts do
               Groups
             </.link>
 
-            <span class="opacity-50">/</span>
+            <span class="opacity-40 hero-chevron-right-micro size-4">/</span>
+
             <.link
-              class="opacity-50 hover:opacity-100 transition"
-              navigate={~p"/#{@ctx.current_group.slug}"}
+              class={[link_class(@ctx, "", false)]}
+              navigate={~p"/#{@ctx[:current_group].slug}"}
             >
-              {@ctx.current_group.title}
+              {@ctx[:current_group].title}
             </.link>
           <% end %>
         </div>
 
         <div>
-          <div class="dropdown dropdown-end mt-2 text-sm">
+          <div class="dropdown dropdown-end mt-2 text-xs">
             <div
               tabindex="0"
               role="button"
-              class="opacity-50 hover:opacity-100 transition cursor-pointer font-bold"
+              class="opacity-50 hover:opacity-100 transition cursor-pointer font-semibold"
             >
               {@ctx.current_user |> to_string}
             </div>
@@ -95,34 +96,78 @@ defmodule WikWeb.Layouts do
       </div>
 
       <%= if(@ctx[:current_group]) do %>
-        <div class="flex gap-2 items-center justify-between">
-          <div>
-            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/pages/home"}>Pages</.link>
-            <.link class="btn" navigate={~p"/#{@ctx.current_group.slug}/members"}>Members</.link>
-          </div>
+        <div class="flex gap-3 text-sm">
+          <.link
+            class={[link_class(@ctx, "/wiki")]}
+            navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}
+          >
+            Wiki
+          </.link>
+
+          <.link
+            class={[link_class(@ctx, "/members")]}
+            navigate={~p"/#{@ctx[:current_group].slug}/members"}
+          >
+            Members
+          </.link>
         </div>
       <% end %>
     </header>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class={["mx-auto space-y-4 grid gap-8", @ctx[:presences] && "grid-cols-[1fr_auto]"]}>
-        <div>
-          {render_slot(@inner_block)}
-        </div>
+    <main class="layout-main">
+      {render_slot(@inner_block)}
 
+      <footer
+        :if={@ctx[:page]}
+        class="mt-8 border-t-4 border-base-content/10 pt-8 flex justify-between"
+      >
         <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
 
-        <div
-          :if={WikWeb.Helpers.slot_has_content?(@aside)}
-          class="border-l border-base-content/30 pl-8 w-64  text-sm"
-        >
-          {render_slot(@aside)}
+        <div class="">
+          <dl
+            :if={Mix.env() == :dev}
+            class="text-xs grid grid-cols-[auto_auto] gap-x-2 opacity-40"
+          >
+            <dt>Page title:</dt>
+            <dd>{@ctx.page.title}</dd>
+          </dl>
         </div>
-      </div>
+      </footer>
     </main>
 
     <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
     """
+  end
+
+  defp link_class(ctx, suffix, subpaths? \\ true) do
+    path = ctx[:current_path] || ""
+
+    base =
+      case ctx[:current_group] do
+        %{slug: slug} -> "/#{slug}#{suffix}"
+        _ -> nil
+      end
+
+    active? =
+      if subpaths? do
+        (path != "" and base) && String.starts_with?(path, base)
+      else
+        (path != "" and base) && path == base
+      end
+
+    base_class =
+      "font-semibold transition hover:opacity-100"
+
+    active_class =
+      "#{base_class} pointer-events-none "
+
+    inactive_class = "#{base_class} opacity-50"
+
+    if active? do
+      active_class
+    else
+      inactive_class
+    end
   end
 
   @doc """

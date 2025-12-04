@@ -1,0 +1,40 @@
+/* assets/css/milkdown-toolbar.css */
+
+.milkdown {
+	/* Makes absolutely positioned toolbar anchor to the editor root */
+	@apply relative;
+
+	/* Hide toolbar when link preview/edit is visible */
+	&:has(.milkdown-link-preview[data-show="true"]) .milkdown-toolbar,
+	&:has(.milkdown-link-edit[data-show="true"]) .milkdown-toolbar {
+		@apply hidden;
+	}
+
+	.milkdown-toolbar {
+		/* Controlled by TooltipProvider via data-show */
+		&[data-show="false"] {
+			@apply hidden;
+		}
+
+		@apply z-10 absolute flex bg-base-300 shadow rounded-lg overflow-hidden;
+
+		.toolbar-item {
+			@apply min-w-8 h-8 m-1.5 p-1 cursor-pointer rounded transition-colors;
+
+			&:hover {
+				@apply bg-base-100;
+			}
+
+			&:active {
+				@apply bg-info;
+			}
+
+			&.active {
+				svg {
+					@apply text-info;
+					fill: var(--color-success);
+				}
+			}
+		}
+	}
+}

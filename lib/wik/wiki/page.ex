@@ -48,7 +48,7 @@ defmodule Wik.Wiki.Page do
     defaults []
 
     update :update do
-      accept [:title, :text, :slug]
+      accept [:title, :text]
       primary? true
       require_atomic? false
     end
@@ -69,6 +69,31 @@ defmodule Wik.Wiki.Page do
                end
              end,
              on: [:create, :update]
+
+      change fn cs, _ctx ->
+               cs |> trim_text()
+             end,
+             on: [:create, :update]
+
+      change fn cs, _ctx ->
+               cs |> collapse_blank_lines()
+             end,
+             on: [:update]
+
+      change fn cs, _ctx ->
+               cs |> set_slug()
+             end,
+             on: [:create]
+
+      change fn cs, _ctx ->
+               cs |> set_header()
+             end,
+             on: [:create, :update]
+
+      change fn cs, _ctx ->
+               cs |> update_title_from_header()
+             end,
+             on: [:update]
     end
 
     create :create do
@@ -91,10 +116,6 @@ defmodule Wik.Wiki.Page do
         else
           Ash.Changeset.add_error(changeset, "No current group set")
         end
-      end
-
-      change fn cs, _ctx ->
-        cs |> Utils.Slugify.maybe_set_and_ensure_unique_slug()
       end
     end
 
@@ -155,5 +176,52 @@ defmodule Wik.Wiki.Page do
 
   identities do
     identity :unique_group_slug, [:group_id, :slug], eager_check_with: Wik.Accounts
+  end
+
+  def trim_text(cs) do
+    text = Ash.Changeset.get_attribute(cs, :text)
+    trimmed = (text || "") |> String.trim()
+    Ash.Changeset.change_attribute(cs, :text, trimmed)
+  end
+
+  def collapse_blank_lines(cs) do
+    text = Ash.Changeset.get_attribute(cs, :text)
+    collapsed = (text || "") |> String.replace("<br />\n\n", "")
+    Ash.Changeset.change_attribute(cs, :text, collapsed)
+  end
+
+  def set_slug(changeset) do
+    title = Ash.Changeset.get_attribute(changeset, :title)
+    Ash.Changeset.change_attribute(changeset, :slug, title)
+  end
+
+  def set_header(changeset) do
+    text = Ash.Changeset.get_attribute(changeset, :text)
+    has_header? = (text || "") |> String.slice(0, 2) == "# "
+
+    if has_header? do
+      changeset
+    else
+      title = Ash.Changeset.get_attribute(changeset, :title)
+      Ash.Changeset.change_attribute(changeset, :text, "# #{title}\n\n#{text || "<br />"}")
+    end
+  end
+
+  def update_title_from_header(changeset) do
+    text = Ash.Changeset.get_attribute(changeset, :text)
+    has_header? = (text || "") |> String.slice(0, 2) == "# "
+
+    if has_header? do
+      header =
+        text
+        |> String.split("\n", parts: 2)
+        |> hd()
+        |> String.trim_leading("# ")
+        |> String.trim()
+
+      Ash.Changeset.change_attribute(changeset, :title, header)
+    else
+      changeset
+    end
   end
 end

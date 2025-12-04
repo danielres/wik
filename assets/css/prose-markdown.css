@@ -1,0 +1,63 @@
+.milkdown *:focus {
+	outline: none !important;
+}
+
+.milkdown-editor-container.editable-true {
+	/* @apply pl-6 min-h-48 border-l-2 border-primary/20; */
+
+	::selection {
+		@apply bg-primary;
+	}
+}
+
+.ProseMirror.editor {
+	white-space: pre-wrap;
+
+	> * {
+		@apply mb-6;
+	}
+
+	h1 {
+		@apply text-3xl;
+	}
+
+	h2 {
+		@apply text-2xl;
+	}
+
+	h3 {
+		@apply text-xl;
+	}
+
+	h4 {
+		@apply text-lg;
+	}
+
+	ul {
+		@apply ml-4 list list-disc;
+		ul {
+			@apply m-0 mb-2;
+		}
+	}
+
+	code {
+		@apply bg-base-200 px-1 py-0.5 text-base-content/80 text-sm;
+	}
+
+	pre {
+		@apply rounded bg-base-200 p-4;
+		@apply overflow-x-auto;
+		code {
+			@apply bg-transparent p-0;
+		}
+	}
+
+	table {
+		@apply w-full;
+	}
+
+	a {
+		@apply underline underline-offset-4;
+		@apply decoration-base-content/50 hover:decoration-base-content transition;
+	}
+}

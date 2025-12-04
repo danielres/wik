@@ -3,6 +3,17 @@
 
 @import "tailwindcss" source(none);
 @import "../../deps/toast/assets/css/toast.css";
+@import "./milkdown/table-block.css";
+@import "./milkdown/list-item-block.css";
+@import "./milkdown/toolbar.css";
+@import "./milkdown/slash-menu-wikilinks.css";
+@import "./milkdown/slash-view.css";
+@import "./milkdown/block-handle.css";
+@import "./milkdown/collab-awareness.css";
+@import "./milkdown/collab-status.css";
+@import "./milkdown/cursor.css";
+@import "./prose-markdown.css";
+
 @source "../../deps/ash_authentication_phoenix";
 @source "../css";
 @source "../js";
@@ -32,15 +43,19 @@
 	--color-base-100: oklch(30.33% 0.016 252.42);
 	--color-base-200: oklch(25.26% 0.014 253.1);
 	--color-base-300: oklch(20.15% 0.012 254.09);
-	--color-base-content: oklch(97.807% 0.029 256.847);
 	--color-primary: oklch(58% 0.233 277.117);
-	--color-primary-content: oklch(96% 0.018 272.314);
-	--color-secondary: oklch(58% 0.233 277.117);
-	--color-secondary-content: oklch(96% 0.018 272.314);
+	--color-base-content: oklch(97.807% 0.029 256.847);
+	--color-primary-content: color-mix(in oklab, white 70%, var(--color-primary));
+	--color-secondary: oklch(46.2% 0.1731 277.1);
+	--color-secondary-content: color-mix(
+		in oklab,
+		white 70%,
+		var(--color-secondary)
+	);
 	--color-accent: oklch(60% 0.25 292.717);
 	--color-accent-content: oklch(96% 0.016 293.756);
 	--color-neutral: oklch(37% 0.044 257.287);
-	--color-neutral-content: oklch(98% 0.003 247.858);
+	--color-neutral-content: color-mix(in oklab, white 60%, var(--color-neutral));
 	--color-info: oklch(58% 0.158 241.966);
 	--color-info-content: oklch(97% 0.013 236.62);
 	--color-success: oklch(60% 0.118 184.704);
@@ -130,7 +145,25 @@
 	}
 }
 
+body:has([data-theme="dark"]) {
+	@apply bg-linear-to-b from-base-200 to-base-100 bg-fixed;
+	@apply min-h-svh;
+}
+
 [data-theme="dark"] {
+	.toast {
+		border-width: 3px;
+		--toast-bg: color-mix(in oklab, var(--bg) 70%, var(--color-neutral));
+		--toast-color: var(--fg);
+		--toast-icon-color: color-mix(in oklab, var(--fg) 50%, var(--bg));
+		--toast-border: color-mix(in oklab, var(--bg) 90%, var(--color-neutral));
+		&:hover {
+			--toast-bg: color-mix(in oklab, var(--bg) 90%, var(--color-neutral));
+			--toast-border: color-mix(in oklab, var(--bg) 100%, var(--color-neutral));
+		}
+		animation: toast-fade-out 600ms ease-out 5s forwards;
+	}
+
 	.toast-success {
 		--bg: var(--color-success);
 		--fg: var(--color-success-content);
@@ -144,18 +177,7 @@
 		--bg: var(--color-error);
 		--fg: var(--color-error-content);
 	}
-	.toast {
-		border-width: 3px;
-		--toast-bg: color-mix(in oklab, var(--bg) 70%, var(--color-neutral));
-		--toast-color: var(--fg);
-		--toast-icon-color: color-mix(in oklab, var(--fg) 50%, var(--bg));
-		--toast-border: color-mix(in oklab, var(--bg) 90%, var(--color-neutral));
-		&:hover {
-			--toast-bg: color-mix(in oklab, var(--bg) 90%, var(--color-neutral));
-			--toast-border: color-mix(in oklab, var(--bg) 100%, var(--color-neutral));
-		}
-		animation: toast-fade-out 600ms ease-out 5s forwards;
-	}
+
 	.toast-close {
 		color: var(--fg);
 		@apply opacity-50 hover:opacity-100 transition-opacity;
@@ -164,4 +186,18 @@
 
 li::marker {
 	color: color-mix(in oklab, var(--color-base-content) 20%, transparent);
+}
+
+.layout-header,
+.layout-main {
+	@apply px-4 sm:px-6 lg:px-8;
+}
+
+.layout-header {
+	@apply bg-base-300 pb-4 mt-0;
+	@apply space-y-2;
+}
+
+.layout-main {
+	@apply py-4 lg:px-8 max-w-4xl mx-auto;
 }

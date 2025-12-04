@@ -22,11 +22,9 @@ export const toggleWikilinkCommand = (ctx: Ctx) => {
 	const pageSlug = encodeURIComponent(capitalize(text));
 	const linkNode = state.schema.text(capitalize(text), [
 		state.schema.mark("link", {
-			href: `${rootPath}/${pageSlug}`, // You'll need to pass rootPath
+			href: `${rootPath}/${pageSlug}`,
 		}),
 	]);
-
-	console.log({ linkNode });
 	// Replace selection with link node
 	dispatch(state.tr.replaceWith(from, to, linkNode).scrollIntoView());
 };

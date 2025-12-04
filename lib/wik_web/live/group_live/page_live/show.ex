@@ -91,32 +91,29 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         pages_map={@ctx.pages_map}
       />
 
-      <div class="mt-12 space-y-4">
-        <div class="flex items-center gap-2">
-          <i class="hero-link-solid size-4"></i>
-          <span class="uppercase tracking-wide text-xs opacity-70">Linked from</span>
-        </div>
+      <:backlinks>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <i class="hero-link-mini size-4"></i>
+            <span class="uppercase tracking-wide text-xs opacity-70">Backlinks</span>
+          </div>
 
-        <div class="grid gap-2">
-          <%= if Enum.empty?(@backlinks) do %>
-            <div class="text-sm opacity-70">No backlinks yet.</div>
-          <% else %>
-            <div :for={backlink <- @backlinks} class="flex items-center gap-3 text-sm">
-              <.link
-                navigate={~p"/#{@ctx.current_group.slug}/wiki/#{backlink.source_page.slug}"}
-                class="hover:text-white"
-              >
-                {backlink.source_page.title || backlink.target_slug}
-              </.link>
-              <span class="text-xs opacity-70">·</span>
-              <WikWeb.Components.Time.pretty
-                datetime={backlink.updated_at}
-                class="text-xs opacity-70"
-              />
-            </div>
-          <% end %>
+          <ul class="list-disc list-inside">
+            <%= if Enum.empty?(@backlinks) do %>
+              <li class="text-sm opacity-70">No backlinks yet.</li>
+            <% else %>
+              <li :for={backlink <- @backlinks} class="text-xs">
+                <.link
+                  navigate={~p"/#{@ctx.current_group.slug}/wiki/#{backlink.source_page.slug}"}
+                  class="hover:text-white"
+                >
+                  {backlink.source_page.title || backlink.target_slug}
+                </.link>
+              </li>
+            <% end %>
+          </ul>
         </div>
-      </div>
+      </:backlinks>
     </Layouts.app>
     """
   end
@@ -144,13 +141,13 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
         socket = socket |> Utils.Ctx.add(:page, page)
 
-      {:ok,
-       socket
-       |> assign(:page_title, page.title)
-       |> assign(:page, page)
-       |> assign(:updated_fields, [])
-       |> assign(:backlinks, load_backlinks(page))
-       |> maybe_subscribe_backlinks(page)}
+        {:ok,
+         socket
+         |> assign(:page_title, page.title)
+         |> assign(:page, page)
+         |> assign(:updated_fields, [])
+         |> assign(:backlinks, load_backlinks(page))
+         |> maybe_subscribe_backlinks(page)}
 
       {:error, _error} ->
         page =

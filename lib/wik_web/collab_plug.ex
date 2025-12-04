@@ -18,7 +18,7 @@ defmodule WikWeb.CollabPlug do
 
     with true <- websocket_upgrade?(conn),
          {:ok, page_id} <- parse_room(room_path),
-         %{} = actor <- conn.assigns[:current_user],
+         %{id: _} = actor <- conn.assigns[:current_user],
          {:ok, page} <- Ash.get(Page, page_id, actor: actor) do
       can_edit? = Ash.can?({page, :update}, actor)
       handle_websocket_upgrade(conn, page_id, page, actor, can_edit?)

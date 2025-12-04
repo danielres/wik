@@ -23,7 +23,11 @@ defmodule Wik.Wiki.Page do
     extensions: [AshEvents.Events]
 
   defimpl String.Chars do
-    def to_string(page), do: page.title
+    @doc """
+Use the page's title as its string representation.
+"""
+@spec to_string(Wik.Wiki.Page.t()) :: String.t()
+def to_string(page), do: page.title
   end
 
   require Logger
@@ -253,12 +257,38 @@ defmodule Wik.Wiki.Page do
     Ash.Changeset.change_attribute(cs, :text, collapsed)
   end
 
+  @doc """
+  Set the changeset's `:slug` attribute to the canonical form of its `:title`.
+  
+  ## Parameters
+  
+    - changeset: an `Ash.Changeset` from which the `:title` attribute is read.
+  
+  """
+  @spec set_slug(Ash.Changeset.t()) :: Ash.Changeset.t()
   def set_slug(changeset) do
     title = Ash.Changeset.get_attribute(changeset, :title)
     slug = Wik.Wiki.Page.Utils.canonical_slug(title)
     Ash.Changeset.change_attribute(changeset, :slug, slug)
   end
 
+  @doc """
+  Ensure the changeset's `:text` begins with a top-level header derived from the `:title`.
+  
+  If the `:text` already starts with "# " it is left unchanged. Otherwise the function prepends a header line "# <title>" followed by two newlines and the original text (or "<br />" if text is nil).
+  
+  ## Parameters
+  
+    - changeset: An `Ash.Changeset` for a `Wik.Wiki.Page` containing `:title` and optional `:text`.
+  
+  ## Examples
+  
+      iex> cs = Ash.Changeset.for_create(Wik.Wiki.Page, title: "Hello", text: "Body")
+      iex> cs |> Wik.Wiki.Page.set_header() |> Ash.Changeset.get_attribute(:text)
+      "# Hello\n\nBody"
+  
+  """
+  @spec set_header(Ash.Changeset.t()) :: Ash.Changeset.t()
   def set_header(changeset) do
     text = Ash.Changeset.get_attribute(changeset, :text)
     has_header? = (text || "") |> String.slice(0, 2) == "# "
@@ -271,6 +301,23 @@ defmodule Wik.Wiki.Page do
     end
   end
 
+  @doc """
+  Updates the changeset's `:title` from a leading Markdown header in `:text` if present.
+  
+  If `:text` begins with "# " followed by a header line, extracts that header (first line without the leading `# `, trimmed) and sets it as the `:title` on the changeset. Otherwise returns the unchanged changeset.
+  
+  ## Parameters
+  
+    - changeset: an Ash.Changeset for a Page that may contain `:text` and `:title` attributes.
+  
+  ## Examples
+  
+      iex> cs = Ash.Changeset.for_create(Page, %{text: "# New Title\\nBody"})
+      iex> Wik.Wiki.Page.update_title_from_header(cs).changes.title
+      "New Title"
+  
+  """
+  @spec update_title_from_header(Ash.Changeset.t()) :: Ash.Changeset.t()
   def update_title_from_header(changeset) do
     text = Ash.Changeset.get_attribute(changeset, :text)
     has_header? = (text || "") |> String.slice(0, 2) == "# "

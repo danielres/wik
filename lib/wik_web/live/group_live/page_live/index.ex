@@ -5,6 +5,12 @@ defmodule WikWeb.GroupLive.PageLive.Index do
   require Ash.Query
 
   @impl true
+  @doc """
+  Renders the pages index for a group inside the application layout.
+  
+  Displays a streamed list of pages with each row showing the page title (linking to the page), a version patch link, last-updated time, backlinks count, and a delete action that issues a `delete` event and hides the row on success.
+  """
+  @spec render(map()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>

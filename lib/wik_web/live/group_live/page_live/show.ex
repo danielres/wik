@@ -11,6 +11,18 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   alias WikWeb.Components.RealtimeToast
 
   @impl true
+  @doc """
+  Render the live view for a group's wiki page, including version navigation, collaboration/edit controls, the markdown editor component, and a backlinks list.
+  
+  The template:
+  - Shows a version link and collaborative presence/status when editing.
+  - Conditionally displays an edit button for users with update permission.
+  - Embeds the markdown form component for viewing or editing the page.
+  - Renders a "Linked from" section listing backlinks or a fallback message when none exist.
+  
+  The function expects standard LiveView assigns (page, current_user, ctx, live_action, current_path, backlinks, flash, socket).
+  """
+  @spec render(map()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
     <% editable = @live_action == :edit and connected?(@socket) %>
@@ -126,6 +138,13 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   @impl true
+  @doc """
+  Initializes LiveView state for displaying a group wiki page.
+  
+  Fetches the page identified by `page_slug` within the current group and sets up socket assigns and PubSub subscriptions. If the page exists, assigns the page, page title, an empty updated fields list, and backlinks; subscribes to page update/destroy topics and backlink updates when the socket is connected. If the page does not exist, creates a new page using `page_slug` as the title and navigates to the page view or its editor depending on the current user's update permission.
+  """
+  @spec mount(%{"page_slug" => String.t()}, map(), Phoenix.LiveView.Socket.t()) ::
+          {:ok, Phoenix.LiveView.Socket.t()}
   def mount(%{"page_slug" => page_slug}, _session, socket) do
     current_group = socket.assigns.ctx.current_group
     current_user = socket.assigns.current_user
@@ -187,6 +206,21 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   @impl true
+  @doc """
+  Handle a page "update" broadcast by reloading the page and updating live assigns.
+  
+  When the broadcast indicates changed attributes, reloads the page by slug, derives the list of changed fields, and if non-empty:
+  - schedules clearing of the `:updated_fields` assign after 2 seconds,
+  - assigns the reloaded `:page`, `:page_title`, `:updated_fields`, and refreshed `:backlinks`,
+  - enqueues an update toast and conditionally pushes a saved version event.
+  
+  If no attributes changed, no state is modified.
+  
+  ## Returns
+  
+  A `{:noreply, socket}` tuple with the updated socket when changes were applied, or the original socket when there are no changes.
+  """
+  @spec handle_info(any(), Phoenix.LiveView.Socket.t()) :: {:noreply, Phoenix.LiveView.Socket.t()}
   def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
     updated_page = reload_page!(payload.data.slug, socket)
     updated_fields = Map.keys(payload.changeset.attributes)
@@ -217,6 +251,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   @impl true
+  @doc """
+  Enqueues a deletion toast for the destroyed page and navigates back to the group's wiki index.
+  """
+  @spec handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: any()}, Phoenix.LiveView.Socket.t()) :: {:noreply, Phoenix.LiveView.Socket.t()}
   def handle_info(%Phoenix.Socket.Broadcast{event: "destroy", payload: payload}, socket) do
     socket =
       socket
@@ -227,6 +265,11 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   @impl true
+  @doc """
+  Reloads backlinks for the current page and updates the socket's `:backlinks` assign.
+  """
+  @spec handle_info(:backlinks_updated, Phoenix.LiveView.Socket.t()) ::
+          {:noreply, Phoenix.LiveView.Socket.t()}
   def handle_info(:backlinks_updated, socket) do
     {:noreply, assign(socket, :backlinks, load_backlinks(socket.assigns.page))}
   end

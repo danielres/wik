@@ -55,8 +55,16 @@ defmodule Wik.Wiki.Backlink.Utils do
     _ -> nil
   end
 
+  
+  
   @doc """
-  Rebuild backlinks for a page when its text changes. Runs inside the page action transaction.
+  Rebuild all backlinks for a page based on its current text.
+  
+  Parses the page's content to determine backlink target slugs within the page's group, updates stored Backlink records to match those targets, and broadcasts any resulting updates.
+  
+  @returns
+    - `:ok` on success.
+    - `{:error, reason}` if the page's group slug cannot be resolved or another error occurs.
   """
   @spec rebuild_for_page(Page.t(), Ash.Changeset.t()) :: :ok | {:error, term()}
   def rebuild_for_page(%Page{} = page, _changeset) do
@@ -99,8 +107,14 @@ defmodule Wik.Wiki.Backlink.Utils do
     :ok
   end
 
+  
+  
   @doc """
-  When a new page is created, reconcile any backlinks that pointed at its slug.
+  Update backlinks that referenced the page's slug so they point to the newly created page.
+  
+  This sets `target_page_id` on any Backlink in the same group whose `target_slug` equals `page.slug` and currently has `target_page_id` nil. If any backlinks are updated, a broadcast for the page's slug and page is sent.
+  
+  @returns `:ok`
   """
   @spec reconcile_new_target(Page.t()) :: :ok
   def reconcile_new_target(%Page{} = page) do
@@ -122,8 +136,12 @@ defmodule Wik.Wiki.Backlink.Utils do
     :ok
   end
 
+  
+  
   @doc """
-  List backlinks pointing to a page (by id or slug), scoped to group.
+  Return backlinks that target the given page within its group.
+  
+  Matches backlinks where target_page_id equals the page's id or target_slug equals the page's canonical slug. Each returned Backlink has `:source_page` preloaded and the list is ordered by `updated_at` descending.
   """
   @spec list_for_page(Page.t()) :: [Backlink.t()]
   def list_for_page(%Page{} = page) do
@@ -136,8 +154,12 @@ defmodule Wik.Wiki.Backlink.Utils do
     |> Ash.read!(authorize?: false)
   end
 
+  
+  
   @doc """
-  Delete backlinks where the page is source or target.
+  Deletes all backlinks in the page's group where the page is the source or the target.
+  
+  This removes matching Backlink records and returns `:ok`.
   """
   @spec delete_for_page(Page.t()) :: :ok
   def delete_for_page(%Page{} = page) do

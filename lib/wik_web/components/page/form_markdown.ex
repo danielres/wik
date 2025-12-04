@@ -83,7 +83,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
       else
         AshPhoenix.Form.for_create(Wik.Wiki.Page, :create,
           as: "page",
-          actor: socket.assigns.current_user,
+          actor: socket.assigns.actor,
           context: %{shared: %{current_group_id: group.id}}
         )
       end

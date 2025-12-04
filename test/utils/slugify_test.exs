@@ -3,7 +3,7 @@ defmodule Utils.SlugifyTest do
 
   alias Utils.Slugify
 
-  describe "slugify/1" do
+  describe "generate/1" do
     test "converts basic ASCII text to slug" do
       assert Slugify.generate("Hello World") == "hello-world"
       assert Slugify.generate("The Quick Brown Fox") == "the-quick-brown-fox"

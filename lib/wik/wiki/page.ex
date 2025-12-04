@@ -26,6 +26,8 @@ defmodule Wik.Wiki.Page do
     def to_string(page), do: page.title
   end
 
+  require Logger
+
   postgres do
     table "pages"
     repo Wik.Repo
@@ -53,13 +55,21 @@ defmodule Wik.Wiki.Page do
       require_atomic? false
 
       change fn changeset, _ctx ->
-        changeset
-        |> Ash.Changeset.after_action(fn changeset, page ->
-          if Ash.Changeset.changing_attribute?(changeset, :text) do
-            Wik.Wiki.Backlink.Utils.rebuild_for_page(page, changeset)
-          end
+        text_changed? = Ash.Changeset.changing_attribute?(changeset, :text)
 
-          {:ok, page}
+        changeset
+        |> Ash.Changeset.after_transaction(fn _changeset, result ->
+          case result do
+            {:ok, page} ->
+              if text_changed? do
+                safe_backlink(fn -> Wik.Wiki.Backlink.Utils.rebuild_for_page(page, _changeset) end, "rebuild", page)
+              end
+
+              {:ok, page}
+
+            other ->
+              other
+          end
         end)
       end
     end
@@ -130,14 +140,22 @@ defmodule Wik.Wiki.Page do
       end
 
       change fn changeset, _ctx ->
-        changeset
-        |> Ash.Changeset.after_action(fn changeset, page ->
-          if Ash.Changeset.changing_attribute?(changeset, :text) do
-            Wik.Wiki.Backlink.Utils.rebuild_for_page(page, changeset)
-          end
+        text_changed? = Ash.Changeset.changing_attribute?(changeset, :text)
 
-          Wik.Wiki.Backlink.Utils.reconcile_new_target(page)
-          {:ok, page}
+        changeset
+        |> Ash.Changeset.after_transaction(fn _changeset, result ->
+          case result do
+            {:ok, page} ->
+              if text_changed? do
+                safe_backlink(fn -> Wik.Wiki.Backlink.Utils.rebuild_for_page(page, _changeset) end, "rebuild", page)
+              end
+
+              safe_backlink(fn -> Wik.Wiki.Backlink.Utils.reconcile_new_target(page) end, "reconcile", page)
+              {:ok, page}
+
+            other ->
+              other
+          end
         end)
       end
     end
@@ -147,9 +165,15 @@ defmodule Wik.Wiki.Page do
 
       change fn changeset, _ctx ->
         changeset
-        |> Ash.Changeset.after_action(fn changeset, page ->
-          Wik.Wiki.Backlink.Utils.delete_for_page(page)
-          {:ok, page}
+        |> Ash.Changeset.after_transaction(fn _changeset, result ->
+          case result do
+            {:ok, page} ->
+              safe_backlink(fn -> Wik.Wiki.Backlink.Utils.delete_for_page(page) end, "delete", page)
+              {:ok, page}
+
+            other ->
+              other
+          end
         end)
       end
     end
@@ -255,5 +279,16 @@ defmodule Wik.Wiki.Page do
     else
       changeset
     end
+  end
+
+  defp safe_backlink(fun, action, page) do
+    fun.()
+  rescue
+    exception ->
+      Logger.warning(
+        "Backlink #{action} failed for page #{inspect(page.id)}: #{Exception.message(exception)}"
+      )
+
+      {:ok, page}
   end
 end

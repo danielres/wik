@@ -28,7 +28,7 @@ defmodule Wik.Wiki.Backlink.Utils do
 
     (wikilinks ++ relative_links)
     |> Enum.map(&normalize_slug/1)
-    |> Enum.map(&canonicalize_slug/1)
+    |> Enum.map(&Page.Utils.canonical_slug/1)
     |> Enum.reject(&is_nil/1)
     |> MapSet.new()
   end
@@ -54,9 +54,6 @@ defmodule Wik.Wiki.Backlink.Utils do
   rescue
     _ -> nil
   end
-
-  defp canonicalize_slug(nil), do: nil
-  defp canonicalize_slug(slug), do: String.capitalize(slug)
 
   @doc """
   Rebuild backlinks for a page when its text changes. Runs inside the page action transaction.
@@ -130,7 +127,7 @@ defmodule Wik.Wiki.Backlink.Utils do
   """
   @spec list_for_page(Page.t()) :: [Backlink.t()]
   def list_for_page(%Page{} = page) do
-    canonical_slug = canonicalize_slug(page.slug)
+    canonical_slug = Page.Utils.canonical_slug(page.slug)
 
     Backlink
     |> Ash.Query.filter(group_id == ^page.group_id and (target_page_id == ^page.id or target_slug == ^canonical_slug))

@@ -223,7 +223,8 @@ defmodule Wik.Wiki.Page do
 
   def set_slug(changeset) do
     title = Ash.Changeset.get_attribute(changeset, :title)
-    Ash.Changeset.change_attribute(changeset, :slug, title)
+    slug = Wik.Wiki.Page.Utils.canonical_slug(title)
+    Ash.Changeset.change_attribute(changeset, :slug, slug)
   end
 
   def set_header(changeset) do

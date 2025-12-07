@@ -16,66 +16,68 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     <% editable = @live_action == :edit and connected?(@socket) %>
 
     <Layouts.app flash={@flash} ctx={@ctx}>
-      <div class="flex justify-between mb-16">
-        <div class="flex items-center">
-          <.link
-            class="btn btn-sm opacity-70 hover:opacity-100 transition"
-            patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"}
-          >
-            v. {@page.versions_count}
-          </.link>
+      <:sticky_toolbar>
+        <div class="flex justify-between">
+          <div class="flex items-center">
+            <.link
+              class="btn btn-sm opacity-70 hover:opacity-100 transition"
+              patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"}
+            >
+              v. {@page.versions_count}
+            </.link>
+
+            <%= if editable do %>
+              <div class="tooltip tooltip-right">
+                <div class="tooltip-content">
+                  <span
+                    class="text-xs opacity-80"
+                    id={"collab-status-label-#{@page.id}"}
+                  >
+                    Synced
+                  </span>
+                </div>
+                <button class="btn btn-sm btn-ghost bg-transparent">
+                  <span
+                    id={"collab-status-dot-#{@page.id}"}
+                    class="size-2 rounded-full bg-emerald-500"
+                  >
+                  </span>
+                </button>
+              </div>
+            <% end %>
+          </div>
+
+          <%= if Ash.can?({@page, :update}, @current_user) and !editable do %>
+            <WikWeb.Components.ButtonEdit.button
+              link={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/edit?return_to=show"}
+              watch_path={@current_path <> "/edit"}
+              presences={@ctx.presences}
+            />
+          <% end %>
 
           <%= if editable do %>
-            <div class="tooltip tooltip-right">
-              <div class="tooltip-content">
-                <span
-                  class="text-xs opacity-80"
-                  id={"collab-status-label-#{@page.id}"}
-                >
-                  Synced
-                </span>
-              </div>
-              <button class="btn btn-sm btn-ghost bg-transparent">
-                <span
-                  id={"collab-status-dot-#{@page.id}"}
-                  class="size-2 rounded-full bg-emerald-500"
-                >
-                </span>
-              </button>
+            <div class="flex items-center gap-2">
+              <a
+                id={"collab-done-#{@page.id}"}
+                data-done-target
+                class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100 transition "
+                href={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
+              >
+                <i class="hero-arrow-left-micro size-5">Back</i>
+              </a>
+              <.button
+                form={"page-form-#{@page.id}"}
+                phx-disable-with="Saving Version..."
+                variant="primary"
+                data-status-button-save
+                class=""
+              >
+                Save
+              </.button>
             </div>
           <% end %>
         </div>
-
-        <%= if Ash.can?({@page, :update}, @current_user) and !editable do %>
-          <WikWeb.Components.ButtonEdit.button
-            link={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/edit?return_to=show"}
-            watch_path={@current_path <> "/edit"}
-            presences={@ctx.presences}
-          />
-        <% end %>
-
-        <%= if editable do %>
-          <div class="flex items-center gap-2">
-            <a
-              id={"collab-done-#{@page.id}"}
-              data-done-target
-              class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100 transition "
-              href={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
-            >
-              <i class="hero-arrow-left-micro size-5">Back</i>
-            </a>
-            <.button
-              form={"page-form-#{@page.id}"}
-              phx-disable-with="Saving Version..."
-              variant="primary"
-              data-status-button-save
-              class=""
-            >
-              Save
-            </.button>
-          </div>
-        <% end %>
-      </div>
+      </:sticky_toolbar>
 
       <.live_component
         module={WikWeb.Components.Page.FormMarkdown}
@@ -90,6 +92,30 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         return_to={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
         pages_map={@ctx.pages_map}
       />
+
+      <:backlinks>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <i class="hero-link-mini size-4"></i>
+            <span class="uppercase tracking-wide text-xs opacity-70">Backlinks</span>
+          </div>
+
+          <ul class="list-disc list-inside">
+            <%= if Enum.empty?(@backlinks) do %>
+              <li class="text-sm opacity-70">No backlinks yet.</li>
+            <% else %>
+              <li :for={backlink <- @backlinks} class="text-xs">
+                <.link
+                  navigate={~p"/#{@ctx.current_group.slug}/wiki/#{backlink.source_page.slug}"}
+                  class="hover:text-white"
+                >
+                  {backlink.source_page.title || backlink.target_slug}
+                </.link>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </:backlinks>
     </Layouts.app>
     """
   end
@@ -121,7 +147,9 @@ defmodule WikWeb.GroupLive.PageLive.Show do
          socket
          |> assign(:page_title, page.title)
          |> assign(:page, page)
-         |> assign(:updated_fields, [])}
+         |> assign(:updated_fields, [])
+         |> assign(:backlinks, load_backlinks(page))
+         |> maybe_subscribe_backlinks(page)}
 
       {:error, _error} ->
         page =
@@ -172,7 +200,8 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         |> assign(
           page: updated_page,
           page_title: updated_page.title,
-          updated_fields: updated_fields
+          updated_fields: updated_fields,
+          backlinks: load_backlinks(updated_page)
         )
         |> RealtimeToast.put_update_toast(payload)
         |> maybe_push_saved_version(updated_fields, updated_page)
@@ -196,6 +225,11 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     {:noreply, socket}
   end
 
+  @impl true
+  def handle_info(:backlinks_updated, socket) do
+    {:noreply, assign(socket, :backlinks, load_backlinks(socket.assigns.page))}
+  end
+
   defp reload_page!(page_slug, socket) do
     Wik.Wiki.Page
     |> Ash.get!(
@@ -203,6 +237,19 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       actor: socket.assigns.current_user,
       load: [:versions_count]
     )
+  end
+
+  defp load_backlinks(page) do
+    Wik.Wiki.Backlink.Utils.list_for_page(page)
+  end
+
+  defp maybe_subscribe_backlinks(socket, page) do
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Wik.PubSub, "backlinks:slug:#{page.group_id}:#{page.slug}")
+      Phoenix.PubSub.subscribe(Wik.PubSub, "backlinks:page:#{page.group_id}:#{page.id}")
+    end
+
+    socket
   end
 
   defp has_editors?(socket, path) do

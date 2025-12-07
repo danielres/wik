@@ -26,9 +26,15 @@ defmodule Wik.Wiki.Page do
     def to_string(page), do: page.title
   end
 
+  require Logger
+
   postgres do
     table "pages"
     repo Wik.Repo
+
+    references do
+      reference :group, on_delete: :delete
+    end
   end
 
   events do
@@ -51,6 +57,29 @@ defmodule Wik.Wiki.Page do
       accept [:title, :text]
       primary? true
       require_atomic? false
+
+      change fn changeset, _ctx ->
+        text_changed? = Ash.Changeset.changing_attribute?(changeset, :text)
+
+        changeset
+        |> Ash.Changeset.after_transaction(fn _changeset, result ->
+          case result do
+            {:ok, page} ->
+              if text_changed? do
+                safe_backlink(
+                  fn -> Wik.Wiki.Backlink.Utils.rebuild_for_page(page, _changeset) end,
+                  "rebuild",
+                  page
+                )
+              end
+
+              {:ok, page}
+
+            other ->
+              other
+          end
+        end)
+      end
     end
 
     read :read do
@@ -117,10 +146,58 @@ defmodule Wik.Wiki.Page do
           Ash.Changeset.add_error(changeset, "No current group set")
         end
       end
+
+      change fn changeset, _ctx ->
+        text_changed? = Ash.Changeset.changing_attribute?(changeset, :text)
+
+        changeset
+        |> Ash.Changeset.after_transaction(fn _changeset, result ->
+          case result do
+            {:ok, page} ->
+              if text_changed? do
+                safe_backlink(
+                  fn -> Wik.Wiki.Backlink.Utils.rebuild_for_page(page, _changeset) end,
+                  "rebuild",
+                  page
+                )
+              end
+
+              safe_backlink(
+                fn -> Wik.Wiki.Backlink.Utils.reconcile_new_target(page) end,
+                "reconcile",
+                page
+              )
+
+              {:ok, page}
+
+            other ->
+              other
+          end
+        end)
+      end
     end
 
     destroy :destroy do
       primary? true
+
+      change fn changeset, _ctx ->
+        changeset
+        |> Ash.Changeset.after_transaction(fn _changeset, result ->
+          case result do
+            {:ok, page} ->
+              safe_backlink(
+                fn -> Wik.Wiki.Backlink.Utils.delete_for_page(page) end,
+                "delete",
+                page
+              )
+
+              {:ok, page}
+
+            other ->
+              other
+          end
+        end)
+      end
     end
   end
 
@@ -166,10 +243,18 @@ defmodule Wik.Wiki.Page do
       source_attribute :id
       filter expr(resource == Wik.Wiki.Page)
     end
+
+    has_many :backlinks, Wik.Wiki.Backlink do
+      destination_attribute :target_page_id
+    end
   end
 
   aggregates do
     count :versions_count, :versions do
+      public? true
+    end
+
+    count :backlinks_count, :backlinks do
       public? true
     end
   end
@@ -192,7 +277,8 @@ defmodule Wik.Wiki.Page do
 
   def set_slug(changeset) do
     title = Ash.Changeset.get_attribute(changeset, :title)
-    Ash.Changeset.change_attribute(changeset, :slug, title)
+    slug = Wik.Wiki.Page.Utils.canonical_slug(title)
+    Ash.Changeset.change_attribute(changeset, :slug, slug)
   end
 
   def set_header(changeset) do
@@ -223,5 +309,16 @@ defmodule Wik.Wiki.Page do
     else
       changeset
     end
+  end
+
+  defp safe_backlink(fun, action, page) do
+    fun.()
+  rescue
+    exception ->
+      Logger.warning(
+        "Backlink #{action} failed for page #{inspect(page.id)}: #{Exception.message(exception)}"
+      )
+
+      {:ok, page}
   end
 end

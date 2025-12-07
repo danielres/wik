@@ -5,22 +5,16 @@ export class StatusIndicator {
 	private current: string;
 	private ready = false;
 	private timer: number | null = null;
-	private statusDataTargetEl: HTMLElement;
 
 	constructor(
 		dot: HTMLElement | null,
 		label: HTMLElement | null,
 		initial: string,
-		statusDataTargetEl: HTMLElement | null,
 	) {
 		this.dot = dot;
 		this.label = label;
 		this.lastSaved = initial;
 		this.current = initial;
-		if (!statusDataTargetEl) {
-			throw new Error("StatusIndicator requires a statusDataTargetEl");
-		}
-		this.statusDataTargetEl = statusDataTargetEl;
 	}
 
 	setReady() {
@@ -67,6 +61,7 @@ export class StatusIndicator {
 		this.dot.classList.toggle("bg-rose-500", dirty);
 		this.label.textContent = dirty ? "Unsaved changes" : "Synced";
 
-		this.statusDataTargetEl.dataset.editorSynced = dirty ? "false" : "true";
+		const value = dirty ? "false" : "true";
+		document.body.dataset.editorSynced = value;
 	}
 }

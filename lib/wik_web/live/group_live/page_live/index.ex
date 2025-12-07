@@ -23,10 +23,10 @@ defmodule WikWeb.GroupLive.PageLive.Index do
           id={id}
           class="card rounded bg-base-200/50 space-y-0 px-4 py-2 has-[a.title:hover]:bg-base-300/60 transition"
         >
-          <div class="grid grid-cols-[3fr_2fr_1fr_auto_1fr] gap-x-8 items-baseline">
+          <div class="grid grid-cols-[4fr_2fr_1fr_1fr_1fr_auto] gap-x-8 items-baseline">
             <.link
               navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, page)}
-              class="title hover:text-white text-sm text-balance"
+              class="title hover:text-white text-sm text-balance break-all"
             >
               {page.title}
             </.link>
@@ -40,19 +40,17 @@ defmodule WikWeb.GroupLive.PageLive.Index do
               </.link>
             </div>
 
-            <div class="flex items-baseline gap-2">
-              <i class="hero-clock-solid size-4 self-center"></i>
+            <div class="flex items-center gap-2">
+              <i class="hero-clock-micro size-3 opacity-70"></i>
               <WikWeb.Components.Time.pretty
                 datetime={page.updated_at}
-                class="opacity-80 hover:opacity-100 transition text-xs whitespace-nowrap"
+                class="text-xs whitespace-nowrap"
               />
             </div>
 
-            <div class="text-xs">
-              {(page.text || "")
-              |> String.split("\n")
-              |> Enum.filter(fn str -> str != "" end)
-              |> length()} lines
+            <div class="text-xs text-right tabular-nums">
+              <i class="hero-link-solid size-3 opacity-70"></i>
+              <span>{page.backlinks_count || 0}</span>
             </div>
 
             <.link
@@ -100,13 +98,15 @@ defmodule WikWeb.GroupLive.PageLive.Index do
     current_group_id = socket.assigns.ctx.current_group.id
 
     Wik.Wiki.Page
+    |> Ash.Query.select([:id, :slug, :title, :updated_at])
     |> Ash.Query.filter(group_id == ^current_group_id)
     |> Ash.Query.sort(updated_at: :desc)
-    |> Ash.read!(actor: socket.assigns[:current_user], load: [:versions_count])
+    |> Ash.read!(actor: socket.assigns[:current_user], load: [:versions_count, :backlinks_count])
   end
 
   defp reload_page!(socket, id) do
-    Wik.Wiki.Page |> Ash.get!(id, actor: socket.assigns.current_user, load: [:versions_count])
+    Wik.Wiki.Page
+    |> Ash.get!(id, actor: socket.assigns.current_user, load: [:versions_count, :backlinks_count])
   end
 
   @impl true

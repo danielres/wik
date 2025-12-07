@@ -22,8 +22,14 @@ defmodule WikWeb.Components.OnlineUsers do
           <sup class="opacity-50">{length(metas)}</sup>
         </div>
         <ul class="pl-2">
-          <li :for={meta <- metas}>
-            <.link navigate={meta.path} class="opacity-75 hover:opacity-100 transition">
+          <li
+            :for={meta <- metas}
+            class="overflow-hidden text-ellipsis whitespace-nowrap"
+          >
+            <.link
+              navigate={meta.path}
+              class="opacity-75 hover:opacity-100 transition "
+            >
               {meta.path |> pretty_path()}
             </.link>
           </li>

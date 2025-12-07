@@ -34,6 +34,8 @@ defmodule WikWeb.Layouts do
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
   slot :inner_block, required: true
+  slot :backlinks, required: false
+  slot :sticky_toolbar, required: false
   slot :aside
 
   def app(assigns) do
@@ -114,21 +116,36 @@ defmodule WikWeb.Layouts do
       <% end %>
     </header>
 
+    <WikWeb.Components.Layout.StickyToolbar.render inner_block={@sticky_toolbar} />
+
     <main class="layout-main">
       {render_slot(@inner_block)}
 
       <footer
         :if={@ctx[:page]}
-        class="mt-8 border-t-4 border-base-content/10 pt-8 flex justify-between"
+        class={[
+          "mt-20 grid md:grid-cols-3 gap-8",
+          "md:[&>*]:border-r-2 [&>:last-child]:border-r-0 [&>*]:border-base-content/10"
+        ]}
       >
-        <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <i class="hero-user-mini size-4"></i>
+            <span class="uppercase tracking-wide text-xs opacity-70">Presences</span>
+          </div>
 
-        <div class="">
-          <dl
-            :if={Mix.env() == :dev}
-            class="text-xs grid grid-cols-[auto_auto] gap-x-2 opacity-40"
-          >
-            <dt>Page title:</dt>
+          <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
+        </div>
+
+        {render_slot(@backlinks)}
+
+        <div :if={Mix.env() == :dev} class="space-y-2">
+          <div class="flex items-center gap-2">
+            <i class="hero-cpu-chip size-4"></i>
+            <span class="uppercase tracking-wide text-xs opacity-70">Dev</span>
+          </div>
+          <dl class="text-xs flex gap-x-2 opacity-40">
+            <dt class="font-semibold">Page title:</dt>
             <dd>{@ctx.page.title}</dd>
           </dl>
         </div>

@@ -97,4 +97,3 @@ defmodule Utils.SlugifyTest do
     end
   end
 end
-

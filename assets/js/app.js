@@ -26,6 +26,7 @@ import { hooks as colocatedHooks } from "phoenix-colocated/wik";
 import topbar from "../vendor/topbar";
 import Toast from "../../deps/toast/assets/js/toast.js";
 import MilkdownEditor from "./hooks/milkdown.js";
+import { LayoutStickyToolbar } from "./hooks/layout-sticky-toolbar.js";
 
 const csrfToken = document
 	.querySelector("meta[name='csrf-token']")
@@ -33,7 +34,7 @@ const csrfToken = document
 const liveSocket = new LiveSocket("/live", Socket, {
 	longPollFallbackMs: 2500,
 	params: { _csrf_token: csrfToken },
-	hooks: { ...colocatedHooks, Toast, MilkdownEditor },
+	hooks: { ...colocatedHooks, Toast, MilkdownEditor, LayoutStickyToolbar },
 });
 
 // Show progress bar on live navigation and form submits

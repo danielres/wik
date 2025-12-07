@@ -24,7 +24,7 @@ defmodule WikWeb.Components.OnlineUsers do
         <ul class="pl-2">
           <li
             :for={meta <- metas}
-            class="overflow-hidden text-ellipsis text-nowrap"
+            class="overflow-hidden text-ellipsis whitespace-nowrap"
           >
             <.link
               navigate={meta.path}

@@ -76,19 +76,23 @@ defmodule Wik.Wiki.Backlink.Utils do
       |> Ash.Query.filter(source_page_id == ^page.id and group_id == ^page.group_id)
       |> Ash.read(authorize?: false)
 
-    Enum.each(existing, fn backlink -> Ash.destroy!(backlink, authorize?: false) end)
+    existing_slugs = MapSet.new(existing, & &1.target_slug)
+    to_delete = Enum.filter(existing, fn bl -> bl.target_slug not in slugs end)
+    to_create = MapSet.difference(slugs, existing_slugs)
+
+    Enum.each(to_delete, fn backlink -> Ash.destroy!(backlink, authorize?: false) end)
 
     target_pages =
-      if MapSet.size(slugs) > 0 do
+      if MapSet.size(to_create) > 0 do
         Page
-        |> Ash.Query.filter(group_id == ^page.group_id and slug in ^MapSet.to_list(slugs))
+        |> Ash.Query.filter(group_id == ^page.group_id and slug in ^MapSet.to_list(to_create))
         |> Ash.read!(authorize?: false)
         |> Map.new(fn p -> {p.slug, p} end)
       else
         %{}
       end
 
-    Enum.each(slugs, fn slug ->
+    Enum.each(to_create, fn slug ->
       target_page_id = target_pages[slug] && target_pages[slug].id
 
       Backlink

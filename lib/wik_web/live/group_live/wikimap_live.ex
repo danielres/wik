@@ -27,15 +27,16 @@ defmodule WikWeb.GroupLive.WikimapLive do
           <h3 class="text-xs uppercase tracking-wide opacity-70 mb-2">
             <i class="hero-exclamation-triangle-micro text-yellow-400"></i> Orphan pages
           </h3>
-          <div class="flex flex-wrap gap-2 text-sm">
-            <.link
-              :for={slug <- @orphan_pages}
-              navigate={"/#{@ctx.current_group.slug}/wiki/#{slug}"}
-              class="px-2 py-1 rounded bg-base-300/60"
-            >
-              {slug}
-            </.link>
-          </div>
+          <ul class="flex flex-wrap gap-2 text-sm">
+            <li :for={slug <- @orphan_pages}>
+              <.link
+                navigate={"/#{@ctx.current_group.slug}/wiki/#{slug}"}
+                class="px-2 py-1 rounded bg-base-300/60"
+              >
+                {slug}
+              </.link>
+            </li>
+          </ul>
         </div>
       </div>
     </Layouts.app>

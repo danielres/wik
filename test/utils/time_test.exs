@@ -94,4 +94,3 @@ defmodule Utils.TimeTest do
     end
   end
 end
-

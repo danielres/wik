@@ -36,10 +36,14 @@ defmodule Wik.Wiki.Backlink.Utils do
   defp extract_slug_from_path(path, group_slug) do
     # Only accept relative links within the same group, in the form /<group_slug>/wiki/<slug>
     cond do
-      String.contains?(path, "..") -> []
+      String.contains?(path, "..") ->
+        []
+
       String.starts_with?(path, "/#{group_slug}/wiki/") ->
         [path |> String.trim_trailing("/") |> String.split("/", parts: 4) |> List.last()]
-      true -> []
+
+      true ->
+        []
     end
   end
 
@@ -88,8 +92,14 @@ defmodule Wik.Wiki.Backlink.Utils do
       target_page_id = target_pages[slug] && target_pages[slug].id
 
       Backlink
-      |> Ash.Changeset.for_create(:create,
-        %{group_id: page.group_id, source_page_id: page.id, target_slug: slug, target_page_id: target_page_id},
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          group_id: page.group_id,
+          source_page_id: page.id,
+          target_slug: slug,
+          target_page_id: target_page_id
+        },
         authorize?: false
       )
       |> Ash.create!(authorize?: false)
@@ -106,7 +116,9 @@ defmodule Wik.Wiki.Backlink.Utils do
   def reconcile_new_target(%Page{} = page) do
     {:ok, backlinks} =
       Backlink
-      |> Ash.Query.filter(group_id == ^page.group_id and target_slug == ^page.slug and is_nil(target_page_id))
+      |> Ash.Query.filter(
+        group_id == ^page.group_id and target_slug == ^page.slug and is_nil(target_page_id)
+      )
       |> Ash.read(authorize?: false)
 
     Enum.each(backlinks, fn backlink ->
@@ -130,7 +142,10 @@ defmodule Wik.Wiki.Backlink.Utils do
     canonical_slug = Page.Utils.canonical_slug(page.slug)
 
     Backlink
-    |> Ash.Query.filter(group_id == ^page.group_id and (target_page_id == ^page.id or target_slug == ^canonical_slug))
+    |> Ash.Query.filter(
+      group_id == ^page.group_id and
+        (target_page_id == ^page.id or target_slug == ^canonical_slug)
+    )
     |> Ash.Query.load([:source_page])
     |> Ash.Query.sort(updated_at: :desc)
     |> Ash.read!(authorize?: false)
@@ -163,11 +178,19 @@ defmodule Wik.Wiki.Backlink.Utils do
 
   defp broadcast_updates(group_id, slugs, target_pages) do
     Enum.each(slugs, fn slug ->
-      Phoenix.PubSub.broadcast(Wik.PubSub, "backlinks:slug:#{group_id}:#{slug}", :backlinks_updated)
+      Phoenix.PubSub.broadcast(
+        Wik.PubSub,
+        "backlinks:slug:#{group_id}:#{slug}",
+        :backlinks_updated
+      )
     end)
 
     Enum.each(target_pages, fn page ->
-      Phoenix.PubSub.broadcast(Wik.PubSub, "backlinks:page:#{group_id}:#{page.id}", :backlinks_updated)
+      Phoenix.PubSub.broadcast(
+        Wik.PubSub,
+        "backlinks:page:#{group_id}:#{page.id}",
+        :backlinks_updated
+      )
     end)
   end
 end

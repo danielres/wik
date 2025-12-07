@@ -62,7 +62,11 @@ defmodule Wik.Wiki.Page do
           case result do
             {:ok, page} ->
               if text_changed? do
-                safe_backlink(fn -> Wik.Wiki.Backlink.Utils.rebuild_for_page(page, _changeset) end, "rebuild", page)
+                safe_backlink(
+                  fn -> Wik.Wiki.Backlink.Utils.rebuild_for_page(page, _changeset) end,
+                  "rebuild",
+                  page
+                )
               end
 
               {:ok, page}
@@ -147,10 +151,19 @@ defmodule Wik.Wiki.Page do
           case result do
             {:ok, page} ->
               if text_changed? do
-                safe_backlink(fn -> Wik.Wiki.Backlink.Utils.rebuild_for_page(page, _changeset) end, "rebuild", page)
+                safe_backlink(
+                  fn -> Wik.Wiki.Backlink.Utils.rebuild_for_page(page, _changeset) end,
+                  "rebuild",
+                  page
+                )
               end
 
-              safe_backlink(fn -> Wik.Wiki.Backlink.Utils.reconcile_new_target(page) end, "reconcile", page)
+              safe_backlink(
+                fn -> Wik.Wiki.Backlink.Utils.reconcile_new_target(page) end,
+                "reconcile",
+                page
+              )
+
               {:ok, page}
 
             other ->
@@ -168,7 +181,12 @@ defmodule Wik.Wiki.Page do
         |> Ash.Changeset.after_transaction(fn _changeset, result ->
           case result do
             {:ok, page} ->
-              safe_backlink(fn -> Wik.Wiki.Backlink.Utils.delete_for_page(page) end, "delete", page)
+              safe_backlink(
+                fn -> Wik.Wiki.Backlink.Utils.delete_for_page(page) end,
+                "delete",
+                page
+              )
+
               {:ok, page}
 
             other ->

@@ -31,6 +31,24 @@ defmodule Wik.Wiki.Backlink do
     end
   end
 
+  policies do
+    policy action_type(:create) do
+      authorize_if relates_to_actor_via([:group, :users])
+    end
+
+    policy action_type(:read) do
+      authorize_if relates_to_actor_via([:group, :users])
+    end
+
+    policy action_type(:update) do
+      authorize_if relates_to_actor_via([:group, :users])
+    end
+
+    policy action_type(:destroy) do
+      authorize_if relates_to_actor_via([:group, :users])
+    end
+  end
+
   attributes do
     uuid_v7_primary_key :id
     attribute :target_slug, :string, allow_nil?: false, public?: true
@@ -56,23 +74,5 @@ defmodule Wik.Wiki.Backlink do
 
   identities do
     identity :unique_source_target, [:group_id, :source_page_id, :target_slug]
-  end
-
-  policies do
-    policy action_type(:create) do
-      authorize_if relates_to_actor_via([:group, :users])
-    end
-
-    policy action_type(:read) do
-      authorize_if relates_to_actor_via([:group, :users])
-    end
-
-    policy action_type(:update) do
-      authorize_if relates_to_actor_via([:group, :users])
-    end
-
-    policy action_type(:destroy) do
-      authorize_if relates_to_actor_via([:group, :users])
-    end
   end
 end

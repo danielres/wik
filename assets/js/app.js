@@ -27,6 +27,7 @@ import topbar from "../vendor/topbar";
 import Toast from "../../deps/toast/assets/js/toast.js";
 import MilkdownEditor from "./hooks/milkdown.js";
 import { LayoutStickyToolbar } from "./hooks/layout-sticky-toolbar.js";
+import Wikimap from "./hooks/wikimap.js";
 
 const csrfToken = document
 	.querySelector("meta[name='csrf-token']")
@@ -34,7 +35,13 @@ const csrfToken = document
 const liveSocket = new LiveSocket("/live", Socket, {
 	longPollFallbackMs: 2500,
 	params: { _csrf_token: csrfToken },
-	hooks: { ...colocatedHooks, Toast, MilkdownEditor, LayoutStickyToolbar },
+	hooks: {
+		...colocatedHooks,
+		Toast,
+		MilkdownEditor,
+		LayoutStickyToolbar,
+		Wikimap,
+	},
 });
 
 // Show progress bar on live navigation and form submits

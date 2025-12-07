@@ -176,7 +176,7 @@ defmodule WikWeb.Layouts do
       "font-semibold transition hover:opacity-100"
 
     active_class =
-      "#{base_class} pointer-events-none "
+      "#{base_class}"
 
     inactive_class = "#{base_class} opacity-50"
 

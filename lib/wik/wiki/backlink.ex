@@ -15,6 +15,12 @@ defmodule Wik.Wiki.Backlink do
   postgres do
     table "backlinks"
     repo Wik.Repo
+
+    references do
+      reference :group, on_delete: :delete
+      reference :source_page, on_delete: :delete
+      reference :target_page, on_delete: :delete
+    end
   end
 
   actions do

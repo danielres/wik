@@ -31,6 +31,10 @@ defmodule Wik.Wiki.Page do
   postgres do
     table "pages"
     repo Wik.Repo
+
+    references do
+      reference :group, on_delete: :delete
+    end
   end
 
   events do

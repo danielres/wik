@@ -67,6 +67,8 @@ export class StatusIndicator {
 		this.dot.classList.toggle("bg-rose-500", dirty);
 		this.label.textContent = dirty ? "Unsaved changes" : "Synced";
 
-		this.statusDataTargetEl.dataset.editorSynced = dirty ? "false" : "true";
+		const value = dirty ? "false" : "true";
+		// this.statusDataTargetEl.dataset.editorSynced = value;
+		document.body.dataset.editorSynced = value;
 	}
 }

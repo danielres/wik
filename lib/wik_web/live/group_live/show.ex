@@ -73,15 +73,25 @@ defmodule WikWeb.GroupLive.Show do
             <h2 class={heading_class}>
               Pages
             </h2>
-            <.link
-              class="indicator btn btn-xs btn-neutral opacity-60 hover:opacity-100 transition"
-              navigate={~p"/#{@ctx.current_group.slug}/wiki"}
-            >
-              All pages
-              <span class="indicator-item badge badge-neutral border text-base-content/70 rounded-full text-xs p-0 aspect-square">
-                {@group.pages_count}
-              </span>
-            </.link>
+
+            <div>
+              <.link
+                class="indicator btn btn-xs btn-neutral opacity-60 hover:opacity-100 transition"
+                navigate={~p"/#{@ctx.current_group.slug}/map"}
+              >
+                Map
+              </.link>
+
+              <.link
+                class="indicator btn btn-xs btn-neutral opacity-60 hover:opacity-100 transition"
+                navigate={~p"/#{@ctx.current_group.slug}/wiki"}
+              >
+                All pages
+                <span class="indicator-item badge badge-neutral border text-base-content/70 rounded-full text-xs p-0 aspect-square">
+                  {@group.pages_count}
+                </span>
+              </.link>
+            </div>
           </div>
 
           <h3 class={[heading_class, "text-sm opacity-60"]}>

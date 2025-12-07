@@ -52,7 +52,9 @@ const Wikimap = {
 		cancelAnimationFrame(this.rafId);
 		this.canvas?.removeEventListener("mousemove", this._hoverHandler);
 		this.canvas?.removeEventListener("click", this._clickHandler);
-		this.canvas?.removeEventListener("wheel", this._wheelHandler);
+		this.canvas?.removeEventListener("mousedown", this._dragStartHandler);
+		window.removeEventListener("mousemove", this._dragMoveHandler);
+		window.removeEventListener("mouseup", this._dragEndHandler);
 		window.removeEventListener("resize", this.resizeHandler);
 	},
 	setupCanvas() {
@@ -76,12 +78,14 @@ const Wikimap = {
 		this.offset = { x: 0, y: 0 };
 		this._clickHandler = (e) => this.handleClick(e);
 		this._hoverHandler = (e) => this.handleHover(e);
-		this._wheelHandler = (e) => this.handleWheel(e);
+		this._dragStartHandler = (e) => this.handleDragStart(e);
+		this._dragMoveHandler = (e) => this.handleDragMove(e);
+		this._dragEndHandler = () => this.handleDragEnd();
 		this.canvas.addEventListener("click", this._clickHandler);
 		this.canvas.addEventListener("mousemove", this._hoverHandler);
-		this.canvas.addEventListener("wheel", this._wheelHandler, {
-			passive: false,
-		});
+		this.canvas.addEventListener("mousedown", this._dragStartHandler);
+		window.addEventListener("mousemove", this._dragMoveHandler);
+		window.addEventListener("mouseup", this._dragEndHandler);
 	},
 	initPositions() {
 		this.pos = {};
@@ -197,6 +201,23 @@ const Wikimap = {
 		const over = !!this.pickNode(x, y);
 		this.canvas.style.cursor = over ? "pointer" : "default";
 	},
+	handleDragStart(event) {
+		this.dragging = true;
+		this.dragStart = { x: event.clientX, y: event.clientY };
+		this.startOffset = { ...this.offset };
+		this.canvas.style.cursor = "grabbing";
+	},
+	handleDragMove(event) {
+		if (!this.dragging) return;
+		const dx = event.clientX - this.dragStart.x;
+		const dy = event.clientY - this.dragStart.y;
+		this.offset.x = this.startOffset.x + dx;
+		this.offset.y = this.startOffset.y + dy;
+	},
+	handleDragEnd() {
+		this.dragging = false;
+		this.canvas.style.cursor = "default";
+	},
 	pickNode(x, y) {
 		const { hit, label } = CONFIG;
 		const hitRadius2 = hit.radius * hit.radius;
@@ -216,17 +237,6 @@ const Wikimap = {
 			if (x >= x0 && x <= x1 && y >= y0 && y <= y1) return n;
 		}
 		return null;
-	},
-	handleWheel(event) {
-		event.preventDefault();
-		const unit =
-			event.deltaMode === 0
-				? 1
-				: event.deltaMode === 1
-					? 16
-					: this.height || 200;
-		this.offset.x -= event.deltaX * unit;
-		this.offset.y -= event.deltaY * unit;
 	},
 	draw() {
 		const { edge, node, label } = CONFIG;

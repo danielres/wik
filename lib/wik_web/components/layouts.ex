@@ -35,6 +35,7 @@ defmodule WikWeb.Layouts do
 
   slot :inner_block, required: true
   slot :backlinks, required: false
+  slot :sticky_toolbar, required: false
   slot :aside
 
   def app(assigns) do
@@ -114,6 +115,8 @@ defmodule WikWeb.Layouts do
         </div>
       <% end %>
     </header>
+
+    <WikWeb.Components.Layout.StickyToolbar.render inner_block={@sticky_toolbar} />
 
     <main class="layout-main">
       {render_slot(@inner_block)}

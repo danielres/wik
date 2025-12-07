@@ -1,0 +1,26 @@
+.layout-header,
+.layout-main,
+.layout-sticky-toolbar-inner {
+	@apply px-4 sm:px-6 lg:px-8;
+}
+
+.layout-sticky-toolbar {
+	@apply py-4 sticky top-0 z-20;
+	@apply bg-base-300/0 transition;
+
+	.layout-sticky-toolbar-inner {
+		@apply max-w-4xl mx-auto;
+	}
+}
+.sticky-active-true {
+	@apply bg-base-300/100 shadow-lg;
+}
+
+.layout-header {
+	@apply bg-base-300 pb-4 mt-0;
+	@apply space-y-2;
+}
+
+.layout-main {
+	@apply py-4 max-w-4xl mx-auto mt-16;
+}

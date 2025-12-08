@@ -24,11 +24,14 @@
     "baseUrl": ".",
     "target": "ES2015",
     "lib": ["ES2015", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "types": ["node"],
     "paths": {
       "*": ["../deps/*"]
     },
     "allowJs": true,
     "noEmit": true
-  },
-  "include": ["js/**/*"]
+	},
+	"include": ["js/**/*"]
 }

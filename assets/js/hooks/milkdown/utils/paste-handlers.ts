@@ -19,6 +19,8 @@ export const makePasteNormalizers = (rootPath: string): PasteNormalizers => {
 
 	const transformHtml = (html: string) => {
 		if (!html) return html;
+		// Early bailout: no links to process
+		if (!html.includes('<a') && !html.includes('href=')) return html;
 		const parser = new DOMParser();
 		const doc = parser.parseFromString(html, "text/html");
 		doc.querySelectorAll("a[href]").forEach((a) => {
@@ -56,7 +58,7 @@ function stripDomain(href: string, rootPath: string): string | null {
 	if (!href) return null;
 
 	// Already normalized to our root path.
-	if (href.startsWith(rootPath)) return href;
+	if (href === rootPath || href.startsWith(rootPath + '/')) return href;
 
 	// Convert only when the pasted link matches the current origin.
 	try {

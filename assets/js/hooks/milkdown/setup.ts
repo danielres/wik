@@ -26,6 +26,7 @@ import {
 } from "./slash-menu-wikilinks";
 import { createSlashView } from "./slash-view";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
+import { configurePasteHandlers } from "./utils/paste-handlers";
 
 const slash = slashFactory("Commands");
 
@@ -74,6 +75,8 @@ export async function createMilkdownEditor({
 					}
 				},
 			});
+
+			configurePasteHandlers(ctx, rootPath);
 
 			ctx.update(dropIndicatorConfig.key, () => ({
 				width: 1,

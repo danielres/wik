@@ -1,9 +1,8 @@
 defmodule WikWeb.Components.Layout.StickyToolbar do
   use Phoenix.Component
   use WikWeb, :live_view
-  alias Phoenix.LiveView.JS
 
-  slot :inner_block, required: false
+  attr :block, :any, required: false
 
   @impl true
   def render(assigns) do

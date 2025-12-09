@@ -116,7 +116,7 @@ defmodule WikWeb.Layouts do
       <% end %>
     </header>
 
-    <WikWeb.Components.Layout.StickyToolbar.render inner_block={@sticky_toolbar} />
+    <WikWeb.Components.Layout.StickyToolbar.render block={@sticky_toolbar} />
 
     <main class="layout-main">
       {render_slot(@inner_block)}

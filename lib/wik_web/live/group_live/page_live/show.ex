@@ -252,28 +252,28 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     socket
   end
 
-  defp has_editors?(socket, path) do
-    socket.assigns.ctx.presences
-    |> WikWeb.Presence.users_at_path(path)
-    |> length() > 0
-  end
+  # defp has_editors?(socket, path) do
+  #   socket.assigns.ctx.presences
+  #   |> WikWeb.Presence.users_at_path(path)
+  #   |> length() > 0
+  # end
 
-  defp redirect_from_edit(socket) do
-    group_slug = socket.assigns.ctx.current_group.slug
-    page_slug = socket.assigns.page.slug
-
-    current_editor =
-      socket.assigns.ctx.presences
-      |> WikWeb.Presence.users_at_path(socket.assigns.current_path)
-      |> List.first()
-
-    socket
-    |> push_patch(to: ~p"/#{group_slug}/wiki/#{page_slug}")
-    |> Toast.put_toast(
-      :info,
-      "Aready being edited by #{current_editor}, please try again later."
-    )
-  end
+  # defp redirect_from_edit(socket) do
+  #   group_slug = socket.assigns.ctx.current_group.slug
+  #   page_slug = socket.assigns.page.slug
+  #
+  #   current_editor =
+  #     socket.assigns.ctx.presences
+  #     |> WikWeb.Presence.users_at_path(socket.assigns.current_path)
+  #     |> List.first()
+  #
+  #   socket
+  #   |> push_patch(to: ~p"/#{group_slug}/wiki/#{page_slug}")
+  #   |> Toast.put_toast(
+  #     :info,
+  #     "Aready being edited by #{current_editor}, please try again later."
+  #   )
+  # end
 
   defp maybe_push_saved_version(socket, updated_fields, updated_page) do
     text_changed? =

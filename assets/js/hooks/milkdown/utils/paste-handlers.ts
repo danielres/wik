@@ -23,6 +23,7 @@ export const makePasteNormalizers = (rootPath: string): PasteNormalizers => {
 		if (!html.includes('<a') && !html.includes('href=')) return html;
 		const parser = new DOMParser();
 		const doc = parser.parseFromString(html, "text/html");
+		if (!doc.body) return html;
 		doc.querySelectorAll("a[href]").forEach((a) => {
 			const href = a.getAttribute("href") || "";
 			const normalized = stripDomain(href, rootPath);

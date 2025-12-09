@@ -10,6 +10,8 @@ export type PasteNormalizers = {
 export const makePasteNormalizers = (rootPath: string): PasteNormalizers => {
 	const transformText = (text: string) => {
 		if (!text) return text;
+		// Early bailout: no same-origin URLs to process
+		if (!hasSameOriginUrls(text)) return text;
 		const pattern = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/gi;
 		return text.replace(pattern, (full, label, href) => {
 			const normalized = stripDomain(href, rootPath);
@@ -19,8 +21,8 @@ export const makePasteNormalizers = (rootPath: string): PasteNormalizers => {
 
 	const transformHtml = (html: string) => {
 		if (!html) return html;
-		// Early bailout: no links to process
-		if (!html.includes('<a') && !html.includes('href=')) return html;
+		// Early bailout: no same-origin URLs to process
+		if (!hasSameOriginUrls(html)) return html;
 		const parser = new DOMParser();
 		const doc = parser.parseFromString(html, "text/html");
 		if (!doc.body) return html;
@@ -55,11 +57,18 @@ export function configurePasteHandlers(ctx: Ctx, rootPath: string) {
 	}));
 }
 
+function hasSameOriginUrls(content: string): boolean {
+	return (
+		content.includes(`http://${window.location.host}`) ||
+		content.includes(`https://${window.location.host}`)
+	);
+}
+
 function stripDomain(href: string, rootPath: string): string | null {
 	if (!href) return null;
 
 	// Already normalized to our root path.
-	if (href === rootPath || href.startsWith(rootPath + '/')) return href;
+	if (href === rootPath || href.startsWith(rootPath + "/")) return href;
 
 	// Convert only when the pasted link matches the current origin.
 	try {

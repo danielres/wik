@@ -5,6 +5,7 @@
     [
       #
       git
+      lefthook
       nodejs_24
       pgcli
       secretspec

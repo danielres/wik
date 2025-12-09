@@ -13,12 +13,12 @@ defmodule WikWeb.Components.Layout.StickyToolbar do
       phx-hook="LayoutStickyToolbar"
       class={[
         "layout-sticky-toolbar",
-        (WikWeb.Helpers.slot_has_content?(@inner_block) &&
+        (WikWeb.Helpers.slot_has_content?(@block) &&
            "block") || "hidden"
       ]}
     >
       <div class="layout-sticky-toolbar-inner">
-        {render_slot(@inner_block)}
+        {render_slot(@block)}
       </div>
     </div>
     """

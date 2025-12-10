@@ -32,16 +32,50 @@ defmodule WikWeb.TagLive.Show do
         <:actions></:actions>
       </.header>
 
-      <div class="space-y-4">
-        <div :if={Enum.empty?(@tagged_blocks)} class="text-sm text-base-content/70">
-          No tagged blocks found yet.
+      <div class="">
+        <div :if={Enum.empty?(@tagged_blocks)} class="text-sm text-base-content/70 space-y-12">
+          <p class="alert alert-info">
+            No content found for this tag.
+          </p>
+
+          <section class="space-y-4">
+            <h2 class="text-xl flex items-center gap-2">
+              <i class="hero-question-mark-circle-mini opacity-80" /> How to
+            </h2>
+
+            <ul class="list-disc space-y-2 pl-4">
+              <li>
+                <div class="flex items-baseline gap-2">
+                  Add <span class="tag-badge">#{@tag.name}</span> to headers on various pages.
+                </div>
+              </li>
+              <li>
+                Content under those headers will show up here.
+              </li>
+            </ul>
+          </section>
+
+          <section class="space-y-4">
+            <h2 class="text-xl flex items-center gap-2">
+              <i class="hero-arrow-right-mini opacity-80" /> Example usage
+            </h2>
+
+            <div
+              id={"milkdown-editor-#{@tag.name}"}
+              phx-hook="MilkdownEditor"
+              class="card p-4 bg-base-200"
+              phx-update="ignore"
+              data-markdown={@markdown}
+              data-mode="static"
+            />
+          </section>
         </div>
 
         <div class="space-y-4 mt-8">
           <section
             :for={{block_id, block} <- @tagged_blocks}
             id={"tag-block-#{block_id}"}
-            class="bg-base-100 rounded shadow-lg border border-base-300 "
+            class="bg-base-100 rounded shadow-lg border border-base-300"
           >
             <h1 class="mb-4 bg-base-200 px-4 py-1 rounded-t flex items-center gap-2">
               <%= for {segment, idx} <- Enum.with_index(block.header_titles_stack) do %>
@@ -85,14 +119,29 @@ defmodule WikWeb.TagLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
+    markdown = """
+    ## Hobbies #activities
+
+    ### Crafting #activities/indoors
+
+    - knitting
+    - crafting
+
+    ### Skydiving #activities/outdoors #skydiving
+
+    - knitting while skydiving
+    """
+
     {:ok,
      socket
      |> assign(:page_title, "Tag")
+     |> assign(:markdown, markdown)
      |> assign_new(:tagged_blocks, fn -> [] end)}
   end
 
   @impl true
-  def handle_params(%{"tag_name" => tag_name}, url, socket) do
+  def handle_params(%{"tag_name_segments" => tag_name_segments}, url, socket) do
+    tag_name = tag_name_segments |> Enum.join("/")
     socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
     WikWeb.Presence.track_in_liveview(socket, url)
 
@@ -107,10 +156,13 @@ defmodule WikWeb.TagLive.Show do
          |> assign(:page_title, "Tag ##{tag.name}")}
 
       :not_found ->
+        tag = %{name: tag_name}
+
         {:noreply,
          socket
-         |> put_flash(:error, "Tag not found")
-         |> push_navigate(to: ~p"/#{socket.assigns.ctx.current_group.slug}/tags")}
+         |> assign(:tag, tag)
+         |> assign(:tagged_blocks, [])
+         |> assign(:page_title, "Tag ##{tag.name}")}
     end
   end
 

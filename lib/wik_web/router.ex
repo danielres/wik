@@ -94,7 +94,7 @@ defmodule WikWeb.Router do
         live "/wiki/:page_slug/edit", GroupLive.PageLive.Show, :edit
         live "/wiki/:page_slug/v/:version", GroupLive.PageLive.History
         live "/tags", TagLive.Index
-        live "/tags/:tag_name", TagLive.Show
+        live "/tags/*tag_name_segments", TagLive.Show
       end
     end
   end

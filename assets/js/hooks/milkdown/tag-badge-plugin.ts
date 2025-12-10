@@ -7,24 +7,108 @@ import { Decoration, DecorationSet } from "prosemirror-view";
 type TagBadgeDecoState = { deco: DecorationSet };
 
 // Normalize tag to bare, downcased name.
-const TAG_REGEX = /(\s|^)(#([A-Za-z0-9_-]+))/g;
+// Matches a leading boundary (start or non-word-ish) + #tag, allowing letters (ASCII + extended Latin),
+// combining marks, digits, _, -, and / — without relying on Unicode property escapes (keeps esbuild targets happy).
+const TAG_REGEX =
+	/(^|[^\w-])(#([\w\u00C0-\u02FF\u1E00-\u1EFF\u0300-\u036F/-]+))/g;
 
 export function createTagBadgePlugin(tagRootPath: string) {
 	const cleanTagRoot = tagRootPath.replace(/\/?$/, "");
 
+	const state = createTagBadgeState();
+
+	// DOM event wiring
 	const spec: PluginSpec<TagBadgeDecoState> = {
 		state: {
 			init(_, { doc }) {
-				return { deco: buildDecorations(doc, cleanTagRoot) };
+				return {
+					deco: buildDecorations(doc, cleanTagRoot, state.typingPos),
+				};
 			},
 			apply(tr, prev) {
 				if (!tr.docChanged) return prev;
-				return { deco: buildDecorations(tr.doc, cleanTagRoot) };
+
+				// Update typing position only when not composing or committing
+				const selection = tr.selection;
+				if (
+					selection &&
+					selection.empty &&
+					!state.state.isComposing &&
+					!state.state.pendingCommit
+				) {
+					const hasTextChanges = tr.steps.some(
+						(step: any) =>
+							step.stepType?.name === "replace" ||
+							step.stepType?.name === "replaceAround",
+					);
+
+					if (hasTextChanges) {
+						state.setTyping(selection.head);
+					}
+				}
+
+				return {
+					deco: buildDecorations(tr.doc, cleanTagRoot, state.state.typingPos),
+				};
 			},
 		},
 		props: {
 			decorations(state) {
 				return this.getState(state)?.deco ?? null;
+			},
+			handleDOMEvents: {
+				keydown(view, event) {
+					if (
+						event.key === " " ||
+						event.key === "Enter" ||
+						event.key === "Tab"
+					) {
+						state.state.pendingCommit = true;
+						state.state.isComposing = false;
+						state.clearComposeTimer();
+						state.clearTyping();
+						state.requestRefresh(view);
+					} else if (event.key === "Dead") {
+						state.startComposition(view);
+					} else {
+						// Any other key ends composition-like state
+						state.state.isComposing = false;
+						state.clearComposeTimer();
+					}
+					return false;
+				},
+				input(view, event) {
+					if (event.inputType === "insertCompositionText") {
+						state.startComposition(view);
+					} else {
+						state.state.isComposing = false;
+						state.clearComposeTimer();
+					}
+
+					if (state.state.pendingCommit) {
+						return false;
+					}
+
+					if (
+						event.inputType?.startsWith("insert") ||
+						event.inputType?.startsWith("delete")
+					) {
+						const selection = view.state.selection;
+						if (selection && selection.empty) {
+							state.setTyping(selection.head);
+						}
+					}
+					return false;
+				},
+				compositionstart() {
+					state.state.isComposing = true;
+					state.clearComposeTimer();
+					return false;
+				},
+				compositionend(view) {
+					state.endComposition(view, true);
+					return false;
+				},
 			},
 		},
 	};
@@ -32,7 +116,7 @@ export function createTagBadgePlugin(tagRootPath: string) {
 	return new Plugin(spec);
 }
 
-function buildDecorations(doc: any, root: string) {
+function buildDecorations(doc: any, root: string, typingPosition: number) {
 	const decos: Decoration[] = [];
 
 	doc.descendants((node: any, pos: number) => {
@@ -55,19 +139,17 @@ function buildDecorations(doc: any, root: string) {
 				}
 
 				const text = child.text as string;
+				const tags = findTagsWithCorrectPositions(text);
 
-				let match: RegExpExecArray | null;
+				for (const tag of tags) {
+					const start = base + offset + tag.start;
+					const end = base + offset + tag.end;
 
-				while ((match = TAG_REGEX.exec(text))) {
-					const full = match[2]; // includes '#'
-					const name = match[3];
-					if (!full || !name) continue;
+					if (isWithinTag(typingPosition, start, end)) {
+						continue;
+					}
 
-					// Align to the '#' inside the match (skip leading whitespace/start).
-					const startOfMatch = base + offset + match.index;
-					const start = startOfMatch + (match[0].length - full.length);
-					const end = start + full.length;
-					const href = `${root}/${encodeURIComponent(name.toLowerCase())}`;
+					const href = `${root}/${encodeURIComponent(tag.name.toLowerCase())}`;
 
 					decos.push(
 						Decoration.inline(start, end, {
@@ -78,7 +160,6 @@ function buildDecorations(doc: any, root: string) {
 						}),
 					);
 				}
-				TAG_REGEX.lastIndex = 0;
 			}
 
 			offset += child.nodeSize;
@@ -87,4 +168,140 @@ function buildDecorations(doc: any, root: string) {
 	});
 
 	return DecorationSet.create(doc, decos);
+}
+
+/**
+ * Find tags in text with Unicode-safe position calculation.
+ * This avoids the UTF-16/Unicode code point mismatch issue that occurs
+ * when emojis or other multi-byte characters precede tags in the text.
+ */
+function findTagsWithCorrectPositions(text: string): Array<{
+	start: number;
+	end: number;
+	name: string;
+	full: string;
+}> {
+	const results: Array<{
+		start: number;
+		end: number;
+		name: string;
+		full: string;
+	}> = [];
+
+	TAG_REGEX.lastIndex = 0;
+
+	let match: RegExpExecArray | null;
+
+	while ((match = TAG_REGEX.exec(text))) {
+		const full = match[2]; // includes '#'
+		const name = match[3];
+		if (!full || !name) continue;
+
+		// Calculate the start position of the '#' symbol
+		// Skip the leading boundary character (match[1])
+		const matchStart = match.index;
+		const boundaryLength = match[1].length;
+		const tagStart = matchStart + boundaryLength;
+
+		// Convert UTF-16 indices to Unicode code point positions
+		// by counting actual characters up to that point
+		const unicodeStart = getUnicodePosition(text, tagStart);
+		const unicodeEnd = unicodeStart + Array.from(full).length;
+
+		results.push({
+			start: unicodeStart,
+			end: unicodeEnd,
+			name,
+			full,
+		});
+	}
+
+	TAG_REGEX.lastIndex = 0;
+	return results;
+}
+
+/**
+ * Convert a UTF-16 byte index to a Unicode code point position.
+ * This handles multi-byte characters like emojis and surrogate pairs properly.
+ */
+function getUnicodePosition(text: string, utf16Index: number): number {
+	// Get the substring up to the UTF-16 index
+	const substring = text.substring(0, utf16Index);
+	// Count actual Unicode characters (code points)
+	return Array.from(substring).length;
+}
+
+function isWithinTag(cursor: number, start: number, end: number) {
+	return cursor >= start && cursor <= end;
+}
+
+function createTagBadgeState() {
+	const COMPOSE_FALLBACK_MS = 30;
+	let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+	let composeTimer: ReturnType<typeof setTimeout> | null = null;
+
+	const state = {
+		typingPos: -1,
+		pendingCommit: false,
+		isComposing: false,
+	};
+
+	const clearTyping = () => {
+		state.typingPos = -1;
+	};
+
+	const setTyping = (pos: number | null) => {
+		state.typingPos = pos ?? -1;
+	};
+
+	const clearComposeTimer = () => {
+		if (composeTimer) {
+			clearTimeout(composeTimer);
+			composeTimer = null;
+		}
+	};
+
+	const endComposition = (view: any, forceRebuild = false) => {
+		state.isComposing = false;
+		state.pendingCommit = false;
+		clearComposeTimer();
+		clearTyping();
+		if (forceRebuild) {
+			requestRefresh(view);
+		}
+	};
+
+	const dispatchRefresh = (view: any) => {
+		refreshTimer = null;
+		if (view.isDestroyed) return;
+		const tr = view.state.tr.setMeta("force-decoration-update", Date.now());
+		view.dispatch(tr);
+		state.pendingCommit = false;
+	};
+
+	const requestRefresh = (view: any) => {
+		if (refreshTimer) return;
+		refreshTimer = setTimeout(() => dispatchRefresh(view), 0);
+	};
+
+	const startComposition = (view: any, delay = COMPOSE_FALLBACK_MS) => {
+		state.isComposing = true;
+		clearComposeTimer();
+		composeTimer = setTimeout(() => {
+			state.isComposing = false;
+			state.pendingCommit = false;
+			clearTyping();
+			requestRefresh(view);
+		}, delay);
+	};
+
+	return {
+		state,
+		clearTyping,
+		setTyping,
+		clearComposeTimer,
+		startComposition,
+		endComposition,
+		requestRefresh,
+	};
 }

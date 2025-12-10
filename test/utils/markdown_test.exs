@@ -21,7 +21,7 @@ defmodule Utils.MarkdownTest do
 
   test "scan_tags and strip_tags" do
     title = "Title #One #two"
-    assert Markdown.extract_tags(title) == ["#one", "#two"]
+    assert Markdown.extract_tags(title) == ["one", "two"]
     assert Markdown.strip_tags(title) |> String.trim() == "Title"
   end
 
@@ -50,8 +50,8 @@ defmodule Utils.MarkdownTest do
     assert length(toc) == 3
 
     [
-      %{level: 1, title: "Title", slug: "title-#main", tags: ["#main"], line_index: 0},
-      %{level: 2, title: "Child", slug: "child-#one-#two", tags: ["#one", "#two"], line_index: 1},
+      %{level: 1, title: "Title", slug: "title-#main", tags: ["main"], line_index: 0},
+      %{level: 2, title: "Child", slug: "child-#one-#two", tags: ["one", "two"], line_index: 1},
       %{level: 3, title: "NoTag", slug: "notag", tags: [], line_index: 2}
     ] = toc
   end

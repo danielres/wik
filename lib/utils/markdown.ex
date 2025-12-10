@@ -93,10 +93,10 @@ defmodule Utils.Markdown do
   @spec extract_tagged_blocks(String.t(), String.t(), keyword()) :: list(map())
   def extract_tagged_blocks(text, tag_name, opts \\ []) do
     headings_base_level = Keyword.get(opts, :headings_base_level, 1)
-    tag_token = "#" <> String.downcase(tag_name)
+    tag_name = String.downcase(tag_name)
 
     # Fast bailout: if the tag token isn't present at all, skip parsing.
-    if text && !String.contains?(String.downcase(text), tag_token) do
+    if text && !String.contains?(String.downcase(text), "#" <> tag_name) do
       []
     else
       lines = String.split(text, "\n", trim: false)
@@ -118,7 +118,7 @@ defmodule Utils.Markdown do
             |> Enum.take(header.level - 1)
             |> Kernel.++([unique_slug])
 
-          if Enum.any?(header.tags, &(&1 == tag_token)) do
+          if Enum.any?(header.tags, &(&1 == tag_name)) do
             start_line = header.line_index
             end_line = find_block_end(toc, idx, header.level, length(lines) - 1)
             block_lines = Enum.slice(lines, start_line, end_line - start_line + 1)
@@ -166,13 +166,13 @@ defmodule Utils.Markdown do
   end
 
   @doc """
-  Scans a title for tag tokens, returning downcased tokens with leading '#'.
+  Scans a title for tag names, returning downcased bare names (no leading '#').
   """
   @spec extract_tags(String.t()) :: [String.t()]
   def extract_tags(title) do
     @tag_regex
     |> Regex.scan(title)
-    |> Enum.map(fn [_, t] -> "#" <> String.downcase(t) end)
+    |> Enum.map(fn [_, t] -> String.downcase(t) end)
   end
 
   @doc """

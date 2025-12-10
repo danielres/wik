@@ -6,7 +6,6 @@ defmodule Wik.Tags.PageToTag.Sync do
   """
 
   alias Wik.Tags.{PageToTag, Tag}
-  alias Wik.Tags.PageToTag.Parser
   import Ash.Query
   require Logger
 
@@ -16,7 +15,7 @@ defmodule Wik.Tags.PageToTag.Sync do
           text: String.t()
         }) :: :ok | {:error, term()}
   def sync(%{id: page_id, group_id: group_id, text: text}) do
-    tags = Parser.extract_tags(text)
+    tags = Utils.Markdown.extract_tags(text)
 
     Wik.Repo.transaction(fn ->
       tag_ids =

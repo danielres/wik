@@ -66,8 +66,6 @@
 	@apply badge badge-neutral badge-md;
 	@apply inline-flex align-middle items-center gap-1 px-[0.5em];
 	@apply !no-underline;
-	-webkit-spellcheck: none;
-	spellcheck: none;
 	&:hover {
 		@apply badge-primary;
 	}

@@ -1,5 +1,5 @@
 import { tableBlock } from "@milkdown/components/table-block";
-import { editorViewCtx } from "@milkdown/core";
+import { editorViewCtx, prosePluginsCtx } from "@milkdown/core";
 import type { Ctx } from "@milkdown/ctx";
 import {
 	listItemBlockComponent,
@@ -19,6 +19,7 @@ import { collab, collabServiceCtx } from "@milkdown/plugin-collab";
 import { getMarkdown } from "@milkdown/utils";
 import { setupBlockHandle } from "./block-handle";
 import { inputRuleWikilink } from "./input-rule-wikilink";
+import { createTagBadgePlugin } from "./tag-badge-plugin";
 import {
 	slashMenuWikilinks,
 	slashMenuWikilinksRegister,
@@ -64,6 +65,12 @@ export async function createMilkdownEditor({
 
 			setupToolbar(ctx);
 			setupBlockHandle(ctx, root as HTMLElement);
+
+			const tagRootPath = rootPath.replace(/\/wiki\/?$/, "/tags");
+
+			ctx.update(prosePluginsCtx, (plugins) =>
+				plugins.concat(createTagBadgePlugin(tagRootPath)),
+			);
 
 			ctx.set(listItemBlockConfig.key, {
 				renderLabel: ({ label, listType, checked }) => {

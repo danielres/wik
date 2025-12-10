@@ -59,16 +59,17 @@ defmodule Wik.Tags.PageToTag.Sync do
     |> filter(group_id == ^group_id and page_id == ^page_id)
     |> Ash.bulk_destroy!(:destroy, %{}, authorize?: false, return_notifications?: false)
 
-    # insert new rows
     Enum.each(tag_ids, fn tag_id ->
-      {:ok, _} =
-        PageToTag
-        |> Ash.Changeset.for_create(:create, %{
-          group_id: group_id,
-          page_id: page_id,
-          tag_id: tag_id
-        })
-        |> Ash.create(authorize?: false, return_notifications?: false)
+      case PageToTag
+           |> Ash.Changeset.for_create(:create, %{
+             group_id: group_id,
+             page_id: page_id,
+             tag_id: tag_id
+           })
+           |> Ash.create(authorize?: false, return_notifications?: false) do
+        {:ok, _} -> :ok
+        {:error, reason} -> raise "Failed to create PageToTag: #{inspect(reason)}"
+      end
     end)
 
     :ok

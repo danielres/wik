@@ -20,7 +20,7 @@ defmodule WikWeb.TagLive.Index do
         <:actions></:actions>
       </.header>
 
-      <ul id="tags" class="grid gap-3 sm:grid-cols-2">
+      <ul :if={Enum.any?(@tags)} id="tags" class="grid gap-3 sm:grid-cols-2">
         <li :for={tag <- @tags} id={"tag-#{tag.id}"} class="contents">
           <.link navigate={"/#{@ctx.current_group.slug}/tags/#{tag.name}"} class="badge badge-neutral">
             <span class="">#{tag.name}</span>
@@ -33,6 +33,14 @@ defmodule WikWeb.TagLive.Index do
           </span>
         </li>
       </ul>
+
+      <div
+        :if={Enum.empty?(@tags)}
+        class="text-base-content/70 card bg-base-200 p-4 text-center my-8"
+      >
+        <p>No tags found yet.</p>
+        <p>Add hashtags to headings in wiki pages to create tags.</p>
+      </div>
     </Layouts.app>
     """
   end

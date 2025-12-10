@@ -26,7 +26,7 @@ export function createTagBadgePlugin(tagRootPath: string) {
 				};
 			},
 			apply(tr, prev) {
-				if (!tr.docChanged) return prev;
+				if (!tr.docChanged && !tr.getMeta("force-decoration-update")) return prev;
 
 				// Update typing position only when not composing or committing
 				const selection = tr.selection;

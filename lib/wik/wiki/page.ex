@@ -198,18 +198,6 @@ defmodule Wik.Wiki.Page do
                 page
               )
 
-              safe_tags(
-                fn ->
-                  Wik.Tags.PageToTag
-                  |> Ash.Query.filter(group_id == ^page.group_id and page_id == ^page.id)
-                  |> Ash.read!(authorize?: false)
-                  |> Enum.each(fn row ->
-                    Ash.destroy!(row, authorize?: false, return_notifications?: false)
-                  end)
-                end,
-                page
-              )
-
               {:ok, page}
 
             other ->

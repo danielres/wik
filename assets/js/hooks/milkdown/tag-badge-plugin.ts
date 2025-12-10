@@ -33,8 +33,8 @@ export function createTagBadgePlugin(tagRootPath: string) {
 				if (
 					selection &&
 					selection.empty &&
-					!state.state.isComposing &&
-					!state.state.pendingCommit
+					!state.isComposing &&
+					!state.pendingCommit
 				) {
 					const hasTextChanges = tr.steps.some(
 						(step: any) =>
@@ -48,7 +48,7 @@ export function createTagBadgePlugin(tagRootPath: string) {
 				}
 
 				return {
-					deco: buildDecorations(tr.doc, cleanTagRoot, state.state.typingPos),
+					deco: buildDecorations(tr.doc, cleanTagRoot, state.typingPos),
 				};
 			},
 		},
@@ -63,8 +63,8 @@ export function createTagBadgePlugin(tagRootPath: string) {
 						event.key === "Enter" ||
 						event.key === "Tab"
 					) {
-						state.state.pendingCommit = true;
-						state.state.isComposing = false;
+						state.pendingCommit = true;
+						state.isComposing = false;
 						state.clearComposeTimer();
 						state.clearTyping();
 						state.requestRefresh(view);
@@ -72,7 +72,7 @@ export function createTagBadgePlugin(tagRootPath: string) {
 						state.startComposition(view);
 					} else {
 						// Any other key ends composition-like state
-						state.state.isComposing = false;
+						state.isComposing = false;
 						state.clearComposeTimer();
 					}
 					return false;
@@ -81,11 +81,11 @@ export function createTagBadgePlugin(tagRootPath: string) {
 					if (event.inputType === "insertCompositionText") {
 						state.startComposition(view);
 					} else {
-						state.state.isComposing = false;
+						state.isComposing = false;
 						state.clearComposeTimer();
 					}
 
-					if (state.state.pendingCommit) {
+					if (state.pendingCommit) {
 						return false;
 					}
 
@@ -101,7 +101,7 @@ export function createTagBadgePlugin(tagRootPath: string) {
 					return false;
 				},
 				compositionstart() {
-					state.state.isComposing = true;
+					state.isComposing = true;
 					state.clearComposeTimer();
 					return false;
 				},

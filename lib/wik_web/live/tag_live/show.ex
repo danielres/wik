@@ -120,9 +120,9 @@ defmodule WikWeb.TagLive.Show do
     tag =
       Tag
       |> Ash.Query.filter(group_id == ^group_id and name == ^downcased)
-      |> Ash.read(actor: actor)
+      |> Ash.read!(actor: actor)
       |> case do
-        {:ok, [tag | _]} -> tag
+        [tag | _] -> tag
         _ -> nil
       end
 

@@ -27,6 +27,7 @@ defmodule Wik.Wiki.Page do
   end
 
   require Logger
+  require Ash.Query
 
   postgres do
     table "pages"
@@ -71,6 +72,10 @@ defmodule Wik.Wiki.Page do
                   "rebuild",
                   page
                 )
+              end
+
+              if text_changed? do
+                safe_tags(fn -> Wik.Tags.PageToTag.Sync.sync(page) end, page)
               end
 
               {:ok, page}
@@ -167,6 +172,8 @@ defmodule Wik.Wiki.Page do
                 "reconcile",
                 page
               )
+
+              safe_tags(fn -> Wik.Tags.PageToTag.Sync.sync(page) end, page)
 
               {:ok, page}
 
@@ -317,6 +324,17 @@ defmodule Wik.Wiki.Page do
     exception ->
       Logger.warning(
         "Backlink #{action} failed for page #{inspect(page.id)}: #{Exception.message(exception)}"
+      )
+
+      {:ok, page}
+  end
+
+  defp safe_tags(fun, page) do
+    fun.()
+  rescue
+    exception ->
+      Logger.warning(
+        "Tag sync failed for page #{inspect(page.id)}: #{Exception.message(exception)}"
       )
 
       {:ok, page}

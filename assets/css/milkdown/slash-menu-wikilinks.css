@@ -1,7 +1,7 @@
 /* Slash menu container */
 .slash-menu-wikilinks-container {
 	@apply hidden; /* initial hidden */
-	@apply z-50 w-64 max-h-60 overflow-y-auto; /* layout */
+	@apply absolute z-50 w-64 max-h-60 overflow-y-auto; /* layout */
 	@apply bg-base-300 border border-base-300; /* colors + border */
 	@apply rounded shadow-lg p-2; /* spacing */
 	@apply data-[show='true']:block; /* shown when active */

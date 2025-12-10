@@ -24,8 +24,10 @@ defmodule WikWeb.TagLive.Show do
           >
             Tags
           </.link>
-          <i class="hero-chevron-right-micro size-6 opacity-50" />
-          <span class="badge badge-neutral badge-xl">#{:"#{@tag.name}"}</span>
+
+          <i class="hero-chevron-right-micro size-6 opacity-20" />
+
+          <WikWeb.Components.Tag.badge tag={@tag} size="xl" />
         </div>
         <:actions></:actions>
       </.header>

@@ -22,9 +22,8 @@ defmodule WikWeb.TagLive.Index do
 
       <ul :if={Enum.any?(@tags)} id="tags" class="grid gap-3 sm:grid-cols-2">
         <li :for={tag <- @tags} id={"tag-#{tag.id}"} class="contents">
-          <.link navigate={"/#{@ctx.current_group.slug}/tags/#{tag.name}"} class="badge badge-neutral">
-            <span class="">#{tag.name}</span>
-          </.link>
+          <WikWeb.Components.Tag.badge tag={tag} ctx={@ctx} />
+
           <span class="flex items-center gap-1 text-xs opacity-80">
             <i class="hero-document-micro size-4 opacity-80">
               page{(tag.pages_count != 1 && "s") || ""}

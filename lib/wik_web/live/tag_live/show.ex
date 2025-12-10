@@ -83,7 +83,10 @@ defmodule WikWeb.TagLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :page_title, "Tag")}
+    {:ok,
+     socket
+     |> assign(:page_title, "Tag")
+     |> assign_new(:tagged_blocks, fn -> [] end)}
   end
 
   @impl true

@@ -105,6 +105,12 @@ defmodule WikWeb.Layouts do
           >
             Wiki
           </.link>
+          <.link
+            class={[link_class(@ctx, "/tags")]}
+            navigate={~p"/#{@ctx[:current_group].slug}/tags"}
+          >
+            Tags
+          </.link>
 
           <.link
             class={[link_class(@ctx, "/members")]}

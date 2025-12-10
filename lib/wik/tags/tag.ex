@@ -20,15 +20,28 @@ defmodule Wik.Tags.Tag do
   end
 
   actions do
-    defaults [:create, :read, :update, :destroy]
+    create :create do
+      primary? true
+      accept [:name, :group_id]
+    end
+
+    read :read do
+      primary? true
+    end
+
+    update :update do
+      accept [:name]
+      require_atomic? false
+      primary? true
+    end
+
+    destroy :destroy do
+      primary? true
+    end
   end
 
   policies do
-    policy action_type(:create) do
-      authorize_if actor_present()
-    end
-
-    policy action_type([:read, :update, :destroy]) do
+    policy action_type([:create, :read, :update, :destroy]) do
       authorize_if relates_to_actor_via([:group, :users])
     end
   end
@@ -58,12 +71,14 @@ defmodule Wik.Tags.Tag do
       public? true
     end
 
-    has_many :tag_to_tagged_blocks, Wik.Tags.TagToTaggedBlock do
-      destination_attribute :tag_id
-    end
-
     has_many :page_to_tags, Wik.Tags.PageToTag do
       destination_attribute :tag_id
+    end
+  end
+
+  aggregates do
+    count :pages_count, :page_to_tags do
+      public? true
     end
   end
 

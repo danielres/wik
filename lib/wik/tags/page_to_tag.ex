@@ -22,15 +22,26 @@ defmodule Wik.Tags.PageToTag do
   end
 
   actions do
-    defaults [:create, :read, :update, :destroy]
+    create :create do
+      primary? true
+      accept [:group_id, :page_id, :tag_id]
+    end
+
+    read :read do
+      primary? true
+    end
+
+    update :update do
+      accept [:group_id, :page_id, :tag_id]
+    end
+
+    destroy :destroy do
+      primary? true
+    end
   end
 
   policies do
-    policy action_type(:create) do
-      authorize_if actor_present()
-    end
-
-    policy action_type([:read, :update, :destroy]) do
+    policy action_type([:create, :read, :update, :destroy]) do
       authorize_if relates_to_actor_via([:group, :users])
     end
   end

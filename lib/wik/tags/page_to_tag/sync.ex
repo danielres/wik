@@ -15,7 +15,12 @@ defmodule Wik.Tags.PageToTag.Sync do
           text: String.t()
         }) :: :ok | {:error, term()}
   def sync(%{id: page_id, group_id: group_id, text: text}) do
-    tags = Utils.Markdown.extract_tags(text)
+    text = text || ""
+
+    tags =
+      text
+      |> Utils.Markdown.extract_tags()
+      |> Enum.uniq()
 
     Wik.Repo.transaction(fn ->
       tag_ids =

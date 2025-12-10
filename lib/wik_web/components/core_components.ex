@@ -290,7 +290,7 @@ defmodule WikWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6 mb-6"]}>
+    <header class={["mb-6", @actions != [] && "flex items-center justify-between gap-6"]}>
       <div>
         <h1 class="text-2xl">
           {render_slot(@inner_block)}

@@ -240,18 +240,16 @@ function createTagBadgeState() {
 	let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 	let composeTimer: ReturnType<typeof setTimeout> | null = null;
 
-	const state = {
-		typingPos: -1,
-		pendingCommit: false,
-		isComposing: false,
-	};
+	let typingPos = -1;
+	let pendingCommit = false;
+	let isComposing = false;
 
 	const clearTyping = () => {
-		state.typingPos = -1;
+		typingPos = -1;
 	};
 
 	const setTyping = (pos: number | null) => {
-		state.typingPos = pos ?? -1;
+		typingPos = pos ?? -1;
 	};
 
 	const clearComposeTimer = () => {
@@ -262,8 +260,8 @@ function createTagBadgeState() {
 	};
 
 	const endComposition = (view: any, forceRebuild = false) => {
-		state.isComposing = false;
-		state.pendingCommit = false;
+		isComposing = false;
+		pendingCommit = false;
 		clearComposeTimer();
 		clearTyping();
 		if (forceRebuild) {
@@ -276,7 +274,7 @@ function createTagBadgeState() {
 		if (view.isDestroyed) return;
 		const tr = view.state.tr.setMeta("force-decoration-update", Date.now());
 		view.dispatch(tr);
-		state.pendingCommit = false;
+		pendingCommit = false;
 	};
 
 	const requestRefresh = (view: any) => {
@@ -285,18 +283,35 @@ function createTagBadgeState() {
 	};
 
 	const startComposition = (view: any, delay = COMPOSE_FALLBACK_MS) => {
-		state.isComposing = true;
+		isComposing = true;
 		clearComposeTimer();
 		composeTimer = setTimeout(() => {
-			state.isComposing = false;
-			state.pendingCommit = false;
+			isComposing = false;
+			pendingCommit = false;
 			clearTyping();
 			requestRefresh(view);
 		}, delay);
 	};
 
 	return {
-		state,
+		get typingPos() {
+			return typingPos;
+		},
+		set typingPos(v: number) {
+			typingPos = v;
+		},
+		get pendingCommit() {
+			return pendingCommit;
+		},
+		set pendingCommit(v: boolean) {
+			pendingCommit = v;
+		},
+		get isComposing() {
+			return isComposing;
+		},
+		set isComposing(v: boolean) {
+			isComposing = v;
+		},
 		clearTyping,
 		setTyping,
 		clearComposeTimer,

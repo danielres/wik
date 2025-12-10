@@ -26,7 +26,8 @@ export function createTagBadgePlugin(tagRootPath: string) {
 				};
 			},
 			apply(tr, prev) {
-				if (!tr.docChanged && !tr.getMeta("force-decoration-update")) return prev;
+				if (!tr.docChanged && !tr.getMeta("force-decoration-update"))
+					return prev;
 
 				// Update typing position only when not composing or committing
 				const selection = tr.selection;
@@ -109,6 +110,9 @@ export function createTagBadgePlugin(tagRootPath: string) {
 					state.endComposition(view, true);
 					return false;
 				},
+			},
+			destroy() {
+				state.destroy?.();
 			},
 		},
 	};
@@ -311,6 +315,12 @@ function createTagBadgeState() {
 		},
 		set isComposing(v: boolean) {
 			isComposing = v;
+		},
+		destroy() {
+			if (refreshTimer) clearTimeout(refreshTimer);
+			if (composeTimer) clearTimeout(composeTimer);
+			refreshTimer = null;
+			composeTimer = null;
 		},
 		clearTyping,
 		setTyping,

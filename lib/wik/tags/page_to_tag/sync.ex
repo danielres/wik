@@ -55,11 +55,9 @@ defmodule Wik.Tags.PageToTag.Sync do
   end
 
   defp replace_page_tags!(group_id, page_id, tag_ids) do
-    # delete existing rows for this page+group
     PageToTag
     |> filter(group_id == ^group_id and page_id == ^page_id)
-    |> Ash.read!(authorize?: false)
-    |> Enum.each(fn row -> Ash.destroy!(row, authorize?: false, return_notifications?: false) end)
+    |> Ash.bulk_destroy!(:destroy, %{}, authorize?: false, return_notifications?: false)
 
     # insert new rows
     Enum.each(tag_ids, fn tag_id ->

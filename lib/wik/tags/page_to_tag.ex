@@ -16,8 +16,8 @@ defmodule Wik.Tags.PageToTag do
 
     references do
       reference :group, on_delete: :delete
-      reference :page, on_delete: :delete
-      reference :tag, on_delete: :delete
+      reference :page, on_delete: :delete, index?: true
+      reference :tag, on_delete: :delete, index?: true
     end
   end
 

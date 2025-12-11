@@ -1,3 +1,10 @@
+import {
+	configureLinkTooltip,
+	linkTooltipPlugin,
+	linkTooltipConfig,
+} from "@milkdown/components/link-tooltip";
+import { defaultValueCtx, Editor } from "@milkdown/kit/core";
+import { commonmark, linkSchema } from "@milkdown/kit/preset/commonmark";
 import { tableBlock } from "@milkdown/components/table-block";
 import { editorViewCtx, prosePluginsCtx } from "@milkdown/core";
 import type { Ctx } from "@milkdown/ctx";
@@ -89,7 +96,10 @@ export async function createMilkdownEditor({
 				width: 1,
 			}));
 		})
+
+		.config(configureLinkTooltip)
 		.use(commonmark)
+		.use(linkTooltipPlugin)
 		.use(gfm)
 		.use(history)
 		.use(collab)

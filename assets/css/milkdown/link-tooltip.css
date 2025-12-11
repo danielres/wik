@@ -1,0 +1,73 @@
+.insert-link-button {
+	@apply bg-base-100 size-4 hover:bg-primary mt-2 mr-5 mb-0 ml-5 p-2 rounded-full;
+}
+
+.milkdown-link-preview {
+	@apply shadow overflow-hidden rounded absolute bg-base-300 backdrop-blur-md w-80;
+
+	&[data-show="false"] {
+		@apply hidden;
+	}
+
+	> .link-preview {
+		@apply flex gap-2 p-2 cursor-pointer h-10 flex-grow;
+
+		> .link-icon {
+			@apply flex items-center justify-center;
+
+			> svg {
+				@apply w-3.5 h-3.5;
+			}
+		}
+
+		> .link-display {
+			@apply leading-6 overflow-hidden text-ellipsis text-sm flex-grow;
+
+			&:hover {
+				@apply underline;
+			}
+		}
+
+		> .button {
+			@apply !size-6;
+			&.link-icon {
+				@apply hero-link-mini opacity-40;
+			}
+
+			&.link-edit-button {
+				@apply hero-pencil-solid opacity-40 hover:opacity-100 transition;
+			}
+
+			&.link-remove-button {
+				@apply hero-backspace-solid opacity-40 hover:opacity-100 transition;
+			}
+			> svg {
+				/* @apply size-4; */
+			}
+		}
+	}
+}
+
+.milkdown-link-edit {
+	@apply shadow overflow-hidden rounded absolute bg-base-300 backdrop-blur-md;
+
+	&[data-show="false"] {
+		@apply hidden;
+	}
+
+	> .link-edit {
+		@apply flex justify-center gap-2 py-2 px-2 rounded-md shadow flex items-center;
+
+		> .input-area {
+			@apply outline-none bg-base-100 text-sm py-0 px-2 py-1 rounded opacity-60 focus:opacity-100 transition;
+		}
+
+		> .button {
+			@apply btn btn-primary btn-sm hero-check-circle-solid opacity-60 hover:opacity-100 transition;
+
+			&.hidden {
+				@apply invisible pointer-events-none;
+			}
+		}
+	}
+}

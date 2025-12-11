@@ -57,7 +57,7 @@
 	--color-accent-content: oklch(96% 0.016 293.756);
 	--color-neutral: oklch(37% 0.044 257.287);
 	--color-neutral-content: color-mix(in oklab, white 60%, var(--color-neutral));
-	--color-info: oklch(58% 0.158 241.966);
+	--color-info: oklch(58% 0.1376 242 / 63.9%);
 	--color-info-content: oklch(97% 0.013 236.62);
 	--color-success: oklch(60% 0.118 184.704);
 	--color-success-content: oklch(98% 0.014 180.72);

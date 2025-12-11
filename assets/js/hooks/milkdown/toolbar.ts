@@ -22,6 +22,8 @@ import {
 	TextSelection,
 } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { toggleLinkCommand } from "@milkdown/components/link-tooltip";
+import { linkSchema } from "@milkdown/kit/preset/commonmark";
 import { toggleWikilinkCommand } from "./toolbar/command-toggle-wiki-link";
 
 // 1) Create a tooltip plugin
@@ -119,6 +121,23 @@ class ToolbarView implements PluginView {
 					const editor = ctx.get(editorCtx);
 					if (editor.status !== EditorStatus.Created) return;
 					toggleWikilinkCommand(ctx);
+				},
+			},
+			{
+				label: "🔗",
+				title: "Insert/edit link",
+				active: (ctx) => {
+					const commands = ctx.get(commandsCtx);
+					return commands.call(
+						isMarkSelectedCommand.key,
+						linkSchema.type(ctx),
+					);
+				},
+				run: (ctx) => {
+					const editor = ctx.get(editorCtx);
+					if (editor.status !== EditorStatus.Created) return;
+					const commands = ctx.get(commandsCtx);
+					commands.call(toggleLinkCommand.key);
 				},
 			},
 		];

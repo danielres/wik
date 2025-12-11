@@ -56,19 +56,26 @@
 		@apply w-full;
 	}
 
-	a {
-		@apply underline underline-offset-4;
-		:not(.tag-badge) {
-			@apply text-cyan-800 dark:text-cyan-100/90 decoration-cyan-400/70 !decoration-2 hover:decoration-cyan-300 transition;
-		}
+	.tag-badge {
+		@apply badge badge-primary badge-md bg-primary/60 transition hover:bg-primary/80 hover:text-base-content;
+		@apply inline-flex align-middle items-center gap-1 px-[0.5em];
 	}
-}
 
-.tag-badge {
-	@apply badge badge-neutral badge-md;
-	@apply inline-flex align-middle items-center gap-1 px-[0.5em];
-	@apply !no-underline;
-	&:hover {
-		@apply badge-primary;
+	a:not(.tag-badge) {
+		@apply px-1 bg-base-100 rounded opacity-80 hover:opacity-100 transition;
+		@apply inline-flex items-center gap-1;
+
+		/* external links */
+		&[href^="http"] {
+			&::after {
+				content: "";
+				@apply opacity-50 transition;
+				@apply hero-arrow-top-right-on-square-micro size-4;
+			}
+
+			&:hover::after {
+				@apply opacity-100;
+			}
+		}
 	}
 }

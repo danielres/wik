@@ -63,15 +63,14 @@
 
 	a:not(.tag-badge) {
 		@apply px-1 bg-base-100 rounded opacity-80 hover:opacity-100 transition;
+		@apply inline-flex items-center gap-1;
 
 		/* external links */
 		&[href^="http"] {
-			@apply items-center inline-flex gap-1;
-
 			&::after {
 				content: "";
 				@apply opacity-50 transition;
-				@apply hero-arrow-top-right-on-square-micro;
+				@apply hero-arrow-top-right-on-square-micro size-4;
 			}
 
 			&:hover::after {

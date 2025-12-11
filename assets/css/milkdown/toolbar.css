@@ -16,7 +16,7 @@
 			@apply hidden;
 		}
 
-		@apply z-10 absolute flex bg-base-300 shadow rounded-lg overflow-hidden;
+		@apply z-10 absolute flex bg-base-300 backdrop-blur-md shadow rounded-lg overflow-hidden;
 
 		.toolbar-item {
 			@apply min-w-8 h-8 m-1.5 p-1 cursor-pointer rounded transition-colors;

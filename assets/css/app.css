@@ -41,30 +41,101 @@
 	default: false;
 	prefersdark: true;
 	color-scheme: "dark";
-	--color-base-100: oklch(30.33% 0.016 252.42);
-	--color-base-200: oklch(25.26% 0.014 253.1);
-	--color-base-300: oklch(20.15% 0.012 254.09);
-	--color-primary: oklch(58% 0.233 277.117);
-	--color-base-content: oklch(97.807% 0.029 256.847);
+	--color-tint-complementary: oklch(58.6% 0.0916 170.6);
+	--color-tint: oklch(55.1% 0.1542 252.7);
+
+	--color-base-100: color-mix(
+		in oklab,
+		oklch(30.33% 0.016 252.42) 94%,
+		var(--color-tint) 26%
+	);
+	--color-base-200: color-mix(
+		in oklab,
+		oklch(25.26% 0.014 253.1) 80%,
+		var(--color-tint) 10%
+	);
+	--color-base-300: color-mix(
+		in oklab,
+		oklch(20.15% 0.012 254.09) 80%,
+		var(--color-tint) 10%
+	);
+	--color-primary: color-mix(
+		in oklab,
+		oklch(58% 0.233 277.117) 80%,
+		var(--color-tint-complementary) 20%
+	);
+	--color-base-content: color-mix(
+		in oklab,
+		oklch(97.807% 0.029 256.847) 95%,
+		var(--color-tint) 5%
+	);
 	--color-primary-content: color-mix(in oklab, white 70%, var(--color-primary));
-	--color-secondary: oklch(46.2% 0.1731 277.1);
+	--color-secondary: color-mix(
+		in oklab,
+		oklch(46.2% 0.1731 277.1) 80%,
+		var(--color-tint) 20%
+	);
 	--color-secondary-content: color-mix(
 		in oklab,
 		white 70%,
 		var(--color-secondary)
 	);
-	--color-accent: oklch(60% 0.25 292.717);
-	--color-accent-content: oklch(96% 0.016 293.756);
-	--color-neutral: oklch(37% 0.044 257.287);
-	--color-neutral-content: color-mix(in oklab, white 60%, var(--color-neutral));
-	--color-info: oklch(58% 0.158 241.966);
-	--color-info-content: oklch(97% 0.013 236.62);
-	--color-success: oklch(60% 0.118 184.704);
-	--color-success-content: oklch(98% 0.014 180.72);
-	--color-warning: oklch(66% 0.179 58.318);
-	--color-warning-content: oklch(98% 0.022 95.277);
-	--color-error: oklch(58% 0.253 17.585);
-	--color-error-content: oklch(96% 0.015 12.422);
+	--color-accent: color-mix(
+		in oklab,
+		oklch(60% 0.25 292.717) 80%,
+		var(--color-tint) 20%
+	);
+	--color-accent-content: color-mix(
+		in oklab,
+		oklch(96% 0.016 293.756) 80%,
+		var(--color-tint) 20%
+	);
+	--color-neutral: color-mix(
+		in oklab,
+		oklch(37% 0.044 257.287) 80%,
+		var(--color-tint) 40%
+	);
+	--color-neutral-content: color-mix(in oklab, white 70%, var(--color-neutral));
+	--color-info: color-mix(
+		in oklab,
+		oklch(45.5% 0.0996 242) 80%,
+		var(--color-tint-complementary) 9%
+	);
+	--color-info-content: color-mix(
+		in oklab,
+		oklch(91.9% 0.033 242) 80%,
+		var(--color-tint) 20%
+	);
+	--color-success: color-mix(
+		in oklab,
+		oklch(60% 0.118 184.704) 80%,
+		var(--color-tint) 20%
+	);
+	--color-success-content: color-mix(
+		in oklab,
+		oklch(98% 0.014 180.72) 80%,
+		var(--color-tint) 20%
+	);
+	--color-warning: color-mix(
+		in oklab,
+		oklch(66% 0.179 58.318) 80%,
+		var(--color-tint) 20%
+	);
+	--color-warning-content: color-mix(
+		in oklab,
+		oklch(98% 0.022 95.277) 80%,
+		var(--color-tint) 20%
+	);
+	--color-error: color-mix(
+		in oklab,
+		oklch(58% 0.253 17.585) 80%,
+		var(--color-tint) 20%
+	);
+	--color-error-content: color-mix(
+		in oklab,
+		oklch(96% 0.015 12.422) 80%,
+		var(--color-tint) 20%
+	);
 	--radius-selector: 0.25rem;
 	--radius-field: 0.25rem;
 	--radius-box: 0.5rem;
@@ -80,20 +151,24 @@
 	default: true;
 	prefersdark: false;
 	color-scheme: "light";
-	--color-base-100: oklch(98% 0 0);
-	--color-base-200: oklch(96% 0.001 286.375);
-	--color-base-300: oklch(92% 0.004 286.32);
-	--color-base-content: oklch(21% 0.006 285.885);
-	--color-primary: oklch(70% 0.213 47.604);
+	--color-base-100: oklch(78% 0 0);
+	--color-base-200: oklch(72% 0.001 286.375);
+	--color-base-300: oklch(61% 0.004 286.32);
+	--color-base-content: oklch(8.6% 0.004 286.3);
+	--color-primary: oklch(60.4% 0.0969 199.8);
 	--color-primary-content: oklch(98% 0.016 73.684);
 	--color-secondary: oklch(55% 0.027 264.364);
 	--color-secondary-content: oklch(98% 0.002 247.839);
 	--color-accent: oklch(0% 0 0);
 	--color-accent-content: oklch(100% 0 0);
-	--color-neutral: oklch(44% 0.017 285.786);
-	--color-neutral-content: oklch(98% 0 0);
-	--color-info: oklch(62% 0.214 259.815);
-	--color-info-content: oklch(97% 0.014 254.604);
+	--color-neutral: oklch(61% 0.017 285.786);
+	--color-neutral-content: oklch(90% 0 0);
+	--color-info: oklch(55.6% 0.1267 259.8);
+	--color-info-content: color-mix(
+		in oklab,
+		var(--color-info) 35%,
+		var(--color-primary-content)
+	);
 	--color-success: oklch(70% 0.14 182.503);
 	--color-success-content: oklch(98% 0.014 180.72);
 	--color-warning: oklch(66% 0.179 58.318);

@@ -61,7 +61,7 @@
 	);
 	--color-primary: color-mix(
 		in oklab,
-		oklch(58% 0.233 277.117) 80%,
+		oklch(48.2% 0.0821 217.8) 80%,
 		var(--color-tint-complementary) 20%
 	);
 	--color-base-content: color-mix(
@@ -82,7 +82,7 @@
 	);
 	--color-accent: color-mix(
 		in oklab,
-		oklch(60% 0.25 292.717) 80%,
+		oklch(38.1% 0.16 314) 80%,
 		var(--color-tint) 20%
 	);
 	--color-accent-content: color-mix(
@@ -92,8 +92,8 @@
 	);
 	--color-neutral: color-mix(
 		in oklab,
-		oklch(37% 0.044 257.287) 80%,
-		var(--color-tint) 40%
+		oklch(37% 0.044 257.287) 90%,
+		var(--color-tint) 10%
 	);
 	--color-neutral-content: color-mix(in oklab, white 70%, var(--color-neutral));
 	--color-info: color-mix(
@@ -151,15 +151,15 @@
 	default: true;
 	prefersdark: false;
 	color-scheme: "light";
-	--color-base-100: oklch(78% 0 0);
-	--color-base-200: oklch(72% 0.001 286.375);
-	--color-base-300: oklch(61% 0.004 286.32);
+	--color-base-100: oklch(85% 0 0);
+	--color-base-200: oklch(75% 0.001 286.375);
+	--color-base-300: oklch(64% 0.004 286.32);
 	--color-base-content: oklch(8.6% 0.004 286.3);
 	--color-primary: oklch(60.4% 0.0969 199.8);
 	--color-primary-content: oklch(98% 0.016 73.684);
 	--color-secondary: oklch(55% 0.027 264.364);
 	--color-secondary-content: oklch(98% 0.002 247.839);
-	--color-accent: oklch(0% 0 0);
+	--color-accent: oklch(40.2% 0.1014 314);
 	--color-accent-content: oklch(100% 0 0);
 	--color-neutral: oklch(61% 0.017 285.786);
 	--color-neutral-content: oklch(90% 0 0);
@@ -222,7 +222,8 @@
 }
 
 body:has([data-theme="dark"]) {
-	@apply bg-linear-to-b from-base-200 to-base-100 bg-fixed;
+	/* @apply bg-linear-to-b from-base-200 to-base-100 bg-fixed; */
+	@apply bg-base-200;
 	@apply min-h-svh;
 }
 

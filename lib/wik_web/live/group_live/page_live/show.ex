@@ -20,7 +20,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         <div class="flex justify-between">
           <div class="flex items-center">
             <.link
-              class="btn btn-sm opacity-70 hover:opacity-100 transition"
+              class="btn btn-sm btn-neutral opacity-70 hover:opacity-100 transition"
               patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"}
             >
               v. {@page.versions_count}

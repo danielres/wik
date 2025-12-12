@@ -1,37 +1,26 @@
 export class StatusIndicator {
-	private dot: HTMLElement | null;
-	private label: HTMLElement | null;
 	private lastSaved: string;
 	private current: string;
 	private ready = false;
 	private timer: number | null = null;
 
-	constructor(
-		dot: HTMLElement | null,
-		label: HTMLElement | null,
-		initial: string,
-	) {
-		this.dot = dot;
-		this.label = label;
+	constructor(initial: string) {
 		this.lastSaved = initial;
 		this.current = initial;
 	}
 
 	setReady() {
 		this.ready = true;
-		this.render();
 	}
 
 	markSaved(content: string) {
 		this.lastSaved = content;
 		if (!this.ready) return;
-		this.render();
 	}
 
 	updateCurrent(content: string) {
 		this.current = content;
 		if (!this.ready) return;
-		this.render();
 	}
 
 	scheduleRefresh(fetchCurrent: () => string, delay = 200) {
@@ -46,22 +35,13 @@ export class StatusIndicator {
 	// Exposed for cases where caller needs to force a render (e.g., after LV patch)
 	refresh() {
 		if (!this.ready) return;
-		this.render();
 	}
 
 	getLastSaved() {
 		return this.lastSaved;
 	}
 
-	private render() {
-		if (!this.dot || !this.label) return;
-
-		const dirty = this.current !== this.lastSaved;
-		this.dot.classList.toggle("bg-emerald-500", !dirty);
-		this.dot.classList.toggle("bg-rose-500", dirty);
-		this.label.textContent = dirty ? "Unsaved changes" : "Synced";
-
-		const value = dirty ? "false" : "true";
-		document.body.dataset.editorSynced = value;
+	isSynced() {
+		return this.current === this.lastSaved;
 	}
 }

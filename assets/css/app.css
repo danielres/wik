@@ -14,6 +14,7 @@
 @import "./milkdown/cursor.css";
 @import "./milkdown/link-tooltip.css";
 @import "./prose-markdown.css";
+@import "./toolbar-editor-controls.css";
 @import "./layout.css";
 
 @source "../../deps/ash_authentication_phoenix";
@@ -57,7 +58,7 @@
 	);
 	--color-base-300: color-mix(
 		in oklab,
-		oklch(20.15% 0.012 254.09) 80%,
+		oklch(20.15% 0.012 254.09) 90%,
 		var(--color-tint) 10%
 	);
 	--color-primary: color-mix(
@@ -83,7 +84,7 @@
 	);
 	--color-accent: color-mix(
 		in oklab,
-		oklch(38.1% 0.16 314) 80%,
+		oklch(46.9% 0.1347 353.3) 80%,
 		var(--color-tint) 20%
 	);
 	--color-accent-content: color-mix(
@@ -119,14 +120,11 @@
 	);
 	--color-warning: color-mix(
 		in oklab,
-		oklch(66% 0.179 58.318) 80%,
+		oklch(52.4% 0.111 58.3) 80%,
 		var(--color-tint) 20%
 	);
-	--color-warning-content: color-mix(
-		in oklab,
-		oklch(98% 0.022 95.277) 80%,
-		var(--color-tint) 20%
-	);
+
+	--color-warning-content: color-mix(in oklab, white 80%, var(--color-warning));
 	--color-error: color-mix(
 		in oklab,
 		oklch(58% 0.253 17.585) 80%,

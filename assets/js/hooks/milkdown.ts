@@ -2,7 +2,7 @@ import { CommandManager, commandsCtx } from "@milkdown/core";
 import type { SliceType } from "@milkdown/ctx";
 import { selectTextNearPosCommand } from "@milkdown/kit/preset/commonmark";
 import { Doc } from "yjs";
-import { undo } from "y-prosemirror";
+import { redo, undo } from "prosemirror-history";
 import { initCollab, type CollabHandles } from "./milkdown/collab";
 import {
 	createMilkdownEditor,
@@ -11,6 +11,7 @@ import {
 } from "./milkdown/setup";
 import type { SlashMenuWikilinksPage } from "./milkdown/slash-menu-wikilinks";
 import { StatusIndicator } from "./milkdown/status";
+import { readUndoRedoState } from "./milkdown/undo-state";
 
 function normalize(content: string | undefined | null) {
 	return (content || "").trim();
@@ -27,9 +28,10 @@ const MilkdownEditor = {
 		} = this.el.dataset;
 
 		const pagesJson = this.el.dataset.pagesJson;
-		const editable = _editable !== undefined;
+		const editable = _editable === "true";
 		const isStatic = mode === "static";
 		const isEdit = mode === "edit";
+		this.mode = mode;
 
 		let pages: SlashMenuWikilinksPage[] = [];
 
@@ -65,19 +67,17 @@ const MilkdownEditor = {
 		this.handleDocUpdate = null;
 		this.doneLink = null;
 		this.doneHandler = null;
+		this.undoBtn = null;
+		this.redoBtn = null;
+		this.undoHandler = null;
+		this.redoHandler = null;
 		this.awareness = null;
+		this.statePushTimer = null;
+		this.statePending = null;
+		this.stateLastSent = null;
+		this.docUpdatesAttached = false;
 
-		const statusTargetEl = document.querySelector("main") as HTMLElement | null;
-		this.status = new StatusIndicator(
-			this.el.dataset.statusDotId
-				? document.getElementById(this.el.dataset.statusDotId)
-				: null,
-			this.el.dataset.statusLabelId
-				? document.getElementById(this.el.dataset.statusLabelId)
-				: null,
-			normalize(markdown),
-			statusTargetEl,
-		);
+		this.status = new StatusIndicator(normalize(markdown));
 		this.userMeta = this.el.dataset.userMeta
 			? JSON.parse(this.el.dataset.userMeta)
 			: {};
@@ -85,6 +85,16 @@ const MilkdownEditor = {
 			| HTMLAnchorElement
 			| HTMLButtonElement
 			| null;
+		this.undoBtn = this.el.dataset.undoId
+			? (document.getElementById(
+					this.el.dataset.undoId,
+				) as HTMLButtonElement | null)
+			: null;
+		this.redoBtn = this.el.dataset.redoId
+			? (document.getElementById(
+					this.el.dataset.redoId,
+				) as HTMLButtonElement | null)
+			: null;
 
 		createMilkdownEditor({
 			root: this.el as HTMLElement,
@@ -98,12 +108,14 @@ const MilkdownEditor = {
 
 			const fetchCurrent = () =>
 				normalize(this.editorInstance.action(getMarkdown()));
+			this.fetchCurrent = fetchCurrent;
 
 			if (isStatic) {
 				this.setEditable(false);
 				const content = fetchCurrent();
 				this.status.updateCurrent(content);
 				this.status.setReady();
+				this.maybePushEditorState(true);
 			} else {
 				const allowEdit = isEdit && editable;
 				this.collabHandles = initCollab({
@@ -119,6 +131,7 @@ const MilkdownEditor = {
 						this.status.updateCurrent(syncedContent);
 						this.status.setReady();
 						this.applyAwarenessMeta();
+						this.maybePushEditorState(true);
 					},
 				});
 				this.awareness = this.collabHandles?.awareness;
@@ -127,14 +140,40 @@ const MilkdownEditor = {
 
 			this.setupFormSync();
 
-			this.handleDocUpdate = () => {
-				this.status.scheduleRefresh(fetchCurrent);
-			};
-			this.yDoc.on("update", this.handleDocUpdate);
+			if (isEdit) {
+				this.attachDocUpdates(fetchCurrent);
+			}
 
 			this.handleEvent("collab_saved_version", ({ markdown }) => {
 				this.status.markSaved(normalize(markdown));
-				this.status.scheduleRefresh(fetchCurrent);
+				this.status.updateCurrent(fetchCurrent());
+				if (this.mode === "edit") this.maybePushEditorState(true);
+			});
+
+			this.handleEvent("submit_page_form", ({ form_id }) => {
+				const form = form_id
+					? (document.getElementById(form_id) as HTMLFormElement | null)
+					: null;
+				form?.requestSubmit();
+			});
+
+			this.handleEvent("revert_to_saved", () => {
+				this.undoUntilSaved(fetchCurrent).finally(() => {
+					this.pushEvent("revert_done", { ok: true });
+				});
+			});
+
+			this.handleEvent("set_editable", ({ editable }) => {
+				this.el.dataset.editable = editable ? "true" : "";
+				this.mode = editable ? "edit" : "view";
+				this.el.dataset.mode = this.mode;
+				if (this.editorInstance) {
+					this.setEditable(!!editable);
+					if (this.mode === "edit") {
+						this.attachDocUpdates(this.fetchCurrent);
+						this.maybePushEditorState(true);
+					}
+				}
 			});
 
 			if (this.doneLink) {
@@ -148,6 +187,9 @@ const MilkdownEditor = {
 				};
 				this.doneLink.addEventListener("click", this.doneHandler);
 			}
+
+			this.attachUndoRedo();
+			if (this.mode === "edit") this.maybePushEditorState(true);
 		});
 	},
 
@@ -190,11 +232,22 @@ const MilkdownEditor = {
 
 	updated() {
 		if (!this.editorInstance) return;
-		this.setEditable(this.el.dataset.editable !== undefined);
-		// Re-apply status to restore data attributes after LiveView patches
-		if (this.status) {
-			this.status.refresh();
-		}
+		this.setEditable(this.el.dataset.editable === "true");
+		// Re-attach status targets in case LiveView patched them
+		if (this.status) this.status.refresh();
+
+		// Rebind undo/redo buttons if LiveView replaced them
+		this.undoBtn = this.el.dataset.undoId
+			? (document.getElementById(
+					this.el.dataset.undoId,
+				) as HTMLButtonElement | null)
+			: null;
+		this.redoBtn = this.el.dataset.redoId
+			? (document.getElementById(
+					this.el.dataset.redoId,
+				) as HTMLButtonElement | null)
+			: null;
+		this.attachUndoRedo();
 	},
 
 	destroyed() {
@@ -224,10 +277,24 @@ const MilkdownEditor = {
 		if (this.doneLink && this.doneHandler) {
 			this.doneLink.removeEventListener("click", this.doneHandler);
 		}
+		if (this.undoBtn && this.undoHandler) {
+			this.undoBtn.removeEventListener("click", this.undoHandler);
+		}
+		if (this.redoBtn && this.redoHandler) {
+			this.redoBtn.removeEventListener("click", this.redoHandler);
+		}
 		this.doneLink = null;
 		this.doneHandler = null;
+		this.undoBtn = null;
+		this.redoBtn = null;
+		this.undoHandler = null;
+		this.redoHandler = null;
 		this.userMeta = null;
 		this.awareness = null;
+		if (this.statePushTimer) window.clearTimeout(this.statePushTimer);
+		this.statePushTimer = null;
+		this.statePending = null;
+		this.stateLastSent = null;
 	},
 
 	applyAwarenessMeta() {
@@ -257,6 +324,97 @@ const MilkdownEditor = {
 			steps += 1;
 			await new Promise((resolve) => requestAnimationFrame(resolve));
 		}
+	},
+
+	attachUndoRedo() {
+		const view = this.editorInstance?.ctx.get(editorViewCtx);
+		const editable = this.el.dataset.editable === "true";
+
+		// Always detach existing handlers first (mode toggles / LV patches).
+		if (this.undoBtn && this.undoHandler)
+			this.undoBtn.removeEventListener("click", this.undoHandler);
+		if (this.redoBtn && this.redoHandler)
+			this.redoBtn.removeEventListener("click", this.redoHandler);
+		this.undoHandler = null;
+		this.redoHandler = null;
+
+		if (!view || !editable) return;
+
+		if (this.undoBtn) {
+			this.undoHandler = (event: Event) => {
+				event.preventDefault();
+				undo(view.state, view.dispatch);
+				this.maybePushEditorState();
+			};
+			this.undoBtn.addEventListener("click", this.undoHandler);
+		}
+
+		if (this.redoBtn) {
+			this.redoHandler = (event: Event) => {
+				event.preventDefault();
+				redo(view.state, view.dispatch);
+				this.maybePushEditorState();
+			};
+			this.redoBtn.addEventListener("click", this.redoHandler);
+		}
+	},
+
+	maybePushEditorState(force = false) {
+		// Only report state when in edit mode
+		if (this.mode !== "edit") return;
+
+		const view = this.editorInstance?.ctx.get(editorViewCtx);
+		const { hasUndo, hasRedo } = readUndoRedoState(view ?? null);
+		const synced = this.status ? this.status.isSynced() : true;
+
+		const payload = {
+			"synced?": synced,
+			"has_undo?": hasUndo,
+			"has_redo?": hasRedo,
+		};
+
+		const same =
+			this.stateLastSent &&
+			this.stateLastSent["synced?"] === payload["synced?"] &&
+			this.stateLastSent["has_undo?"] === payload["has_undo?"] &&
+			this.stateLastSent["has_redo?"] === payload["has_redo?"];
+
+		if (same && !force) return;
+
+		if (this.statePushTimer && !force) {
+			this.statePending = payload;
+			return;
+		}
+
+		const push = (data: typeof payload) => {
+			this.pushEvent("editor_state", data);
+			this.stateLastSent = data;
+		};
+
+		if (force) {
+			if (this.statePushTimer) window.clearTimeout(this.statePushTimer);
+			this.statePushTimer = null;
+			this.statePending = null;
+			push(payload);
+			return;
+		}
+
+		this.statePending = payload;
+		this.statePushTimer = window.setTimeout(() => {
+			if (this.statePending) push(this.statePending);
+			this.statePending = null;
+			this.statePushTimer = null;
+		}, 150);
+	},
+
+	attachDocUpdates(fetchCurrent: () => any) {
+		if (this.docUpdatesAttached) return;
+		this.handleDocUpdate = () => {
+			this.status.updateCurrent(fetchCurrent());
+			this.maybePushEditorState();
+		};
+		this.yDoc.on("update", this.handleDocUpdate);
+		this.docUpdatesAttached = true;
 	},
 };
 

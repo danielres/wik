@@ -23,15 +23,6 @@ export class StatusIndicator {
 		if (!this.ready) return;
 	}
 
-	scheduleRefresh(fetchCurrent: () => string, delay = 200) {
-		if (!this.ready || this.timer) return;
-
-		this.timer = window.setTimeout(() => {
-			this.timer = null;
-			this.updateCurrent(fetchCurrent());
-		}, delay);
-	}
-
 	// Exposed for cases where caller needs to force a render (e.g., after LV patch)
 	refresh() {
 		if (!this.ready) return;

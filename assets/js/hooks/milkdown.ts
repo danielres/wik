@@ -65,8 +65,6 @@ const MilkdownEditor = {
 		this.collabHandles = null as CollabHandles | null;
 		this.editorInstance = null;
 		this.handleDocUpdate = null;
-		this.doneLink = null;
-		this.doneHandler = null;
 		this.undoBtn = null;
 		this.redoBtn = null;
 		this.undoHandler = null;
@@ -81,10 +79,6 @@ const MilkdownEditor = {
 		this.userMeta = this.el.dataset.userMeta
 			? JSON.parse(this.el.dataset.userMeta)
 			: {};
-		this.doneLink = document.querySelector("[data-done-target]") as
-			| HTMLAnchorElement
-			| HTMLButtonElement
-			| null;
 		this.undoBtn = this.el.dataset.undoId
 			? (document.getElementById(
 					this.el.dataset.undoId,
@@ -176,17 +170,6 @@ const MilkdownEditor = {
 				}
 			});
 
-			if (this.doneLink) {
-				this.doneHandler = (event: Event) => {
-					event.preventDefault();
-					this.undoUntilSaved(fetchCurrent).finally(() => {
-						if (this.doneLink instanceof HTMLAnchorElement) {
-							window.location.href = this.doneLink.href;
-						}
-					});
-				};
-				this.doneLink.addEventListener("click", this.doneHandler);
-			}
 
 			this.attachUndoRedo();
 			if (this.mode === "edit") this.maybePushEditorState(true);
@@ -274,17 +257,12 @@ const MilkdownEditor = {
 		this.form = null;
 		this.hiddenInput = null;
 		this.status = null;
-		if (this.doneLink && this.doneHandler) {
-			this.doneLink.removeEventListener("click", this.doneHandler);
-		}
 		if (this.undoBtn && this.undoHandler) {
 			this.undoBtn.removeEventListener("click", this.undoHandler);
 		}
 		if (this.redoBtn && this.redoHandler) {
 			this.redoBtn.removeEventListener("click", this.redoHandler);
 		}
-		this.doneLink = null;
-		this.doneHandler = null;
 		this.undoBtn = null;
 		this.redoBtn = null;
 		this.undoHandler = null;

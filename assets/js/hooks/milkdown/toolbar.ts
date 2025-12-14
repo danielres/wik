@@ -49,12 +49,14 @@ class ToolbarView implements PluginView {
 		const items: {
 			label: string;
 			title: string;
+			iconClass?: string;
 			active: (ctx: Ctx) => boolean;
 			run: (ctx: Ctx) => void;
 		}[] = [
 			{
 				label: "B",
 				title: "Bold",
+				iconClass: "hero-bold",
 				active: (ctx) => {
 					const commands = ctx.get(commandsCtx);
 					return commands.call(
@@ -70,6 +72,7 @@ class ToolbarView implements PluginView {
 			{
 				label: "I",
 				title: "Italic",
+				iconClass: "hero-italic",
 				active: (ctx) => {
 					const commands = ctx.get(commandsCtx);
 					return commands.call(
@@ -85,6 +88,7 @@ class ToolbarView implements PluginView {
 			{
 				label: "S",
 				title: "Strikethrough",
+				iconClass: "hero-strikethrough",
 				active: (ctx) => {
 					const commands = ctx.get(commandsCtx);
 					return commands.call(
@@ -100,6 +104,7 @@ class ToolbarView implements PluginView {
 			{
 				label: "</>",
 				title: "Inline code",
+				iconClass: "hero-code-bracket",
 				active: (ctx) => {
 					const commands = ctx.get(commandsCtx);
 					return commands.call(
@@ -115,7 +120,8 @@ class ToolbarView implements PluginView {
 
 			{
 				label: "W",
-				title: "Wikilink",
+				title: "Turn into Wikilink",
+				iconClass: "hero-book-open",
 				active: () => false, // Wikilinks are converted to links by input rule
 				run: (ctx) => {
 					const editor = ctx.get(editorCtx);
@@ -125,7 +131,8 @@ class ToolbarView implements PluginView {
 			},
 			{
 				label: "🔗",
-				title: "Insert/edit link",
+				title: "Turn into regular link",
+				iconClass: "hero-link",
 				active: (ctx) => {
 					const commands = ctx.get(commandsCtx);
 					return commands.call(isMarkSelectedCommand.key, linkSchema.type(ctx));
@@ -150,10 +157,15 @@ class ToolbarView implements PluginView {
 
 			const btn = document.createElement("button");
 			btn.type = "button";
-			btn.textContent = item.label;
 			btn.title = item.title;
 			btn.className =
 				"toolbar-item px-1 rounded hover:bg-zinc-700/80 data-[active=true]:bg-zinc-600";
+
+			if (item.iconClass) {
+				btn.innerHTML = `<span class="${item.iconClass} w-4 h-4 pointer-events-none" aria-hidden="true"></span><span class="sr-only">${item.title}</span>`;
+			} else {
+				btn.textContent = item.label;
+			}
 
 			btn.addEventListener("mousedown", (e) => {
 				e.preventDefault();

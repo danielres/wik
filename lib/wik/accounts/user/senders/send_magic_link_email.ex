@@ -54,6 +54,9 @@ defmodule Wik.Accounts.User.Senders.SendMagicLinkEmail do
   defp build_email_body(params) do
     magic_link_url = url(~p"/magic_link/#{params[:token]}")
 
+    magic_link_url2 =
+      url(~p"/magic_link/#{params[:token]}") |> String.replace("localhost", "192.168.178.132")
+
     """
     <!DOCTYPE html>
     <html>
@@ -61,6 +64,7 @@ defmodule Wik.Accounts.User.Senders.SendMagicLinkEmail do
         <p>Hello, #{params[:email]}!</p>
         <p>Click this link to sign in:</p>
         <p><a href="#{magic_link_url}">#{magic_link_url}</a></p>
+        <p><a href="#{magic_link_url2}">#{magic_link_url2}</a></p>
         <p>This link will expire after use or a period of inactivity.</p>
       </body>
     </html>

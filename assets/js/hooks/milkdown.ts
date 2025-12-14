@@ -152,9 +152,13 @@ const MilkdownEditor = {
 			});
 
 			this.handleEvent("revert_to_saved", () => {
-				this.undoUntilSaved(fetchCurrent).finally(() => {
-					this.pushEvent("revert_done", { ok: true });
-				});
+				this.undoUntilSaved(fetchCurrent)
+					.then((reverted: boolean) => {
+						this.pushEvent("revert_done", { ok: reverted !== false });
+					})
+					.catch(() => {
+						this.pushEvent("revert_done", { ok: false });
+					});
 			});
 
 			this.handleEvent("set_editable", ({ editable }) => {
@@ -287,22 +291,23 @@ const MilkdownEditor = {
 
 	async undoUntilSaved(fetchCurrent: () => string) {
 		const target = this.status ? this.status.getLastSaved() : null;
-		if (target == null) return;
+		if (target == null) return false;
 
 		const view = this.editorInstance?.ctx.get(editorViewCtx);
-		if (!view) return;
+		if (!view) return false;
 
 		const maxSteps = 1000;
 		let steps = 0;
 
 		while (steps < maxSteps) {
 			const current = fetchCurrent();
-			if (current === target) break;
+			if (current === target) return true;
 			const didUndo = undo(view.state, view.dispatch);
 			if (!didUndo) break;
 			steps += 1;
 			await new Promise((resolve) => requestAnimationFrame(resolve));
 		}
+		return fetchCurrent() === target;
 	},
 
 	attachUndoRedo() {

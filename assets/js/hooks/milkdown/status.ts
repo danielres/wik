@@ -2,7 +2,6 @@ export class StatusIndicator {
 	private lastSaved: string;
 	private current: string;
 	private ready = false;
-	private timer: number | null = null;
 
 	constructor(initial: string) {
 		this.lastSaved = initial;

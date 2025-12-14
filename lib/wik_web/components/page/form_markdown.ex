@@ -1,6 +1,10 @@
 defmodule WikWeb.Components.Page.FormMarkdown do
   use WikWeb, :live_component
 
+  attr :undo_button_id, :string, default: nil
+  attr :redo_button_id, :string, default: nil
+  attr :exit_after_save?, :boolean, default: false
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -25,10 +29,10 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-markdown={text_value}
             data-page-id={@page.id}
             data-input-id={"page_text_#{@id}"}
-            data-editable={@editable}
+            data-editable={@editable && "true"}
             data-mode={if(@editable, do: "edit", else: "view")}
-            data-status-dot-id={@status_dot_id}
-            data-status-label-id={@status_label_id}
+            data-undo-id={@undo_button_id}
+            data-redo-id={@redo_button_id}
             data-user-meta={%{name: @actor |> to_string} |> Jason.encode!()}
             data-root-path={"/#{ @group.slug }/wiki"}
             data-pages-json={
@@ -65,6 +69,10 @@ defmodule WikWeb.Components.Page.FormMarkdown do
           socket
           # |> push_navigate(to: socket.assigns.return_to)
           |> Toast.put_toast(:success, "Page #{socket.assigns.form.source.type}d successfully")
+
+        if socket.assigns.exit_after_save? do
+          send(self(), {:page_saved_for_exit, socket.assigns.page.id})
+        end
 
         {:noreply, socket}
 

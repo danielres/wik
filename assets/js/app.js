@@ -23,7 +23,7 @@ import "phoenix_html";
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import { hooks as colocatedHooks } from "phoenix-colocated/wik";
-import topbar from "../vendor/topbar";
+import topbar from "../vendor/topbar.cjs";
 import Toast from "../../deps/toast/assets/js/toast.js";
 import MilkdownEditor from "./hooks/milkdown.js";
 import { LayoutStickyToolbar } from "./hooks/layout-sticky-toolbar.js";

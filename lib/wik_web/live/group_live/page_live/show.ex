@@ -5,6 +5,8 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   Handles viewing wiki pages within a group, automatically creating pages
   that don't exist yet when accessed.
   """
+  @debug? true
+  @env Mix.env()
 
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
@@ -13,85 +15,151 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <% editable = @live_action == :edit and connected?(@socket) %>
-
     <Layouts.app flash={@flash} ctx={@ctx}>
       <:sticky_toolbar>
-        <div class="flex justify-between">
-          <div class="flex items-center">
-            <.link
-              class="btn btn-sm btn-neutral opacity-70 hover:opacity-100 transition"
-              patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"}
-            >
-              v. {@page.versions_count}
-            </.link>
-
-            <%= if editable do %>
-              <div class="tooltip tooltip-right">
-                <div class="tooltip-content">
-                  <span
-                    class="text-xs opacity-80"
-                    id={"collab-status-label-#{@page.id}"}
-                  >
-                    Synced
-                  </span>
-                </div>
-                <button class="btn btn-sm btn-ghost bg-transparent">
-                  <span
-                    id={"collab-status-dot-#{@page.id}"}
-                    class="size-2 rounded-full bg-emerald-500"
-                  >
-                  </span>
-                </button>
-              </div>
-            <% end %>
-          </div>
-
-          <%= if Ash.can?({@page, :update}, @current_user) and !editable do %>
-            <WikWeb.Components.ButtonEdit.button
-              link={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/edit?return_to=show"}
-              watch_path={@current_path <> "/edit"}
-              presences={@ctx.presences}
-            />
-          <% end %>
-
-          <%= if editable do %>
-            <div class="flex items-center gap-2">
-              <a
-                id={"collab-done-#{@page.id}"}
-                data-done-target
-                class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100 transition "
-                href={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
+        <div class="toolbar-editor-controls">
+          <%= if Ash.can?({@page, :update}, @current_user)  do %>
+            <div class={["toolbar-actions", not @editing? and "opacity-0"]}>
+              <button
+                id={"editor-undo-#{@page.id}"}
+                type="button"
+                class={[
+                  "action",
+                  if(@editing? and @editor_state.has_undo?,
+                    do: "action-enabled",
+                    else: "action-disabled"
+                  )
+                ]}
               >
-                <i class="hero-arrow-left-micro size-5">Back</i>
-              </a>
-              <.button
+                <.icon name="hero-arrow-uturn-left-micro" />
+              </button>
+              <button
+                id={"editor-redo-#{@page.id}"}
+                type="button"
+                class={[
+                  "action",
+                  if(@editing? and @editor_state.has_redo?,
+                    do: "action-enabled",
+                    else: "action-disabled"
+                  )
+                ]}
+              >
+                <.icon name="hero-arrow-uturn-right-micro" />
+              </button>
+              <button
                 form={"page-form-#{@page.id}"}
-                phx-disable-with="Saving Version..."
-                variant="primary"
-                data-status-button-save
-                class=""
+                type="submit"
+                class={[
+                  "action",
+                  if(@editing? and not @editor_state.synced?,
+                    do: "action-enabled",
+                    else: "action-disabled"
+                  )
+                ]}
               >
-                Save
-              </.button>
+                <.icon name="hero-arrow-down-tray-micro" />
+              </button>
             </div>
           <% end %>
+
+          <div class="toolbar-actions">
+            <%= if Ash.can?({@page, :update}, @current_user)  do %>
+              <button
+                :if={not @editing?}
+                type="button"
+                class={["action", "action-enabled"]}
+                phx-click="toggle_editing"
+              >
+                <.icon name="hero-lock-closed-micro" />
+              </button>
+              <button
+                :if={@editing?}
+                type="button"
+                class={["action", "action-enabled"]}
+                phx-click="attempt_end_editing"
+                phx-value-synced={@editor_state.synced?}
+                phx-value-has_undo={@editor_state.has_undo?}
+                phx-value-has_redo={@editor_state.has_redo?}
+              >
+                <.icon name="hero-lock-open-micro" />
+              </button>
+            <% end %>
+
+            <.link
+              class={[
+                "action action-version",
+                if(@editing?, do: "action-disabled", else: "action-enabled")
+              ]}
+              id={"page-version-link-#{@page.id}"}
+              patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"}
+            >
+              v.{@page.versions_count}
+            </.link>
+          </div>
+        </div>
+
+        <div
+          :if={@env == :dev and @debug?}
+          class="bg-base-300 w-fit ml-auto text-xs font-mono mt-2 p-4 rounded"
+        >
+          <dd>page title: {@ctx.page.title}</dd>
+          <div>editing?: {@editing?}</div>
+          <div>synced?: {@editor_state.synced?}</div>
+          <div>has_undo?: {@editor_state.has_undo?}</div>
+          <div>has_redo?: {@editor_state.has_redo?}</div>
+          <div>exit_after_save?: {@exit_after_save?}</div>
+          <div>show_unsaved_modal?:{@show_unsaved_modal}</div>
         </div>
       </:sticky_toolbar>
 
       <.live_component
         module={WikWeb.Components.Page.FormMarkdown}
-        id={"form-page-#{@page.id}-#{@page.versions_count}-#{@live_action}"}
+        id={"form-page-#{@page.id}"}
         form_id={"page-form-#{@page.id}"}
-        status_dot_id={"collab-status-dot-#{@page.id}"}
-        status_label_id={"collab-status-label-#{@page.id}"}
+        undo_button_id={"editor-undo-#{@page.id}"}
+        redo_button_id={"editor-redo-#{@page.id}"}
+        exit_after_save?={@exit_after_save?}
         page={@page}
         actor={@current_user}
         group={@ctx.current_group}
-        editable={editable}
+        editable={@editing?}
         return_to={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
         pages_map={@ctx.pages_map}
       />
+
+      <.live_component
+        module={WikWeb.Components.Generic.Modal}
+        id="unsaved-exit-modal"
+        open?={@show_unsaved_modal}
+        mandatory?={false}
+        padding_class="p-4 space-y-4"
+        phx-click-close="cancel_exit_modal"
+      >
+        <div class="space-y-4">
+          <div class="text-lg font-semibold">Unsaved changes</div>
+          <p class="text-sm opacity-80">
+            You have edits that haven&apos;t been saved. What do you want to do?
+          </p>
+
+          <div class="flex flex-col gap-2">
+            <button
+              type="button"
+              class="btn btn-sm btn-primary w-full"
+              phx-click="save_version_and_continue"
+            >
+              Save version and continue
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-sm btn-error w-full"
+              phx-click="discard_and_continue"
+            >
+              Forget changes and continue
+            </button>
+          </div>
+        </div>
+      </.live_component>
 
       <:backlinks>
         <div class="space-y-2">
@@ -145,7 +213,13 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
         {:ok,
          socket
+         |> assign(:env, @env)
+         |> assign(:debug?, @debug?)
          |> assign(:page_title, page.title)
+         |> set_editing(false)
+         |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
+         |> assign(:show_unsaved_modal, false)
+         |> assign(:exit_after_save?, false)
          |> assign(:page, page)
          |> assign(:updated_fields, [])
          |> assign(:backlinks, load_backlinks(page))
@@ -173,6 +247,71 @@ defmodule WikWeb.GroupLive.PageLive.Show do
          socket
          |> push_navigate(to: redirect_url)}
     end
+  end
+
+  @impl true
+  def handle_event("toggle_editing", _params, socket) do
+    {:noreply, set_editing(socket, not socket.assigns.editing?)}
+  end
+
+  @impl true
+  def handle_event("attempt_end_editing", params, socket) do
+    state = %{
+      synced?: parse_bool(params["synced"], socket.assigns.editor_state.synced?),
+      has_undo?: parse_bool(params["has_undo"], socket.assigns.editor_state.has_undo?),
+      has_redo?: parse_bool(params["has_redo"], socket.assigns.editor_state.has_redo?)
+    }
+
+    if state.synced? do
+      {:noreply, set_editing(socket, false)}
+    else
+      {:noreply, assign(socket, show_unsaved_modal: true, editor_state: state)}
+    end
+  end
+
+  @impl true
+  def handle_event("save_version_and_continue", _params, socket) do
+    form_id = "page-form-#{socket.assigns.page.id}"
+
+    {:noreply,
+     socket
+     |> assign(:exit_after_save?, true)
+     |> push_event("submit_page_form", %{form_id: form_id})}
+  end
+
+  @impl true
+  def handle_event("discard_and_continue", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_unsaved_modal, true)
+     |> push_event("revert_to_saved", %{})}
+  end
+
+  @impl true
+  def handle_event("cancel_exit_modal", _params, socket) do
+    {:noreply, assign(socket, show_unsaved_modal: false, exit_after_save?: false)}
+  end
+
+  @impl true
+  def handle_event("editor_state", params, socket) do
+    state = %{
+      synced?: Map.get(params, "synced?", true),
+      has_undo?: Map.get(params, "has_undo?", false),
+      has_redo?: Map.get(params, "has_redo?", false)
+    }
+
+    {:noreply, assign(socket, editor_state: state)}
+  end
+
+  @impl true
+  def handle_event("revert_done", _params, socket) do
+    socket =
+      socket
+      |> assign(:show_unsaved_modal, false)
+      |> assign(:exit_after_save?, false)
+      |> set_editing(false)
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -230,6 +369,14 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     {:noreply, assign(socket, :backlinks, load_backlinks(socket.assigns.page))}
   end
 
+  def handle_info({:page_saved_for_exit, _page_id}, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_unsaved_modal, false)
+     |> assign(:exit_after_save?, false)
+     |> set_editing(false)}
+  end
+
   defp reload_page!(page_slug, socket) do
     Wik.Wiki.Page
     |> Ash.get!(
@@ -238,6 +385,26 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       load: [:versions_count]
     )
   end
+
+  defp set_editing(socket, value) do
+    socket =
+      socket
+      |> assign(:editing?, value)
+      |> Utils.Ctx.add(:editing?, value)
+
+    if connected?(socket) do
+      push_event(socket, "set_editable", %{editable: value})
+    else
+      socket
+    end
+  end
+
+  defp parse_bool("true", _default), do: true
+  defp parse_bool("false", _default), do: false
+  defp parse_bool(true, _default), do: true
+  defp parse_bool(false, _default), do: false
+  defp parse_bool(nil, default), do: default
+  defp parse_bool(_, default), do: default
 
   defp load_backlinks(page) do
     Wik.Wiki.Backlink.Utils.list_for_page(page)

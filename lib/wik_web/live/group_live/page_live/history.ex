@@ -7,55 +7,94 @@ defmodule WikWeb.GroupLive.PageLive.History do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>
-      <div class="flex grid grid-cols-3 mb-12">
-        <div>
-          <.button
-            navigate={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
-            class="btn btn-sm btn-circle btn-ghost opacity-50 hover:opacity-100 transition "
-          >
-            <.icon name="hero-arrow-left-micro size-5" />
-          </.button>
-        </div>
+      <:sticky_toolbar>
+        <div class="toolbar-editor-controls">
+          <div class="space-y-1">
+            <div class="flex gap-2 items-start">
+              <div>
+                <div class="toolbar-actions items-center text-xs">
+                  <.link
+                    class={["action", @v == 1 and "action-disabled"]}
+                    patch={
+                      if @v == 1,
+                        do: "#",
+                        else: ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/1"
+                    }
+                    aria-disabled={@v == 1}
+                    tabindex={@v == 1 && "-1"}
+                  >
+                    <.icon name="hero-chevron-double-left-mini" />
+                  </.link>
+                  <.link
+                    class={["action", @v == 1 and "action-disabled"]}
+                    patch={
+                      if @v > 1,
+                        do: ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v - 1}",
+                        else: "#"
+                    }
+                    aria-disabled={@v == 1}
+                    tabindex={@v == 1 && "-1"}
+                  >
+                    <.icon name="hero-chevron-left-mini" />
+                  </.link>
+                  <div class="whitespace-nowrap min-w-16 text-center">
+                    <span>{@v}</span>
+                    <span class="opacity-60">/</span>
+                    <span class="opacity-60">{@page.versions_count}</span>
+                  </div>
+                  <.link
+                    patch={
+                      if @v < @page.versions_count,
+                        do: ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v + 1}",
+                        else: "#"
+                    }
+                    class={["action", @v == @page.versions_count and "action-disabled"]}
+                    aria-disabled={@v == @page.versions_count}
+                    tabindex={@v == @page.versions_count && "-1"}
+                  >
+                    <.icon name="hero-chevron-right-mini" />
+                  </.link>
+                  <.link
+                    patch={
+                      ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"
+                    }
+                    class={["action", @v == @page.versions_count and "action-disabled"]}
+                    aria-disabled={@v == @page.versions_count}
+                    tabindex={@v == @page.versions_count && "-1"}
+                  >
+                    <.icon name="hero-chevron-double-right-mini" />
+                  </.link>
+                </div>
 
-        <div class="space-y-0">
-          <div class="join w-full flex justify-center">
-            <.button
-              disabled={@v == 1}
-              patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v - 1}"}
-              class="btn btn-sm btn-circle btn-ghost"
-            >
-              <i class="hero-chevron-left size-4"></i>
-            </.button>
+                <div class="text-end text-xs px-2 pt-1 opacity-80 hover:opacity-100 transition">
+                  <div>
+                    <WikWeb.Components.Time.pretty
+                      datetime={@version.occurred_at}
+                      class="opacity-80 hover:opacity-100 transition"
+                    />
+                    <span class="opacity-50">by</span>
 
-            <span class="btn btn-sm btn-ghost pointer-events-none text-white">
-              {@v}
-              <span class="opacity-75">/</span>
-              {@page.versions_count}
-            </span>
+                    {# TODO: link to author }
+                    <.link class="opacity-80 hover:opacity-100 transition">
+                      {@author |> to_string()}
+                    </.link>
+                  </div>
+                </div>
+              </div>
 
-            <.button
-              disabled={@v == @page.versions_count}
-              patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v + 1}"}
-              class="btn btn-sm btn-circle btn-ghost"
-            >
-              <i class="hero-chevron-right size-4"></i>
-            </.button>
+              <div class="toolbar-actions ">
+                <.link
+                  class="action !btn-ghost opacity-40 hover:opacity-100 transition"
+                  patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
+                >
+                  <.icon name="hero-x-mark size-6" />
+                </.link>
+              </div>
+            </div>
           </div>
-
-          <div class="text-xs flex justify-center gap-1.5">
-            <WikWeb.Components.Time.pretty
-              datetime={@version.occurred_at}
-              class="opacity-80 hover:opacity-100 transition"
-            />
-
-            <span class="opacity-50">by</span>
-
-            <.link class="opacity-80 hover:opacity-100 transition">
-              {@author |> to_string()}
-            </.link>
-          </div>
         </div>
-      </div>
+      </:sticky_toolbar>
+
       <%= if @version.data["text"] do %>
         <div
           id={"milkdown-editor-#{@v}"}

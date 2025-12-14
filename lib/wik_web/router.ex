@@ -86,7 +86,6 @@ defmodule WikWeb.Router do
           {WikWeb.CtxAdditions, :ctx_additions}
         ] do
         live "/", GroupLive.Show, :show
-        live "/edit", GroupLive.Show, :edit
         live "/members", GroupLive.MemberLive.Index, :index
         live "/map", GroupLive.WikimapLive, :show
         live "/wiki", GroupLive.PageLive.Index, :index

@@ -1,0 +1,23 @@
+.toolbar-editor-controls {
+	@apply flex gap-2 justify-end items-center;
+
+	.toolbar-actions {
+		@apply bg-base-300 rounded-lg p-2 flex gap-2 transition;
+	}
+
+	.action {
+		@apply btn btn-sm btn-square hover:btn-accent;
+	}
+
+	.action-version {
+		@apply btn btn-sm transition w-auto;
+	}
+
+	.action-enabled {
+		@apply opacity-100 pointer-events-auto;
+	}
+
+	.action-disabled {
+		@apply opacity-50 pointer-events-none btn-ghost;
+	}
+}

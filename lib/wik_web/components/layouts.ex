@@ -44,14 +44,11 @@ defmodule WikWeb.Layouts do
       <div class="flex justify-between w-full">
         <div class="flex items-center gap-1 mt-2 font-bold text-xs">
           <%= if @ctx[:current_group] do %>
-            <.link
-              class="opacity-50 hover:opacity-100 transition"
-              navigate={~p"/"}
-            >
+            <.link class="opacity-50 hover:opacity-100 transition" navigate={~p"/"}>
               Groups
             </.link>
 
-            <span class="opacity-40 hero-chevron-right-micro size-4">/</span>
+            <.icon name="hero-chevron-right-micro" class="opacity-40" />
 
             <.link
               class={[link_class(@ctx, "", false)]}
@@ -64,13 +61,13 @@ defmodule WikWeb.Layouts do
 
         <div>
           <div class="dropdown dropdown-end mt-2 text-xs">
-            <div
+            <button
               tabindex="0"
               role="button"
               class="opacity-50 hover:opacity-100 transition cursor-pointer font-semibold"
             >
               {@ctx.current_user |> to_string}
-            </div>
+            </button>
 
             <div
               tabindex="0"
@@ -82,7 +79,7 @@ defmodule WikWeb.Layouts do
                   class="flex gap-3 justify-center items-center hover:bg-white/5 transition px-2 py-2 rounded opacity-80 hover:opacity-100"
                 >
                   <span>Log out</span>
-                  <.icon name="hero-chevron-right size-4" />
+                  <.icon name="hero-chevron-right" class="size-4" />
                 </.link>
 
                 <hr class="opacity-20 my-2" />
@@ -122,7 +119,12 @@ defmodule WikWeb.Layouts do
       <% end %>
     </header>
 
-    <WikWeb.Components.Layout.StickyToolbar.render block={@sticky_toolbar} />
+    <%= if WikWeb.Helpers.slot_has_content?(@sticky_toolbar) do %>
+      <div id="layout-sticky-toolbar-sentinel" />
+      <div id="LayoutStickyToolbar" class="layout-sticky-toolbar" phx-hook="LayoutStickyToolbar">
+        {render_slot(@sticky_toolbar)}
+      </div>
+    <% end %>
 
     <main class="layout-main">
       {render_slot(@inner_block)}
@@ -144,17 +146,6 @@ defmodule WikWeb.Layouts do
         </div>
 
         {render_slot(@backlinks)}
-
-        <div :if={Mix.env() == :dev} class="space-y-2">
-          <div class="flex items-center gap-2">
-            <i class="hero-cpu-chip size-4"></i>
-            <span class="uppercase tracking-wide text-xs opacity-70">Dev</span>
-          </div>
-          <dl class="text-xs flex gap-x-2 opacity-40">
-            <dt class="font-semibold">Page title:</dt>
-            <dd>{@ctx.page.title}</dd>
-          </dl>
-        </div>
       </footer>
     </main>
 

@@ -128,11 +128,13 @@
 
   if (typeof module === "object" && typeof module.exports === "object") {
     module.exports = topbar;
-  } else if (typeof define === "function" && define.amd) {
+  }
+  if (typeof define === "function" && define.amd) {
     define(function () {
       return topbar;
     });
-  } else {
-    this.topbar = topbar;
+  }
+  if (typeof window !== "undefined") {
+    window.topbar = topbar;
   }
 }.call(this, window, document));

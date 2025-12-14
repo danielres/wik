@@ -1,12 +1,12 @@
 // Node built-in test runner; uses jsdom for DOM APIs.
-const assert = require("node:assert/strict");
-const { describe, test, beforeEach, afterEach } = require("node:test");
-const { JSDOM } = require("jsdom");
+import assert from "node:assert/strict";
+import { describe, test, beforeEach, afterEach } from "node:test";
+import { JSDOM } from "jsdom";
 
-const {
+import {
 	makePasteNormalizers,
 	configurePasteHandlers,
-} = require("./paste-handlers.ts");
+} from "./paste-handlers.ts";
 
 const ROOT = "/wiki";
 const ORIGIN = "https://example.com";

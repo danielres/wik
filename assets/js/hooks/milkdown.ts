@@ -166,10 +166,11 @@ const MilkdownEditor = {
 					if (this.mode === "edit") {
 						this.attachDocUpdates(this.fetchCurrent);
 						this.maybePushEditorState(true);
+					} else {
+						this.detachDocUpdates?.();
 					}
 				}
 			});
-
 
 			this.attachUndoRedo();
 			if (this.mode === "edit") this.maybePushEditorState(true);
@@ -393,6 +394,13 @@ const MilkdownEditor = {
 		};
 		this.yDoc.on("update", this.handleDocUpdate);
 		this.docUpdatesAttached = true;
+	},
+
+	detachDocUpdates() {
+		if (!this.docUpdatesAttached) return;
+		if (this.yDoc && this.handleDocUpdate)
+			this.yDoc.off("update", this.handleDocUpdate);
+		this.docUpdatesAttached = false;
 	},
 };
 

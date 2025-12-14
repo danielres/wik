@@ -24,7 +24,7 @@ import {
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { toggleLinkCommand } from "@milkdown/components/link-tooltip";
 import { linkSchema } from "@milkdown/kit/preset/commonmark";
-import { toggleWikilinkCommand } from "./toolbar/command-toggle-wiki-link";
+import { toggleWikilinkCommand } from "./toolbar/command-toggle-wiki-link.ts";
 
 // 1) Create a tooltip plugin
 export const toolbarTooltip = tooltipFactory("WIK_TOOLBAR");
@@ -128,10 +128,7 @@ class ToolbarView implements PluginView {
 				title: "Insert/edit link",
 				active: (ctx) => {
 					const commands = ctx.get(commandsCtx);
-					return commands.call(
-						isMarkSelectedCommand.key,
-						linkSchema.type(ctx),
-					);
+					return commands.call(isMarkSelectedCommand.key, linkSchema.type(ctx));
 				},
 				run: (ctx) => {
 					const editor = ctx.get(editorCtx);

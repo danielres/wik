@@ -5,7 +5,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   Handles viewing wiki pages within a group, automatically creating pages
   that don't exist yet when accessed.
   """
-  @debug? true
   @env Mix.env()
 
   use WikWeb, :live_view
@@ -99,8 +98,21 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         </div>
 
         <div
+          :if={@env == :dev}
+          class={[
+            "toolbar-editor-controls ml-auto mt-2",
+            not @debug? and "opacity-0 hover:opacity-100"
+          ]}
+        >
+          <div class="toolbar-actions w-fit">
+            <.button type="button" class="action" phx-click="toggle_debug">
+              <.icon name="hero-bug-ant" />
+            </.button>
+          </div>
+        </div>
+        <div
           :if={@env == :dev and @debug?}
-          class="bg-base-300 w-fit ml-auto text-xs font-mono mt-2 p-4 rounded"
+          class="bg-base-300 w-fit ml-auto text-xs font-mono mt-2 p-4 rounded-lg"
         >
           <dd>page title: {@ctx.page.title}</dd>
           <div>editing?: {@editing?}</div>
@@ -214,7 +226,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         {:ok,
          socket
          |> assign(:env, @env)
-         |> assign(:debug?, @debug?)
+         |> assign(:debug?, false)
          |> assign(:page_title, page.title)
          |> set_editing(false)
          |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
@@ -252,6 +264,11 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @impl true
   def handle_event("toggle_editing", _params, socket) do
     {:noreply, set_editing(socket, not socket.assigns.editing?)}
+  end
+
+  @impl true
+  def handle_event("toggle_debug", _params, socket) do
+    {:noreply, socket |> assign(:debug?, !socket.assigns.debug?)}
   end
 
   @impl true

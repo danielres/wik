@@ -18,6 +18,12 @@ export const createSlashView =
 			content: container,
 		});
 
+		const emptyState = document.createElement("div");
+		emptyState.className = "slash-empty";
+		emptyState.textContent = "No actions available";
+		emptyState.style.display = "none";
+		container.appendChild(emptyState);
+
 		const makeSlashHandler =
 			(commandKey: any, payload?: any) => (e: MouseEvent | KeyboardEvent) => {
 				e.preventDefault();
@@ -48,15 +54,43 @@ export const createSlashView =
 			return button;
 		};
 
-		const handleCodeBlock = makeSlashHandler(createCodeBlockCommand.key);
-		const handleTable = makeSlashHandler(insertTableCommand.key);
+		const isAtRoot = (view: any) => {
+			const $pos = view.state.selection.$from;
+			// depth 1 means direct child of doc; depth 0 is the doc itself
+			return $pos.depth <= 1;
+		};
+
+		const handleCodeBlock = (e: any) => {
+			editorAction((ctx) => {
+				const view = ctx.get(editorViewCtx);
+				if (!isAtRoot(view)) return;
+			});
+			makeSlashHandler(createCodeBlockCommand.key)(e);
+		};
+
+		const handleTable = (e: any) => {
+			editorAction((ctx) => {
+				const view = ctx.get(editorViewCtx);
+				if (!isAtRoot(view)) return;
+			});
+			makeSlashHandler(insertTableCommand.key)(e);
+		};
 
 		const buttonCode = createButton("Code Block", handleCodeBlock);
 		const buttonTable = createButton("Table", handleTable);
 
+		const updateVisibility = (atRoot: boolean) => {
+			buttonCode.style.display = atRoot ? "" : "none";
+			buttonTable.style.display = atRoot ? "" : "none";
+			const anyVisible = atRoot; // only these two actions for now
+			emptyState.style.display = anyVisible ? "none" : "";
+		};
+
 		return {
 			update: (updatedView: any, prevState: any) => {
 				provider.update(updatedView, prevState);
+				const atRoot = isAtRoot(updatedView);
+				updateVisibility(atRoot);
 			},
 			destroy: () => {
 				provider.destroy();

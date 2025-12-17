@@ -7,12 +7,12 @@ import { readUndoRedoState } from "./undo-state.ts";
 
 // Focus on function-level behavior (no DOM needed here)
 
-test("readUndoRedoState returns false/false for null view", () => {
+test("disables undo/redo when editor view is unavailable", () => {
 	const result = readUndoRedoState(null);
 	assert.deepEqual(result, { hasUndo: false, hasRedo: false });
 });
 
-test("readUndoRedoState reflects depths > 0", () => {
+test("enables undo when there are undoable edits", () => {
 	const schema = new Schema({
 		nodes: {
 			doc: { content: "text*" },

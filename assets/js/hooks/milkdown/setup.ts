@@ -34,6 +34,7 @@ import {
 	type SlashMenuWikilinksPage,
 } from "./slash-menu-wikilinks";
 import { createSlashView } from "./slash-view";
+import { overrideTableSchema, sanitizeDocPlugin } from "./sanitize-doc";
 import { createTagBadgePlugin } from "./tag-badge-plugin";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
 import { configurePasteHandlers } from "./utils/paste-handlers";
@@ -103,6 +104,7 @@ export async function createMilkdownEditor({
 		.use(commonmark)
 		.use(linkTooltipPlugin)
 		.use(gfm)
+		.use(overrideTableSchema)
 		.use(history)
 		.use(collab)
 		.use(listItemBlockComponent)
@@ -113,6 +115,10 @@ export async function createMilkdownEditor({
 		.use(toolbarTooltip)
 		.use(cursorPlugin)
 		.use(inputRuleWikilink(rootPath))
+		// Ensure the sanitizer is appended after all other ProseMirror plugins.
+		.config((ctx) => {
+			ctx.update(prosePluginsCtx, (plugins) => plugins.concat(sanitizeDocPlugin));
+		})
 		.create()
 		.then((editor) => {
 			setEditorInstance(editor);

@@ -19,6 +19,22 @@ function normalize(content: string | undefined | null) {
 	return (content || "").trim();
 }
 
+function extractPlainTitleFromEditorView(view: any) {
+	const first = view?.state?.doc?.firstChild;
+	if (!first) return null;
+	if (first.type?.name !== "heading") return null;
+	if (first.attrs?.level !== 1) return null;
+
+	let title = (first.textContent || "").trim();
+	if (title === "") return null;
+
+	// Strip tags like #tag or #tag/subtag
+	title = title.replace(/(^|\s)#[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*/g, " ");
+	title = title.replace(/\s+/g, " ").trim();
+
+	return title === "" ? null : title;
+}
+
 const EDITOR_STATE_PUSH_DEBOUNCE_MS = 150;
 
 const MilkdownEditor = {
@@ -79,6 +95,8 @@ const MilkdownEditor = {
 		this.stateLastSent = null;
 		this.docUpdatesAttached = false;
 		this.markdownValidator = null;
+
+		this.el.dataset.pageTitle = normalize(this.el.dataset.pageTitle) || "";
 
 		this.status = new StatusIndicator(normalize(markdown));
 		this.userMeta = this.el.dataset.userMeta
@@ -158,6 +176,9 @@ const MilkdownEditor = {
 
 			this.handleEvent("collab_saved_version", ({ markdown }) => {
 				this.status.markSaved(normalize(markdown));
+				const view = this.editorInstance?.ctx?.get?.(editorViewCtx);
+				const title = extractPlainTitleFromEditorView(view);
+				if (title) this.el.dataset.pageTitle = title;
 				ensureMarkdownValidator();
 				this.markdownValidator?.refresh({ immediate: true });
 			});
@@ -243,6 +264,10 @@ const MilkdownEditor = {
 					this.maybePushEditorState(true);
 					return;
 				}
+
+				const view = this.editorInstance?.ctx?.get?.(editorViewCtx);
+				const title = extractPlainTitleFromEditorView(view);
+				if (title) this.el.dataset.pageTitle = title;
 
 				this.hiddenInput.value = result.markdown;
 				this.hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));

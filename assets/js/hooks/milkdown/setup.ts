@@ -35,6 +35,7 @@ import {
 } from "./slash-menus/slash-menu-wikilinks";
 import { createSlashMenu } from "./slash-menus/slash-menu";
 import { overrideTableSchema, sanitizeDocPlugin } from "./sanitize-doc";
+import { ensureTitleHeadingPlugin } from "./ensure-title-heading";
 import { createTagBadgePlugin } from "./tag-badge-plugin";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
 import { configurePasteHandlers } from "./utils/paste-handlers";
@@ -119,7 +120,10 @@ export async function createMilkdownEditor({
 			// Ensure the sanitizer is appended after all other ProseMirror plugins.
 			.config((ctx) => {
 				ctx.update(prosePluginsCtx, (plugins) =>
-					plugins.concat(sanitizeDocPlugin),
+					plugins.concat(
+						sanitizeDocPlugin,
+						ensureTitleHeadingPlugin({ rootEl: root }),
+					),
 				);
 			})
 			.create()

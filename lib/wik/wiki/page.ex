@@ -92,37 +92,31 @@ defmodule Wik.Wiki.Page do
     end
 
     changes do
-      change fn changeset, _context ->
-               case Ash.Changeset.fetch_change(changeset, :title) do
-                 {:ok, title} when is_binary(title) ->
-                   capitalized = String.capitalize(title)
-                   Ash.Changeset.force_change_attribute(changeset, :title, capitalized)
+      #          case Ash.Changeset.fetch_change(changeset, :title) do
+      #            {:ok, title} when is_binary(title) ->
+      #              capitalized = String.capitalize(title)
+      #              Ash.Changeset.force_change_attribute(changeset, :title, capitalized)
+      #
+      #            _ ->
+      #              changeset
+      #          end
+      #        end,
+      #        on: [:create, :update]
+      #
+      # change fn cs, _ctx ->
+      #          cs |> trim_text()
+      #        end,
+      #        on: [:create, :update]
 
-                 _ ->
-                   changeset
-               end
-             end,
-             on: [:create, :update]
-
-      change fn cs, _ctx ->
-               cs |> trim_text()
-             end,
-             on: [:create, :update]
-
-      change fn cs, _ctx ->
-               cs |> collapse_blank_lines()
-             end,
-             on: [:update]
+      # change fn cs, _ctx ->
+      #          cs |> collapse_blank_lines()
+      #        end,
+      #        on: [:update]
 
       change fn cs, _ctx ->
                cs |> set_slug()
              end,
              on: [:create]
-
-      change fn cs, _ctx ->
-               cs |> set_header()
-             end,
-             on: [:create, :update]
 
       change fn cs, _ctx ->
                cs |> update_title_from_header()
@@ -288,33 +282,15 @@ defmodule Wik.Wiki.Page do
     Ash.Changeset.change_attribute(changeset, :slug, slug)
   end
 
-  def set_header(changeset) do
-    text = Ash.Changeset.get_attribute(changeset, :text)
-    has_header? = (text || "") |> String.slice(0, 2) == "# "
-
-    if has_header? do
-      changeset
-    else
-      title = Ash.Changeset.get_attribute(changeset, :title)
-      Ash.Changeset.change_attribute(changeset, :text, "# #{title}\n\n#{text || "<br />"}")
-    end
-  end
-
   def update_title_from_header(changeset) do
     text = Ash.Changeset.get_attribute(changeset, :text)
-    has_header? = (text || "") |> String.slice(0, 2) == "# "
 
-    if has_header? do
-      header =
-        text
-        |> String.split("\n", parts: 2)
-        |> hd()
-        |> String.trim_leading("# ")
-        |> String.trim()
+    case Utils.Markdown.extract_page_title(text) do
+      title when is_binary(title) and title != "" ->
+        Ash.Changeset.change_attribute(changeset, :title, title)
 
-      Ash.Changeset.change_attribute(changeset, :title, header)
-    else
-      changeset
+      _ ->
+        changeset
     end
   end
 

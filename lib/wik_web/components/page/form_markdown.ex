@@ -27,6 +27,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             phx-hook="MilkdownEditor"
             phx-update="ignore"
             data-markdown={text_value}
+            data-page-title={@page.title || ""}
             data-page-id={@page.id}
             data-input-id={"page_text_#{@id}"}
             data-editable={@editable && "true"}
@@ -34,7 +35,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-undo-id={@undo_button_id}
             data-redo-id={@redo_button_id}
             data-user-meta={%{name: @actor |> to_string} |> Jason.encode!()}
-            data-root-path={"/#{ @group.slug }/wiki"}
+            data-root-path={"/#{@group.slug}/wiki"}
             data-pages-json={
               @pages_map
               |> Enum.map(fn page ->
@@ -63,6 +64,12 @@ defmodule WikWeb.Components.Page.FormMarkdown do
 
   @impl true
   def handle_event("save", %{"page" => page_params}, socket) do
+    page_params =
+      case Utils.Markdown.extract_page_title(Map.get(page_params, "text")) do
+        title when is_binary(title) and title != "" -> Map.put(page_params, "title", title)
+        _ -> page_params
+      end
+
     case AshPhoenix.Form.submit(socket.assigns.form, params: page_params) do
       {:ok, _page} ->
         socket =

@@ -16,6 +16,7 @@ export const createSlashView =
 
 		const provider = new SlashProvider({
 			content: container,
+			debounce: 50,
 		});
 
 		const emptyState = document.createElement("div");

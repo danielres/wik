@@ -10,7 +10,8 @@ import {
 	editorViewCtx,
 	getMarkdown,
 } from "./milkdown/setup";
-import type { SlashMenuWikilinksPage } from "./milkdown/slash-menu-wikilinks";
+import type { SlashMenuWikilinksPage } from "./milkdown/slash-menus/slash-menu-wikilinks";
+
 import { StatusIndicator } from "./milkdown/status";
 import { readUndoRedoState } from "./milkdown/undo-state";
 

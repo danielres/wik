@@ -1,4 +1,4 @@
-.milkdown-slash-view {
+.milkdown-slash-menu {
 	@apply absolute hidden data-[show='true']:grid w-64 gap-1 p-2 bg-base-300 rounded;
 
 	button {

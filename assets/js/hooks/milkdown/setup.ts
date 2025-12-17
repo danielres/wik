@@ -33,7 +33,7 @@ import {
 	slashMenuWikilinksRegister,
 	type SlashMenuWikilinksPage,
 } from "./slash-menu-wikilinks";
-import { createSlashView } from "./slash-view";
+import { createSlashMenu } from "./slash-menu";
 import { overrideTableSchema, sanitizeDocPlugin } from "./sanitize-doc";
 import { createTagBadgePlugin } from "./tag-badge-plugin";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
@@ -62,14 +62,14 @@ export async function createMilkdownEditor({
 
 			if (isStatic) {
 				ctx.set(defaultValueCtx, markdown);
-			}
+				}
 
-			ctx.set(slash.key, {
-				view: createSlashView(root, (fn: (ctx: Ctx) => void) => {
-					if (!editorInstance) return;
-					editorInstance.action(fn);
-				}),
-			});
+				ctx.set(slash.key, {
+					view: createSlashMenu(root, (fn: (ctx: Ctx) => void) => {
+						if (!editorInstance) return;
+						editorInstance.action(fn);
+					}),
+				});
 
 			slashMenuWikilinksRegister(ctx, pages, rootPath);
 

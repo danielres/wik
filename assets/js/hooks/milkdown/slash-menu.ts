@@ -1,4 +1,4 @@
-// milkdown-slash-view.ts
+// milkdown-slash-menu.ts
 import type { Ctx } from "@milkdown/ctx";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { SlashProvider } from "@milkdown/kit/plugin/slash";
@@ -8,10 +8,10 @@ import { callCommand } from "@milkdown/kit/utils";
 
 type EditorAction = (fn: (ctx: Ctx) => void) => void;
 
-export const createSlashView =
+export const createSlashMenu =
 	(rootEl: HTMLElement, editorAction: EditorAction) => (_view: any) => {
 		const container = document.createElement("div");
-		container.className = "milkdown-slash-view";
+		container.className = "milkdown-slash-menu";
 		rootEl.appendChild(container);
 
 		const provider = new SlashProvider({

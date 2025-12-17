@@ -233,6 +233,8 @@ const MilkdownEditor = {
 	setupFormSync() {
 		if (this.form && this.hiddenInput) {
 			this.handleSubmit = (event: Event) => {
+				if (this.mode !== "edit") return;
+
 				const result = this.markdownValidator?.refresh({ immediate: true });
 				if (!result || !result.ok || result.markdown == null) {
 					event.preventDefault();

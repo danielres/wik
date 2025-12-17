@@ -1,103 +1,69 @@
 // milkdown-slash-menu.ts
 import type { Ctx } from "@milkdown/ctx";
 import { editorViewCtx } from "@milkdown/kit/core";
-import { SlashProvider } from "@milkdown/kit/plugin/slash";
-import { createCodeBlockCommand } from "@milkdown/kit/preset/commonmark";
-import { insertTableCommand } from "@milkdown/kit/preset/gfm";
 import { callCommand } from "@milkdown/kit/utils";
+import type { EditorView } from "prosemirror-view";
+import { createSlashMenuView, type SlashMenuItem } from "./slash-menu-view";
 
 type EditorAction = (fn: (ctx: Ctx) => void) => void;
 
-export const createSlashMenu =
-	(rootEl: HTMLElement, editorAction: EditorAction) => (_view: any) => {
-		const container = document.createElement("div");
-		container.className = "milkdown-slash-menu";
-		rootEl.appendChild(container);
+type CommandItem = SlashMenuItem & { commandId: string; matchText: string };
 
-		const provider = new SlashProvider({
-			content: container,
-			debounce: 50,
-		});
+const COMMAND_ITEMS: CommandItem[] = [
+	{
+		id: "code_block",
+		label: "Code Block",
+		commandId: "CreateCodeBlock",
+		matchText: "code block code",
+	},
+	{
+		id: "table",
+		label: "Table",
+		commandId: "InsertTable",
+		matchText: "table",
+	},
+];
 
-		const emptyState = document.createElement("div");
-		emptyState.className = "slash-empty";
-		emptyState.textContent = "No actions available";
-		emptyState.style.display = "none";
-		container.appendChild(emptyState);
+function filterCommands(query: string): CommandItem[] {
+	const q = query.trim().toLowerCase();
+	if (q === "") return COMMAND_ITEMS;
+	return COMMAND_ITEMS.filter((c) => c.matchText.includes(q));
+}
 
-		const makeSlashHandler =
-			(commandKey: any, payload?: any) => (e: MouseEvent | KeyboardEvent) => {
-				e.preventDefault();
-				e.stopPropagation();
+function isAtRoot(view: EditorView) {
+	const $pos = view.state.selection.$from;
+	// depth 1 means direct child of doc; depth 0 is the doc itself
+	return $pos.depth <= 1;
+}
 
-				editorAction((ctx) => {
-					const view = ctx.get(editorViewCtx);
-					const { dispatch, state } = view;
-					const { tr, selection } = state;
-					const { from } = selection;
-
-					// delete the trigger `/`
-					dispatch(tr.deleteRange(from - 1, from));
-
-					return payload
-						? callCommand(commandKey, payload)(ctx)
-						: callCommand(commandKey)(ctx);
-				});
-			};
-
-		const createButton = (label: string, handler: (e: any) => void) => {
-			const button = document.createElement("button");
-			button.type = "button";
-			button.textContent = label;
-			button.className = "";
-			button.addEventListener("mousedown", handler);
-			container.appendChild(button);
-			return button;
-		};
-
-		const isAtRoot = (view: any) => {
-			const $pos = view.state.selection.$from;
-			// depth 1 means direct child of doc; depth 0 is the doc itself
-			return $pos.depth <= 1;
-		};
-
-		const handleCodeBlock = (e: any) => {
+export const createSlashMenu = (
+	rootEl: HTMLElement,
+	editorAction: EditorAction,
+) =>
+	createSlashMenuView<CommandItem>({
+		root: rootEl,
+		containerId: "slash-menu",
+		containerClassName:
+			"milkdown-slash-menu hidden absolute z-50 w-64 max-h-60 overflow-y-auto bg-base-300 border border-base-300 rounded shadow-lg p-2 grid gap-1 data-[show='true']:grid",
+		optionClassName:
+			"px-2 py-1 cursor-pointer rounded bg-base-200 border border-base-300 shadow-sm hover:bg-base-100 transition-colors text-base-content/70",
+		optionActiveClassName: "bg-primary/20 text-primary-content border-primary",
+		debounceMs: 0,
+		allow: (view) => isAtRoot(view),
+		getQuery: (textBlockContent) => {
+			const match = textBlockContent.match(/(?:^|\s)\/([^\s]*)$/);
+			return match ? (match[1] ?? "") : null;
+		},
+		getItems: (query) => filterCommands(query),
+		onSelect: (item, { query }) => {
 			editorAction((ctx) => {
 				const view = ctx.get(editorViewCtx);
-				if (!isAtRoot(view)) return;
+				const { dispatch, state } = view;
+				const { from } = state.selection;
+				const deleteLen = query.length + 1; // "/" + query
+				const start = Math.max(0, from - deleteLen);
+				dispatch(state.tr.deleteRange(start, from));
+				callCommand(item.commandId)(ctx);
 			});
-			makeSlashHandler(createCodeBlockCommand.key)(e);
-		};
-
-		const handleTable = (e: any) => {
-			editorAction((ctx) => {
-				const view = ctx.get(editorViewCtx);
-				if (!isAtRoot(view)) return;
-			});
-			makeSlashHandler(insertTableCommand.key)(e);
-		};
-
-		const buttonCode = createButton("Code Block", handleCodeBlock);
-		const buttonTable = createButton("Table", handleTable);
-
-		const updateVisibility = (atRoot: boolean) => {
-			buttonCode.style.display = atRoot ? "" : "none";
-			buttonTable.style.display = atRoot ? "" : "none";
-			const anyVisible = atRoot; // only these two actions for now
-			emptyState.style.display = anyVisible ? "none" : "";
-		};
-
-		return {
-			update: (updatedView: any, prevState: any) => {
-				provider.update(updatedView, prevState);
-				const atRoot = isAtRoot(updatedView);
-				updateVisibility(atRoot);
-			},
-			destroy: () => {
-				provider.destroy();
-				buttonCode.removeEventListener("mousedown", handleCodeBlock);
-				buttonTable.removeEventListener("mousedown", handleTable);
-				container.remove();
-			},
-		};
-	};
+		},
+	});

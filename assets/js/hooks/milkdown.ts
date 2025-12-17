@@ -4,6 +4,7 @@ import { selectTextNearPosCommand } from "@milkdown/kit/preset/commonmark";
 import { Doc } from "yjs";
 import { redo, undo } from "prosemirror-history";
 import { initCollab, type CollabHandles } from "./milkdown/collab";
+import { markdownValidator } from "./milkdown/markdown-validator";
 import {
 	createMilkdownEditor,
 	editorViewCtx,
@@ -16,6 +17,8 @@ import { readUndoRedoState } from "./milkdown/undo-state";
 function normalize(content: string | undefined | null) {
 	return (content || "").trim();
 }
+
+const EDITOR_STATE_PUSH_DEBOUNCE_MS = 150;
 
 const MilkdownEditor = {
 	mounted() {
@@ -74,6 +77,7 @@ const MilkdownEditor = {
 		this.statePending = null;
 		this.stateLastSent = null;
 		this.docUpdatesAttached = false;
+		this.markdownValidator = null;
 
 		this.status = new StatusIndicator(normalize(markdown));
 		this.userMeta = this.el.dataset.userMeta
@@ -100,16 +104,28 @@ const MilkdownEditor = {
 			this.editorInstance = editor;
 			this.collabService = collabService;
 
-			const fetchCurrent = () =>
-				normalize(this.editorInstance.action(getMarkdown()));
-			this.fetchCurrent = fetchCurrent;
+			const ensureMarkdownValidator = () => {
+				if (this.markdownValidator) return;
+
+				this.markdownValidator = markdownValidator({
+					seedMarkdown: markdown,
+					serialize: () => this.editorInstance.action(getMarkdown()),
+					normalize,
+					onValidMarkdown: (current) => {
+						this.status?.updateCurrent(current);
+					},
+					onAfterRefresh: (_result, { immediate }) => {
+						this.maybePushEditorState(immediate);
+					},
+					onError: (e) => {
+						console.error("Failed to serialize markdown", e);
+					},
+				});
+			};
 
 			if (isStatic) {
 				this.setEditable(false);
-				const content = fetchCurrent();
-				this.status.updateCurrent(content);
 				this.status.setReady();
-				this.maybePushEditorState(true);
 			} else {
 				const allowEdit = isEdit && editable;
 				this.collabHandles = initCollab({
@@ -121,11 +137,12 @@ const MilkdownEditor = {
 					onReady: () => {
 						this.setEditable(allowEdit);
 						if (allowEdit) this.setFocusAndCursorPos();
-						const syncedContent = fetchCurrent();
-						this.status.updateCurrent(syncedContent);
+						if (allowEdit) {
+							ensureMarkdownValidator();
+							this.markdownValidator?.refresh({ immediate: true });
+						}
 						this.status.setReady();
 						this.applyAwarenessMeta();
-						this.maybePushEditorState(true);
 					},
 				});
 				this.awareness = this.collabHandles?.awareness;
@@ -135,13 +152,13 @@ const MilkdownEditor = {
 			this.setupFormSync();
 
 			if (isEdit) {
-				this.attachDocUpdates(fetchCurrent);
+				this.attachDocUpdates();
 			}
 
 			this.handleEvent("collab_saved_version", ({ markdown }) => {
 				this.status.markSaved(normalize(markdown));
-				this.status.updateCurrent(fetchCurrent());
-				if (this.mode === "edit") this.maybePushEditorState(true);
+				ensureMarkdownValidator();
+				this.markdownValidator?.refresh({ immediate: true });
 			});
 
 			this.handleEvent("submit_page_form", ({ form_id }) => {
@@ -152,7 +169,7 @@ const MilkdownEditor = {
 			});
 
 			this.handleEvent("revert_to_saved", () => {
-				this.undoUntilSaved(fetchCurrent)
+				this.undoUntilSaved()
 					.then((reverted: boolean) => {
 						this.pushEvent("revert_done", { ok: reverted !== false });
 					})
@@ -168,16 +185,22 @@ const MilkdownEditor = {
 				if (this.editorInstance) {
 					this.setEditable(!!editable);
 					if (this.mode === "edit") {
-						this.attachDocUpdates(this.fetchCurrent);
-						this.maybePushEditorState(true);
+						ensureMarkdownValidator();
+						this.attachDocUpdates();
+						this.markdownValidator?.refresh({ immediate: true });
 					} else {
 						this.detachDocUpdates?.();
+						this.markdownValidator?.destroy?.();
+						this.markdownValidator = null;
 					}
 				}
 			});
 
 			this.attachUndoRedo();
-			if (this.mode === "edit") this.maybePushEditorState(true);
+			if (this.mode === "edit") {
+				ensureMarkdownValidator();
+				this.markdownValidator?.refresh({ immediate: true });
+			}
 		});
 	},
 
@@ -209,9 +232,16 @@ const MilkdownEditor = {
 
 	setupFormSync() {
 		if (this.form && this.hiddenInput) {
-			this.handleSubmit = () => {
-				const currentMarkdown = this.editorInstance.action(getMarkdown());
-				this.hiddenInput.value = currentMarkdown;
+			this.handleSubmit = (event: Event) => {
+				const result = this.markdownValidator?.refresh({ immediate: true });
+				if (!result || !result.ok || result.markdown == null) {
+					event.preventDefault();
+					event.stopPropagation();
+					this.maybePushEditorState(true);
+					return;
+				}
+
+				this.hiddenInput.value = result.markdown;
 				this.hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
 			};
 			this.form.addEventListener("submit", this.handleSubmit);
@@ -278,6 +308,8 @@ const MilkdownEditor = {
 		this.statePushTimer = null;
 		this.statePending = null;
 		this.stateLastSent = null;
+		this.markdownValidator?.destroy?.();
+		this.markdownValidator = null;
 	},
 
 	applyAwarenessMeta() {
@@ -289,9 +321,11 @@ const MilkdownEditor = {
 		this.awareness.setLocalStateField("user", withColor);
 	},
 
-	async undoUntilSaved(fetchCurrent: () => string) {
+	async undoUntilSaved() {
 		const target = this.status ? this.status.getLastSaved() : null;
 		if (target == null) return false;
+
+		if (!this.markdownValidator) return false;
 
 		const view = this.editorInstance?.ctx.get(editorViewCtx);
 		if (!view) return false;
@@ -300,14 +334,18 @@ const MilkdownEditor = {
 		let steps = 0;
 
 		while (steps < maxSteps) {
-			const current = fetchCurrent();
-			if (current === target) return true;
+			const current = this.markdownValidator.refresh();
+			if (current.ok && current.markdown === target) return true;
 			const didUndo = undo(view.state, view.dispatch);
 			if (!didUndo) break;
 			steps += 1;
 			await new Promise((resolve) => requestAnimationFrame(resolve));
 		}
-		return fetchCurrent() === target;
+
+		const final = this.markdownValidator.refresh();
+		this.maybePushEditorState(true);
+
+		return final.ok && final.markdown === target;
 	},
 
 	attachUndoRedo() {
@@ -349,19 +387,22 @@ const MilkdownEditor = {
 
 		const view = this.editorInstance?.ctx.get(editorViewCtx);
 		const { hasUndo, hasRedo } = readUndoRedoState(view ?? null);
-		const synced = this.status ? this.status.isSynced() : true;
+		const markdownOk = this.markdownValidator?.isValid?.() ?? true;
+		const synced = markdownOk && this.status ? this.status.isSynced() : false;
 
 		const payload = {
 			"synced?": synced,
 			"has_undo?": hasUndo,
 			"has_redo?": hasRedo,
+			"markdown_ok?": markdownOk,
 		};
 
 		const same =
 			this.stateLastSent &&
 			this.stateLastSent["synced?"] === payload["synced?"] &&
 			this.stateLastSent["has_undo?"] === payload["has_undo?"] &&
-			this.stateLastSent["has_redo?"] === payload["has_redo?"];
+			this.stateLastSent["has_redo?"] === payload["has_redo?"] &&
+			this.stateLastSent["markdown_ok?"] === payload["markdown_ok?"];
 
 		if (same && !force) return;
 
@@ -388,14 +429,13 @@ const MilkdownEditor = {
 			if (this.statePending) push(this.statePending);
 			this.statePending = null;
 			this.statePushTimer = null;
-		}, 150);
+		}, EDITOR_STATE_PUSH_DEBOUNCE_MS);
 	},
 
-	attachDocUpdates(fetchCurrent: () => any) {
+	attachDocUpdates() {
 		if (this.docUpdatesAttached) return;
 		this.handleDocUpdate = () => {
-			this.status.updateCurrent(fetchCurrent());
-			this.maybePushEditorState();
+			this.markdownValidator?.scheduleValidation();
 		};
 		this.yDoc.on("update", this.handleDocUpdate);
 		this.docUpdatesAttached = true;

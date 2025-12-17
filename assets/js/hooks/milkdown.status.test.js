@@ -4,7 +4,7 @@ import { StatusIndicator } from "./milkdown/status.ts";
 
 // Simple StatusIndicator smoke tests
 
-test("StatusIndicator marks unsaved when current != last saved and synced when equal", () => {
+test("shows “saved” when current content matches last saved version", () => {
 	const s = new StatusIndicator("Saved");
 	// Not ready yet, but isSynced uses values only
 	s.updateCurrent("Saved");

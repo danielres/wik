@@ -32,8 +32,8 @@ import {
 	slashMenuWikilinks,
 	slashMenuWikilinksRegister,
 	type SlashMenuWikilinksPage,
-} from "./slash-menu-wikilinks";
-import { createSlashMenu } from "./slash-menu";
+} from "./slash-menus/slash-menu-wikilinks";
+import { createSlashMenu } from "./slash-menus/slash-menu";
 import { overrideTableSchema, sanitizeDocPlugin } from "./sanitize-doc";
 import { createTagBadgePlugin } from "./tag-badge-plugin";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
@@ -56,12 +56,13 @@ export async function createMilkdownEditor({
 	rootPath,
 	isStatic,
 }: SetupOpts) {
-	return Editor.make()
-		.config((ctx) => {
-			ctx.set(rootCtx, root);
+	return (
+		Editor.make()
+			.config((ctx) => {
+				ctx.set(rootCtx, root);
 
-			if (isStatic) {
-				ctx.set(defaultValueCtx, markdown);
+				if (isStatic) {
+					ctx.set(defaultValueCtx, markdown);
 				}
 
 				ctx.set(slash.key, {
@@ -71,59 +72,62 @@ export async function createMilkdownEditor({
 					}),
 				});
 
-			slashMenuWikilinksRegister(ctx, pages, rootPath);
+				slashMenuWikilinksRegister(ctx, pages, rootPath);
 
-			setupToolbar(ctx);
-			setupBlockHandle(ctx, root as HTMLElement);
+				setupToolbar(ctx);
+				setupBlockHandle(ctx, root as HTMLElement);
 
-			const tagRootPath = rootPath.replace(/\/wiki\/?$/, "/tags");
+				const tagRootPath = rootPath.replace(/\/wiki\/?$/, "/tags");
 
-			ctx.update(prosePluginsCtx, (plugins) =>
-				plugins.concat(createTagBadgePlugin(tagRootPath)),
-			);
+				ctx.update(prosePluginsCtx, (plugins) =>
+					plugins.concat(createTagBadgePlugin(tagRootPath)),
+				);
 
-			ctx.set(listItemBlockConfig.key, {
-				renderLabel: ({ label, listType, checked }) => {
-					if (checked == null) {
-						if (listType === "bullet") {
-							return `<span class="ml-1 mr-1">-</span>`;
+				ctx.set(listItemBlockConfig.key, {
+					renderLabel: ({ label, listType, checked }) => {
+						if (checked == null) {
+							if (listType === "bullet") {
+								return `<span class="ml-1 mr-1">-</span>`;
+							}
+							return label;
 						}
-						return label;
-					}
-				},
-			});
+					},
+				});
 
-			configurePasteHandlers(ctx, rootPath);
+				configurePasteHandlers(ctx, rootPath);
 
-			ctx.update(dropIndicatorConfig.key, () => ({
-				width: 1,
-			}));
-		})
+				ctx.update(dropIndicatorConfig.key, () => ({
+					width: 1,
+				}));
+			})
 
-		.config(configureLinkTooltip)
-		.use(commonmark)
-		.use(linkTooltipPlugin)
-		.use(gfm)
-		.use(overrideTableSchema)
-		.use(history)
-		.use(collab)
-		.use(listItemBlockComponent)
-		.use(tableBlock)
-		.use(block)
-		.use(slash)
-		.use(slashMenuWikilinks)
-		.use(toolbarTooltip)
-		.use(cursorPlugin)
-		.use(inputRuleWikilink(rootPath))
-		// Ensure the sanitizer is appended after all other ProseMirror plugins.
-		.config((ctx) => {
-			ctx.update(prosePluginsCtx, (plugins) => plugins.concat(sanitizeDocPlugin));
-		})
-		.create()
-		.then((editor) => {
-			setEditorInstance(editor);
-			return { editor, collabService: editor.ctx.get(collabServiceCtx) };
-		});
+			.config(configureLinkTooltip)
+			.use(commonmark)
+			.use(linkTooltipPlugin)
+			.use(gfm)
+			.use(overrideTableSchema)
+			.use(history)
+			.use(collab)
+			.use(listItemBlockComponent)
+			.use(tableBlock)
+			.use(block)
+			.use(slash)
+			.use(slashMenuWikilinks)
+			.use(toolbarTooltip)
+			.use(cursorPlugin)
+			.use(inputRuleWikilink(rootPath))
+			// Ensure the sanitizer is appended after all other ProseMirror plugins.
+			.config((ctx) => {
+				ctx.update(prosePluginsCtx, (plugins) =>
+					plugins.concat(sanitizeDocPlugin),
+				);
+			})
+			.create()
+			.then((editor) => {
+				setEditorInstance(editor);
+				return { editor, collabService: editor.ctx.get(collabServiceCtx) };
+			})
+	);
 }
 
 let editorInstance: any = null;

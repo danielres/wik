@@ -3,7 +3,10 @@ import type { Ctx } from "@milkdown/ctx";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { callCommand } from "@milkdown/kit/utils";
 import type { EditorView } from "prosemirror-view";
-import { createSlashMenuView, type SlashMenuItem } from "./slash-menu-view";
+import {
+	createSlashMenuView,
+	type SlashMenuItem,
+} from "./components/slash-menu-view";
 
 type EditorAction = (fn: (ctx: Ctx) => void) => void;
 

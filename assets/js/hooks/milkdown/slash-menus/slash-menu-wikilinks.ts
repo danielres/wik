@@ -3,7 +3,10 @@ import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
 import { slashFactory } from "@milkdown/kit/plugin/slash";
-import { createSlashMenuView, type SlashMenuItem } from "./slash-menu-view";
+import {
+	createSlashMenuView,
+	type SlashMenuItem,
+} from "./components/slash-menu-view";
 
 export type SlashMenuWikilinksPage = {
 	id: string;

@@ -28,6 +28,7 @@ import { collab, collabServiceCtx } from "@milkdown/plugin-collab";
 import { getMarkdown } from "@milkdown/utils";
 import { setupBlockHandle } from "./block-handle";
 import { inputRuleWikilink } from "./input-rule-wikilink";
+import { overrideHeadingSchema } from "./override-heading-schema";
 import {
 	slashMenuWikilinks,
 	slashMenuWikilinksRegister,
@@ -35,6 +36,7 @@ import {
 } from "./slash-menus/slash-menu-wikilinks";
 import { createSlashMenu } from "./slash-menus/slash-menu";
 import { overrideTableSchema, sanitizeDocPlugin } from "./sanitize-doc";
+import { ensureTitleHeadingPlugin } from "./ensure-title-heading";
 import { createTagBadgePlugin } from "./tag-badge-plugin";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
 import { configurePasteHandlers } from "./utils/paste-handlers";
@@ -105,6 +107,7 @@ export async function createMilkdownEditor({
 			.use(commonmark)
 			.use(linkTooltipPlugin)
 			.use(gfm)
+			.use(overrideHeadingSchema)
 			.use(overrideTableSchema)
 			.use(history)
 			.use(collab)
@@ -119,7 +122,10 @@ export async function createMilkdownEditor({
 			// Ensure the sanitizer is appended after all other ProseMirror plugins.
 			.config((ctx) => {
 				ctx.update(prosePluginsCtx, (plugins) =>
-					plugins.concat(sanitizeDocPlugin),
+					plugins.concat(
+						sanitizeDocPlugin,
+						ensureTitleHeadingPlugin({ rootEl: root }),
+					),
 				);
 			})
 			.create()

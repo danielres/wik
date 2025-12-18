@@ -7,7 +7,7 @@ defmodule Utils.Markdown do
   """
 
   @header_regex ~r/^(#+)\s+(.+)$/
-  @tag_regex ~r/#([A-Za-z0-9_-]+)/u
+  @tag_regex ~r/#([A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*)/u
 
   @doc """
   Generates a slug compatible with Milkdown/markdown-it-anchor defaults.
@@ -158,7 +158,7 @@ defmodule Utils.Markdown do
   end
 
   @doc """
-  Removes tag tokens (e.g., #tag) from a title.
+  Removes tag tokens (e.g., #tag, #tag/subtag) from a title.
   """
   @spec strip_tags(String.t()) :: String.t()
   def strip_tags(title) do
@@ -173,6 +173,51 @@ defmodule Utils.Markdown do
     @tag_regex
     |> Regex.scan(title)
     |> Enum.map(fn [_, t] -> String.downcase(t) end)
+  end
+
+  @doc """
+  Extracts the page title from the first H1 line (`# ...`) in markdown.
+
+  - Strips tag tokens (e.g. `#tag`, `#tag/subtag`)
+  - Strips common inline markdown (links/emphasis/code)
+  - Returns plain text (or `nil` if not present / empty)
+  """
+  @spec extract_page_title(String.t() | nil) :: String.t() | nil
+  def extract_page_title(text) when is_binary(text) do
+    first_line = text |> String.split("\n", parts: 2) |> hd()
+
+    case Regex.run(@header_regex, first_line, capture: :all_but_first) do
+      [hashes, title] ->
+        if hashes == "#" do
+          clean =
+            title
+            |> strip_tags()
+            |> strip_inline_markdown()
+            |> String.trim()
+
+          if clean == "", do: nil, else: clean
+        else
+          nil
+        end
+
+      _ ->
+        nil
+    end
+  end
+
+  def extract_page_title(_), do: nil
+
+  defp strip_inline_markdown(title) do
+    title
+    |> String.replace(~r/!\[([^\]]*)\]\([^)]+\)/, "\\1")
+    |> String.replace(~r/\[([^\]]+)\]\([^)]+\)/, "\\1")
+    |> String.replace(~r/`([^`]+)`/, "\\1")
+    |> String.replace(~r/\*\*([^*]+)\*\*/, "\\1")
+    |> String.replace(~r/\*([^*]+)\*/, "\\1")
+    |> String.replace(~r/__([^_]+)__/, "\\1")
+    |> String.replace(~r/_([^_]+)_/, "\\1")
+    |> String.replace(~r/<[^>]+>/, "")
+    |> String.replace(~r/\s+/, " ")
   end
 
   @doc """

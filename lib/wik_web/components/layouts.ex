@@ -96,12 +96,36 @@ defmodule WikWeb.Layouts do
 
       <%= if(@ctx[:current_group]) do %>
         <div class="flex gap-3 text-sm">
-          <.link
-            class={[link_class(@ctx, "/wiki")]}
-            navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}
-          >
-            Wiki
-          </.link>
+          <WikWeb.Components.dropdown>
+            <span
+              class={[link_class(@ctx, "/wiki")]}
+              navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}
+            >
+              Wiki
+            </span>
+
+            <:content>
+              <ul>
+                <li>
+                  <.link navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}>
+                    <.icon name="hero-home-mini" /> Home
+                  </.link>
+                </li>
+
+                <li>
+                  <.link navigate={~p"/#{@ctx.current_group.slug}/wiki"}>
+                    <.icon name="hero-book-open-mini" /> All pages
+                  </.link>
+                </li>
+                <li>
+                  <.link navigate={~p"/#{@ctx.current_group.slug}/map"}>
+                    <.icon name="hero-map-pin-mini" /> Map
+                  </.link>
+                </li>
+              </ul>
+            </:content>
+          </WikWeb.Components.dropdown>
+
           <.link
             class={[link_class(@ctx, "/tags")]}
             navigate={~p"/#{@ctx[:current_group].slug}/tags"}

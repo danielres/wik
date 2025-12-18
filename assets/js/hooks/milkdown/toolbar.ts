@@ -25,6 +25,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { toggleLinkCommand } from "@milkdown/components/link-tooltip";
 import { linkSchema } from "@milkdown/kit/preset/commonmark";
 import { toggleWikilinkCommand } from "./toolbar/command-toggle-wiki-link.ts";
+import { isSelectionInHeading } from "./utils/selection";
 
 // 1) Create a tooltip plugin
 export const toolbarTooltip = tooltipFactory("WIK_TOOLBAR");
@@ -196,6 +197,8 @@ class ToolbarView implements PluginView {
 			shouldShow(view: EditorView) {
 				const { doc, selection } = view.state;
 				const { empty, from, to } = selection as Selection;
+
+				if (isSelectionInHeading(view)) return false;
 
 				const isEmptyTextBlock =
 					!doc.textBetween(from, to).length &&

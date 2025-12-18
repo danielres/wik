@@ -20,6 +20,9 @@ function normalize(content: string | undefined | null) {
 }
 
 function extractPlainTitleFromEditorView(view: any) {
+	// We derive the title from ProseMirror's document (not markdown) because `textContent`
+	// already excludes formatting markers like `**bold**`, `*italic*`, `[link](url)`, etc.
+	// We only apply our domain-specific normalization (strip `#tags`, collapse whitespace).
 	const first = view?.state?.doc?.firstChild;
 	if (!first) return null;
 	if (first.type?.name !== "heading") return null;

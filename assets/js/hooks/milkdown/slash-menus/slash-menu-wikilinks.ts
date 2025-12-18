@@ -7,6 +7,7 @@ import {
 	createSlashMenuView,
 	type SlashMenuItem,
 } from "./components/slash-menu-view";
+import { isSelectionInHeading } from "../utils/selection";
 
 export type SlashMenuWikilinksPage = {
 	id: string;
@@ -38,6 +39,7 @@ export function slashMenuWikilinksRegister(
 			optionClassName: "slash-menu-wikilinks-option",
 			optionActiveClassName: "slash-menu-wikilinks-option-active",
 			debounceMs: 0,
+			allow: (view) => !isSelectionInHeading(view),
 			getQuery: (textBlockContent) => {
 				const match = textBlockContent.match(/\[\[([^\]]*)$/);
 				return match ? (match[1] ?? "") : null;

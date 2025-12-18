@@ -7,6 +7,7 @@ import {
 	createSlashMenuView,
 	type SlashMenuItem,
 } from "./components/slash-menu-view";
+import { isSelectionInHeading } from "../utils/selection";
 
 type EditorAction = (fn: (ctx: Ctx) => void) => void;
 
@@ -52,7 +53,7 @@ export const createSlashMenu = (
 			"px-2 py-1 cursor-pointer rounded bg-base-200 border border-base-300 shadow-sm hover:bg-base-100 transition-colors text-base-content/70",
 		optionActiveClassName: "bg-primary/20 text-primary-content border-primary",
 		debounceMs: 0,
-		allow: (view) => isAtRoot(view),
+		allow: (view) => isAtRoot(view) && !isSelectionInHeading(view),
 		getQuery: (textBlockContent) => {
 			const match = textBlockContent.match(/(?:^|\s)\/([^\s]*)$/);
 			return match ? (match[1] ?? "") : null;

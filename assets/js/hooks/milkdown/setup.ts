@@ -28,6 +28,7 @@ import { collab, collabServiceCtx } from "@milkdown/plugin-collab";
 import { getMarkdown } from "@milkdown/utils";
 import { setupBlockHandle } from "./block-handle";
 import { inputRuleWikilink } from "./input-rule-wikilink";
+import { overrideHeadingSchema } from "./override-heading-schema";
 import {
 	slashMenuWikilinks,
 	slashMenuWikilinksRegister,
@@ -106,6 +107,7 @@ export async function createMilkdownEditor({
 			.use(commonmark)
 			.use(linkTooltipPlugin)
 			.use(gfm)
+			.use(overrideHeadingSchema)
 			.use(overrideTableSchema)
 			.use(history)
 			.use(collab)

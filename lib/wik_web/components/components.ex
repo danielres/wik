@@ -51,7 +51,7 @@ defmodule WikWeb.Components do
   attr :class, :string, default: ""
   attr :position, :string, default: "top"
   # attr :variant, :string, default: "base-300"
-  attr :variant, :string, default: "accent"
+  attr :variant, :string, default: "base-300"
   attr :offset, :string, default: "0.75rem"
   slot :inner_block, required: true
   slot :content, required: true

@@ -1,9 +1,6 @@
 defmodule WikWeb.Components do
   @moduledoc """
-  Generic tooltip wrapper.
-
-  - Inner block renders the trigger.
-  - The `:content` slot renders tooltip content. 
+  Generic WikWeb components.
   """
 
   use WikWeb, :html
@@ -39,7 +36,7 @@ defmodule WikWeb.Components do
 
       <div
         tabindex="-1"
-        class="dropdown-content z-1 mt-2"
+        class="dropdown-content z-10 mt-2"
       >
         {render_slot(@content)}
       </div>
@@ -50,7 +47,6 @@ defmodule WikWeb.Components do
   attr :open?, :boolean, default: false
   attr :class, :string, default: ""
   attr :position, :string, default: "top"
-  # attr :variant, :string, default: "base-300"
   attr :variant, :string, default: "base-300"
   attr :offset, :string, default: "0.75rem"
   slot :inner_block, required: true

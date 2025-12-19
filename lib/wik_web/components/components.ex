@@ -11,26 +11,38 @@ defmodule WikWeb.Components do
   use Phoenix.Component
   attr :open?, :boolean, default: false
   attr :class, :string, default: ""
-  attr :position, :string, default: "top"
+  attr :position, :string, default: "bottom"
   attr :variant, :string, default: "neutral"
   slot :inner_block, required: true
   slot :content, required: true
 
   def dropdown(assigns) do
+    position_class =
+      case assigns.position do
+        "top" -> "dropdown-top"
+        "bottom" -> "dropdown-bottom"
+        "left" -> "dropdown-left"
+        "right" -> "dropdown-right"
+        "end" -> "dropdown-end"
+        _ -> "dropdown-bottom"
+      end
+
+    assigns =
+      assigns
+      |> assign(position_class: position_class)
+
     ~H"""
-    <div class="dropdown">
-      <div tabindex="0" role="button" class="cursor-pointer">{render_slot(@inner_block)}</div>
+    <div class={["dropdown", @position_class]}>
+      <div tabindex="0" class="cursor-pointer">
+        {render_slot(@inner_block)}
+      </div>
 
       <div
         tabindex="-1"
-        class="dropdown-content bg-base-300 backdrop-blur z-1 mt-2 rounded menu w-52 text-sm"
+        class="dropdown-content z-1 mt-2"
       >
         {render_slot(@content)}
       </div>
-
-      {# <div tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"> }
-      {#   {render_slot(@content)} }
-      {# </div> }
     </div>
     """
   end
@@ -38,7 +50,9 @@ defmodule WikWeb.Components do
   attr :open?, :boolean, default: false
   attr :class, :string, default: ""
   attr :position, :string, default: "top"
-  attr :variant, :string, default: "neutral"
+  # attr :variant, :string, default: "base-300"
+  attr :variant, :string, default: "accent"
+  attr :offset, :string, default: "0.75rem"
   slot :inner_block, required: true
   slot :content, required: true
 
@@ -62,6 +76,9 @@ defmodule WikWeb.Components do
         "success" -> "tooltip-success"
         "warning" -> "tooltip-warning"
         "error" -> "tooltip-error"
+        "base-100" -> "[--tt-bg:var(--color-base-100)]"
+        "base-200" -> "[--tt-bg:var(--color-base-200)]"
+        "base-300" -> "[--tt-bg:var(--color-base-300)]"
         _ -> "tooltip-neutral"
       end
 
@@ -73,17 +90,27 @@ defmodule WikWeb.Components do
       )
 
     ~H"""
-    <div class={[
-      "tooltip",
-      @position_class,
-      @variant_class,
-      @open? && "tooltip-open"
-    ]}>
+    <div
+      class={[
+        "tooltip",
+        @position_class,
+        @variant_class,
+        @open? && "tooltip-open"
+      ]}
+      style={"
+      --custom-offset: #{@offset};
+      --tt-off: calc(100% + 0.5rem + var(--custom-offset));     
+      --tt-tail: calc(100% + 1px + 0.25rem + var(--custom-offset));
+      "}
+    >
       <span class={["cursor-pointer", @class]}>
         {render_slot(@inner_block)}
       </span>
 
-      <div class="tooltip-content" style="font-size: inherit">
+      <div
+        class="tooltip-content"
+        style="font-size: inherit"
+      >
         {render_slot(@content)}
       </div>
     </div>

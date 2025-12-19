@@ -59,49 +59,82 @@ defmodule WikWeb.Layouts do
           <% end %>
         </div>
 
-        <div>
-          <div class="dropdown dropdown-end mt-2 text-xs">
-            <button
-              tabindex="0"
-              role="button"
-              class="opacity-50 hover:opacity-100 transition cursor-pointer font-semibold"
-            >
-              {@ctx.current_user |> to_string}
-            </button>
-
-            <div
-              tabindex="0"
-              class="dropdown-content card card-sm bg-base-100 z-1 w-48 shadow-md mt-2"
-            >
-              <div class="card-body bg-base-200 rounded-lg">
+        <WikWeb.Components.dropdown position="end">
+          <span class="opacity-50 hover:opacity-100 transition cursor-pointer font-semibold text-xs">
+            {@ctx.current_user |> to_string}
+          </span>
+          <:content>
+            <div class="card card-sm w-48 shadow-md">
+              <div class="card-body bg-base-300 rounded-lg">
                 <.link
                   navigate={~p"/sign-out"}
                   class="flex gap-3 justify-center items-center hover:bg-white/5 transition px-2 py-2 rounded opacity-80 hover:opacity-100"
                 >
                   <span>Log out</span>
-                  <.icon name="hero-chevron-right" class="size-4" />
+                  <.icon name="hero-chevron-right" />
                 </.link>
 
                 <hr class="opacity-20 my-2" />
 
                 <div class="py-2 space-y-4 flex flex-col items-center opacity-80 hover:opacity-100">
                   <div>Theme</div>
-                  <div class=""><.theme_toggle /></div>
+                  <div><.theme_toggle /></div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </:content>
+        </WikWeb.Components.dropdown>
       </div>
 
       <%= if(@ctx[:current_group]) do %>
-        <div class="flex gap-3 text-sm">
-          <.link
-            class={[link_class(@ctx, "/wiki")]}
-            navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}
-          >
-            Wiki
-          </.link>
+        <div class="flex gap-4">
+          <%= if link_active?(@ctx, "/wiki") or link_active?(@ctx, "/map") do %>
+            <WikWeb.Components.dropdown>
+              <.link
+                class={[link_class(@ctx, "/wiki"), "group"]}
+                navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}
+              >
+                Wiki
+                <.icon
+                  name="hero-chevron-down-micro"
+                  class="opacity-50 group-hover:opacity-100 transition"
+                />
+              </.link>
+
+              <:content>
+                <ul class={[
+                  "menu bg-base-300 rounded backdrop-blur",
+                  "text-sm [&_a]:whitespace-nowrap",
+                  "[&_.icon]:opacity-50"
+                ]}>
+                  <li>
+                    <.link navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}>
+                      <.icon name="hero-home-mini" /> Home
+                    </.link>
+                  </li>
+
+                  <li>
+                    <.link navigate={~p"/#{@ctx.current_group.slug}/wiki"}>
+                      <.icon name="hero-book-open-mini" /> All pages
+                    </.link>
+                  </li>
+                  <li>
+                    <.link navigate={~p"/#{@ctx.current_group.slug}/map"}>
+                      <.icon name="hero-map-pin-mini" /> Map
+                    </.link>
+                  </li>
+                </ul>
+              </:content>
+            </WikWeb.Components.dropdown>
+          <% else %>
+            <.link
+              class={[link_class(@ctx, "/wiki")]}
+              navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}
+            >
+              Wiki
+            </.link>
+          <% end %>
+
           <.link
             class={[link_class(@ctx, "/tags")]}
             navigate={~p"/#{@ctx[:current_group].slug}/tags"}
@@ -153,7 +186,7 @@ defmodule WikWeb.Layouts do
     """
   end
 
-  defp link_class(ctx, suffix, subpaths? \\ true) do
+  defp link_active?(ctx, suffix, subpaths? \\ true) do
     path = ctx[:current_path] || ""
 
     base =
@@ -162,26 +195,19 @@ defmodule WikWeb.Layouts do
         _ -> nil
       end
 
-    active? =
-      if subpaths? do
-        (path != "" and base) && String.starts_with?(path, base)
-      else
-        (path != "" and base) && path == base
-      end
-
-    base_class =
-      "font-semibold transition hover:opacity-100"
-
-    active_class =
-      "#{base_class}"
-
-    inactive_class = "#{base_class} opacity-50"
-
-    if active? do
-      active_class
+    if subpaths? do
+      (path != "" and base) && String.starts_with?(path, base)
     else
-      inactive_class
+      (path != "" and base) && path == base
     end
+  end
+
+  defp link_class(ctx, suffix, subpaths? \\ true) do
+    active? = link_active?(ctx, suffix, subpaths?)
+    base_class = "font-semibold transition hover:opacity-100"
+    active_class = "#{base_class}"
+    inactive_class = "#{base_class} opacity-50"
+    if active?, do: active_class, else: inactive_class
   end
 
   @doc """

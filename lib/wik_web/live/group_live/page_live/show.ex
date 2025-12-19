@@ -45,32 +45,43 @@ defmodule WikWeb.GroupLive.PageLive.Show do
               >
                 <.icon name="hero-arrow-uturn-right-micro" />
               </button>
-              <button
-                form={"page-form-#{@page.id}"}
-                type="submit"
-                class={[
-                  "action",
-                  if(@editing? and not @editor_state.synced?,
-                    do: "action-enabled",
-                    else: "action-disabled"
-                  )
-                ]}
-              >
-                <.icon name="hero-arrow-down-tray-micro" />
-              </button>
+
+              <WikWeb.Components.tooltip position="bottom">
+                <button
+                  form={"page-form-#{@page.id}"}
+                  type="submit"
+                  class={[
+                    "action",
+                    if(@editing? and not @editor_state.synced?,
+                      do: "action-enabled",
+                      else: "action-disabled"
+                    )
+                  ]}
+                >
+                  <.icon name="hero-arrow-down-tray-micro" />
+                </button>
+                <:content>
+                  <span class="text-xs">
+                    Save as <span class="font-bold">v.{@page.versions_count + 1}</span>
+                  </span>
+                </:content>
+              </WikWeb.Components.tooltip>
             </div>
           <% end %>
 
           <div class="toolbar-actions">
             <%= if Ash.can?({@page, :update}, @current_user)  do %>
-              <button
-                :if={not @editing?}
-                type="button"
-                class={["action", "action-enabled"]}
-                phx-click="toggle_editing"
-              >
-                <.icon name="hero-lock-closed-micro" />
-              </button>
+              <WikWeb.Components.tooltip position="left">
+                <button
+                  :if={not @editing?}
+                  type="button"
+                  class={["action", "action-enabled"]}
+                  phx-click="toggle_editing"
+                >
+                  <.icon name="hero-lock-closed-micro" />
+                </button>
+                <:content><span class="text-xs">Unlock to edit</span></:content>
+              </WikWeb.Components.tooltip>
               <button
                 :if={@editing?}
                 type="button"

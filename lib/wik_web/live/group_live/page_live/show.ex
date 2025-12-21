@@ -417,6 +417,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           updated_fields: updated_fields,
           backlinks: load_backlinks(updated_page)
         )
+        |> Utils.Ctx.add(:page, updated_page)
         |> RealtimeToast.put_update_toast(payload)
         |> maybe_push_saved_version(updated_fields, updated_page)
 

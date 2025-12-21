@@ -55,25 +55,36 @@ defmodule Utils.Slugify do
   ## Returns
     The modified changeset with a unique slug set
   """
-  @spec maybe_set_and_ensure_unique_slug(Ash.Changeset.t(), String.t()) :: Ash.Changeset.t()
-  def maybe_set_and_ensure_unique_slug(changeset, fallback_base \\ "") do
+  @spec maybe_set_and_ensure_unique_slug(Ash.Changeset.t(), String.t(), keyword()) ::
+          Ash.Changeset.t()
+  def maybe_set_and_ensure_unique_slug(changeset, fallback_base \\ "", opts \\ []) do
     resource = changeset.resource
+    scope = Keyword.get(opts, :scope, [])
 
     case Ash.Changeset.get_attribute(changeset, :slug) do
       nil ->
         title = Ash.Changeset.get_attribute(changeset, :title) || fallback_base
         base = generate(title)
-        unique = pick_unique_slug(resource, base)
+        unique = pick_unique_slug(resource, base, scope)
         Ash.Changeset.change_attribute(changeset, :slug, unique)
 
       "" ->
         base = fallback_base
-        unique = pick_unique_slug(resource, base)
+        unique = pick_unique_slug(resource, base, scope)
         Ash.Changeset.change_attribute(changeset, :slug, unique)
 
       _slug ->
         changeset
     end
+  end
+
+  @spec set_and_ensure_unique_slug(Ash.Changeset.t(), String.t(), keyword()) ::
+          Ash.Changeset.t()
+  def set_and_ensure_unique_slug(changeset, base, opts \\ []) do
+    resource = changeset.resource
+    scope = Keyword.get(opts, :scope, [])
+    unique = pick_unique_slug(resource, base, scope)
+    Ash.Changeset.change_attribute(changeset, :slug, unique)
   end
 
   # ---------- internals ----------
@@ -85,34 +96,46 @@ defmodule Utils.Slugify do
     |> String.replace(~r/\p{M}/u, "")
   end
 
-  @spec pick_unique_slug(module(), String.t()) :: String.t()
-  defp pick_unique_slug(resource, base), do: pick_unique_slug(resource, base, 0)
+  @spec pick_unique_slug(module(), String.t(), keyword()) :: String.t()
+  defp pick_unique_slug(resource, base, scope), do: pick_unique_slug(resource, base, scope, 0)
 
-  @spec pick_unique_slug(module(), String.t(), non_neg_integer()) :: String.t()
-  defp pick_unique_slug(resource, base, tries) do
+  @spec pick_unique_slug(module(), String.t(), keyword(), non_neg_integer()) :: String.t()
+  defp pick_unique_slug(resource, base, scope, tries) do
     candidate =
       case tries do
         0 -> base
         _ -> base <> "-" <> random_suffix(2)
       end
 
-    if slug_exists?(resource, candidate) do
-      pick_unique_slug(resource, base, tries + 1)
+    if slug_exists?(resource, candidate, scope) do
+      pick_unique_slug(resource, base, scope, tries + 1)
     else
       candidate
     end
   end
 
-  @spec slug_exists?(module(), String.t()) :: boolean()
-  defp slug_exists?(resource, slug) do
+  @spec slug_exists?(module(), String.t(), keyword()) :: boolean()
+  defp slug_exists?(resource, slug, scope) do
     resource
     |> Ash.Query.filter(slug == ^slug)
+    |> apply_scope(scope)
     |> Ash.read(authorize?: false)
     |> case do
       {:ok, []} -> false
       {:ok, _} -> true
       {:error, _} -> true
     end
+  end
+
+  defp apply_scope(query, scope) when is_map(scope),
+    do: apply_scope(query, Map.to_list(scope))
+
+  defp apply_scope(query, scope) when is_list(scope) do
+    Enum.reduce(scope, query, fn
+      {:group_id, nil}, q -> q
+      {:group_id, group_id}, q -> Ash.Query.filter(q, group_id == ^group_id)
+      {_key, _val}, q -> q
+    end)
   end
 
   @spec random_suffix(pos_integer()) :: String.t()

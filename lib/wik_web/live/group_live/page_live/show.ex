@@ -323,7 +323,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     if title == "" do
       {:reply, %{ok: false, error: "title_required"}, socket}
     else
-      slug = Wik.Wiki.Page.Utils.canonical_slug(title)
+      slug = Utils.Slugify.generate(title)
 
       page_result =
         case Wik.Wiki.Page

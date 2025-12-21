@@ -92,7 +92,7 @@ defmodule WikWeb.Layouts do
             <WikWeb.Components.dropdown>
               <.link
                 class={[link_class(@ctx, "/wiki"), "group"]}
-                navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}
+                navigate={~p"/#{@ctx[:current_group].slug}/wiki/home"}
               >
                 Wiki
                 <.icon
@@ -108,7 +108,7 @@ defmodule WikWeb.Layouts do
                   "[&_.icon]:opacity-50"
                 ]}>
                   <li>
-                    <.link navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}>
+                    <.link navigate={~p"/#{@ctx[:current_group].slug}/wiki/home"}>
                       <.icon name="hero-home-mini" /> Home
                     </.link>
                   </li>

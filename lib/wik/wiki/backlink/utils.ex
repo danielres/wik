@@ -28,7 +28,7 @@ defmodule Wik.Wiki.Backlink.Utils do
 
     (wikilinks ++ relative_links)
     |> Enum.map(&normalize_slug/1)
-    |> Enum.map(&Page.Utils.canonical_slug/1)
+    |> Enum.map(&Utils.Slugify.generate/1)
     |> Enum.reject(&is_nil/1)
     |> MapSet.new()
   end
@@ -143,12 +143,12 @@ defmodule Wik.Wiki.Backlink.Utils do
   """
   @spec list_for_page(Page.t()) :: [Backlink.t()]
   def list_for_page(%Page{} = page) do
-    canonical_slug = Page.Utils.canonical_slug(page.slug)
+    page_slug = Utils.Slugify.generate(page.slug)
 
     Backlink
     |> Ash.Query.filter(
       group_id == ^page.group_id and
-        (target_page_id == ^page.id or target_slug == ^canonical_slug)
+        (target_page_id == ^page.id or target_slug == ^page_slug)
     )
     |> Ash.Query.load([:source_page])
     |> Ash.Query.sort(updated_at: :desc)

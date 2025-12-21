@@ -113,13 +113,18 @@ defmodule Wik.Wiki.Page do
       #        end,
       #        on: [:update]
 
-      change fn cs, _ctx ->
-               cs |> set_slug()
+      change fn cs, ctx ->
+               cs |> set_slug(ctx)
              end,
              on: [:create]
 
       change fn cs, _ctx ->
                cs |> update_title_from_header()
+             end,
+             on: [:update]
+
+      change fn cs, ctx ->
+               cs |> set_slug(ctx)
              end,
              on: [:update]
     end
@@ -276,10 +281,23 @@ defmodule Wik.Wiki.Page do
     Ash.Changeset.change_attribute(cs, :text, collapsed)
   end
 
-  def set_slug(changeset) do
+  def set_slug(changeset, context) do
+    group_id =
+      get_in(context.source_context, [:shared, :current_group_id]) ||
+        Ash.Changeset.get_attribute(changeset, :group_id)
+
+    if is_nil(group_id),
+      do: raise(ArgumentError, "current_group_id is required to scope page slug uniqueness")
+
     title = Ash.Changeset.get_attribute(changeset, :title)
-    slug = Wik.Wiki.Page.Utils.canonical_slug(title)
-    Ash.Changeset.change_attribute(changeset, :slug, slug)
+    current_slug = Ash.Changeset.get_attribute(changeset, :slug)
+
+    if Utils.Slugify.generate(title) == current_slug do
+      changeset
+    else
+      changeset
+      |> Utils.Slugify.set_unique_scoped_slug_from(title, scope: [group_id: group_id])
+    end
   end
 
   def update_title_from_header(changeset) do

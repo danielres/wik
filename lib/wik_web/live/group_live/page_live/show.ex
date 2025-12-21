@@ -259,16 +259,8 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           )
           |> Ash.create!()
 
-        redirect_url =
-          if Ash.can?({page, :update}, socket.assigns.current_user) do
-            page_url(current_group, page) <> "/edit"
-          else
-            page_url(current_group, page)
-          end
-
-        {:ok,
-         socket
-         |> push_navigate(to: redirect_url)}
+        redirect_url = page_url(current_group, page)
+        {:ok, socket |> push_navigate(to: redirect_url)}
     end
   end
 

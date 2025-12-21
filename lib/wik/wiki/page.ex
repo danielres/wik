@@ -282,25 +282,21 @@ defmodule Wik.Wiki.Page do
   end
 
   def set_slug(changeset, context) do
+    group_id =
+      get_in(context.source_context, [:shared, :current_group_id]) ||
+        Ash.Changeset.get_attribute(changeset, :group_id)
+
+    if is_nil(group_id),
+      do: raise(ArgumentError, "current_group_id is required to scope page slug uniqueness")
+
     title = Ash.Changeset.get_attribute(changeset, :title)
-    base = Utils.Slugify.generate(title)
+    current_slug = Ash.Changeset.get_attribute(changeset, :slug)
 
-    current_slug =
-      case changeset.data do
-        %{slug: slug} when is_binary(slug) -> slug
-        _ -> nil
-      end
-
-    if base == current_slug do
+    if Utils.Slugify.generate(title) == current_slug do
       changeset
     else
-      group_id =
-        Ash.Changeset.get_attribute(changeset, :group_id) ||
-          (changeset.data && Map.get(changeset.data, :group_id)) ||
-          get_in(context.source_context, [:shared, :current_group_id])
-
-      scope = if group_id, do: [group_id: group_id], else: []
-      Utils.Slugify.set_and_ensure_unique_slug(changeset, base, scope: scope)
+      changeset
+      |> Utils.Slugify.ensure_unique_scoped_slug_from(title, scope: [group_id: group_id])
     end
   end
 

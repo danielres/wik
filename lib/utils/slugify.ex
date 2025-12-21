@@ -45,32 +45,37 @@ defmodule Utils.Slugify do
   @doc """
   Sets a unique slug on the changeset if one is not already present.
 
-  If :slug is nil or empty, generates one from :title (or fallback_base)
+  If :slug is nil or empty, generates one from base (or fallback_base)
   and ensures it is unique for the resource backing this changeset.
 
   ## Parameters
     - changeset: An Ash.Changeset struct
-    - fallback_base: Default base string to use if title is not available (default: "")
+    - base: Source string to derive the slug from (nil/blank falls back)
+    - opts: Options (fallback_base)
 
   ## Returns
     The modified changeset with a unique slug set
   """
-  @spec maybe_set_and_ensure_unique_slug(Ash.Changeset.t(), String.t(), keyword()) ::
+  @spec ensure_unique_global_slug_from(Ash.Changeset.t(), String.t() | nil, keyword()) ::
           Ash.Changeset.t()
-  def maybe_set_and_ensure_unique_slug(changeset, fallback_base \\ "", opts \\ []) do
+  def ensure_unique_global_slug_from(changeset, base, opts \\ []) do
+    if Keyword.has_key?(opts, :scope) do
+      raise ArgumentError, "scope is not supported for global slug generation"
+    end
+
     resource = changeset.resource
-    scope = Keyword.get(opts, :scope, [])
+    fallback_base = Keyword.get(opts, :fallback_base, "")
+    base = normalize_base(base, fallback_base)
 
     case Ash.Changeset.get_attribute(changeset, :slug) do
       nil ->
-        title = Ash.Changeset.get_attribute(changeset, :title) || fallback_base
-        base = generate(title)
-        unique = pick_unique_slug(resource, base, scope)
+        base = generate(base)
+        unique = pick_unique_slug(resource, base, [])
         Ash.Changeset.change_attribute(changeset, :slug, unique)
 
       "" ->
-        base = fallback_base
-        unique = pick_unique_slug(resource, base, scope)
+        base = generate(base)
+        unique = pick_unique_slug(resource, base, [])
         Ash.Changeset.change_attribute(changeset, :slug, unique)
 
       _slug ->
@@ -78,11 +83,39 @@ defmodule Utils.Slugify do
     end
   end
 
-  @spec set_and_ensure_unique_slug(Ash.Changeset.t(), String.t(), keyword()) ::
+  @doc """
+  Sets a unique slug scoped to a provided context (e.g., group_id).
+
+  Scope is required and must be provided via opts.
+
+  ## Parameters
+    - changeset: An Ash.Changeset struct
+    - base: Source string to derive the slug from (nil/blank falls back)
+    - opts: Options (scope, fallback_base)
+  """
+  @spec ensure_unique_scoped_slug_from(Ash.Changeset.t(), String.t() | nil, keyword()) ::
           Ash.Changeset.t()
-  def set_and_ensure_unique_slug(changeset, base, opts \\ []) do
+  def ensure_unique_scoped_slug_from(changeset, base, opts \\ []) do
     resource = changeset.resource
-    scope = Keyword.get(opts, :scope, [])
+    scope = Keyword.get(opts, :scope, nil)
+
+    if scope in [nil, [], %{}] do
+      raise ArgumentError, "scope is required for scoped slug generation"
+    end
+
+    case scope do
+      list when is_list(list) ->
+        if Keyword.get(list, :group_id) in [nil, ""] do
+          raise ArgumentError, "group_id is required for scoped slug generation"
+        end
+
+      _ ->
+        raise ArgumentError, "scope must be a keyword list with group_id"
+    end
+
+    fallback_base = Keyword.get(opts, :fallback_base, "")
+    base = normalize_base(base, fallback_base)
+    base = generate(base)
     unique = pick_unique_slug(resource, base, scope)
     Ash.Changeset.change_attribute(changeset, :slug, unique)
   end
@@ -136,6 +169,14 @@ defmodule Utils.Slugify do
       {:group_id, group_id}, q -> Ash.Query.filter(q, group_id == ^group_id)
       {_key, _val}, q -> q
     end)
+  end
+
+  defp normalize_base(base, fallback) do
+    case base do
+      nil -> fallback
+      "" -> fallback
+      value -> value
+    end
   end
 
   @spec random_suffix(pos_integer()) :: String.t()

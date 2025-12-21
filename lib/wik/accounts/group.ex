@@ -48,8 +48,8 @@ defmodule Wik.Accounts.Group do
       change relate_actor(:author)
 
       change fn cs, _ctx ->
-        cs
-        |> Utils.Slugify.maybe_set_and_ensure_unique_slug()
+        title = cs |> Ash.Changeset.get_attribute(:title)
+        cs |> Utils.Slugify.ensure_unique_global_slug_from(title)
       end
 
       change fn changeset, context ->

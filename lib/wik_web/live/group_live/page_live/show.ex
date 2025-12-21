@@ -423,6 +423,16 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
       socket =
         if updated_page.slug != old_slug do
+          Phoenix.PubSub.unsubscribe(
+            Wik.PubSub,
+            "backlinks:slug:#{socket.assigns.page.group_id}:#{old_slug}"
+          )
+
+          Phoenix.PubSub.subscribe(
+            Wik.PubSub,
+            "backlinks:slug:#{updated_page.group_id}:#{updated_page.slug}"
+          )
+
           push_patch(socket, to: page_url(socket.assigns.ctx.current_group, updated_page))
         else
           socket

@@ -134,6 +134,7 @@ export const wikilinkView = $view(
 				const id = String(node.attrs?.id ?? "");
 				const storedLabel = String(node.attrs?.label ?? "");
 				const page = config.getPageById(id);
+				// Prefer resolved title, then stored label, then id, then a fallback.
 				const displayLabel =
 					page?.title?.trim() || storedLabel.trim() || id || "Untitled";
 				const href = page?.slug

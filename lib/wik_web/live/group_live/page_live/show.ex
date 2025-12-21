@@ -332,14 +332,14 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     else
       slug = Wik.Wiki.Page.Utils.canonical_slug(title)
 
-      page =
+      page_result =
         case Wik.Wiki.Page
              |> Ash.get(
                %{group_id: current_group.id, slug: slug},
                actor: current_user
              ) do
           {:ok, page} ->
-            page
+            {:ok, page}
 
           {:error, _} ->
             Wik.Wiki.Page
@@ -349,10 +349,18 @@ defmodule WikWeb.GroupLive.PageLive.Show do
               actor: current_user,
               context: %{shared: %{current_group_id: current_group.id}}
             )
-            |> Ash.create!()
+            |> Ash.create()
         end
 
-      {:reply, %{ok: true, page: %{id: page.id, slug: page.slug, title: page.title}}, socket}
+      case page_result do
+        {:ok, page} ->
+          {:reply,
+           %{ok: true, page: %{id: page.id, slug: page.slug, title: page.title}},
+           socket}
+
+        {:error, _} ->
+          {:reply, %{ok: false, error: "create_failed"}, socket}
+      end
     end
   end
 

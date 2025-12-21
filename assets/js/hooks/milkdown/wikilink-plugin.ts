@@ -104,11 +104,6 @@ export function wikilinkPlugin(options: Options) {
 				if (!page) return;
 				if (!view) return;
 
-				const state: any = (view as any).state;
-				const schema = state.schema;
-				const linkMark = schema.marks.link;
-				if (!linkMark) return;
-
 				replaceLinkMarksWithWikilink(view, (href, text) => {
 					if (href !== `${WIKIREF_PREFIX}${encodeURIComponent(ref)}`) return null;
 					return { id: String(page.id), label: text };

@@ -94,7 +94,7 @@ export async function createMilkdownEditor({
 					}),
 				});
 
-				slashMenuWikilinksRegister(ctx, pages, rootPath);
+				slashMenuWikilinksRegister(ctx, pages);
 
 				setupToolbar(ctx);
 				setupBlockHandle(ctx, root as HTMLElement);

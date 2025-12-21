@@ -12,7 +12,7 @@ export const toggleWikilinkCommand = (ctx: Ctx) => {
 	const text = state.doc.textBetween(from, to);
 	if (!text) return;
 
-	// Create a wekilink ref; the editor will resolve it to a stable `wikid:*` target.
+	// Create a wikilink ref; the editor will resolve it to a stable `wikid:*` target.
 	const ref = capitalize(text);
 	const linkNode = state.schema.text(ref, [
 		state.schema.mark("link", {

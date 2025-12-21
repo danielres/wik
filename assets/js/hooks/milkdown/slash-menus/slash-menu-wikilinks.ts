@@ -23,11 +23,8 @@ type PageItem = SlashMenuItem & { slug: string };
 export function slashMenuWikilinksRegister(
 	ctx: Ctx,
 	pages: SlashMenuWikilinksPage[],
-	rootPath: string,
 ) {
 	if (!Array.isArray(pages)) throw new TypeError("pages must be an array");
-	if (typeof rootPath !== "string")
-		throw new TypeError("rootPath must be a string");
 
 	const allPages = pages.slice();
 

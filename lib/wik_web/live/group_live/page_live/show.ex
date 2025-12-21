@@ -349,7 +349,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             end
 
           {:error, reason} ->
-            Logger.error("🔴 Failed to lookup", error: inspect(reason))
+            Logger.error("🔴 Failed to lookup: #{inspect(reason)}")
             {:error, :lookup_failed}
         end
 

@@ -10,6 +10,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
   alias WikWeb.Components.RealtimeToast
+  require Logger
 
   @impl true
   def render(assigns) do
@@ -333,17 +334,22 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           {:ok, page} ->
             {:ok, page}
 
-          {:error, %Ash.Error.Query.NotFound{}} ->
-            Wik.Wiki.Page
-            |> Ash.Changeset.for_create(
-              :create,
-              %{title: title, text: ""},
-              actor: current_user,
-              context: %{shared: %{current_group_id: current_group.id}}
-            )
-            |> Ash.create()
+          {:error, %Ash.Error.Invalid{errors: errors}} when is_list(errors) ->
+            if Enum.any?(errors, &match?(%Ash.Error.Query.NotFound{}, &1)) do
+              Wik.Wiki.Page
+              |> Ash.Changeset.for_create(
+                :create,
+                %{title: title, text: ""},
+                actor: current_user,
+                context: %{shared: %{current_group_id: current_group.id}}
+              )
+              |> Ash.create()
+            else
+              {:error, :lookup_failed}
+            end
 
-          {:error, _} ->
+          {:error, reason} ->
+            Logger.error("🔴 Failed to lookup", error: inspect(reason))
             {:error, :lookup_failed}
         end
 

@@ -1,8 +1,8 @@
 import { CommandManager, commandsCtx } from "@milkdown/core";
 import type { SliceType } from "@milkdown/ctx";
 import { selectTextNearPosCommand } from "@milkdown/kit/preset/commonmark";
-import { Doc } from "yjs";
 import { redo, undo } from "prosemirror-history";
+import { Doc } from "yjs";
 import { initCollab, type CollabHandles } from "./milkdown/collab";
 import { markdownValidator } from "./milkdown/markdown-validator";
 import {
@@ -12,6 +12,7 @@ import {
 } from "./milkdown/setup";
 import type { SlashMenuWikilinksPage } from "./milkdown/slash-menus/slash-menu-wikilinks";
 
+import { stringToPastelColor } from "../utils";
 import { StatusIndicator } from "./milkdown/status";
 import { readUndoRedoState } from "./milkdown/undo-state";
 
@@ -386,7 +387,7 @@ const MilkdownEditor = {
 		if (!this.awareness || !this.userMeta) return;
 		const withColor = {
 			...this.userMeta,
-			...pastelForName(this.userMeta.name || ""),
+			...stringToPastelColor(this.userMeta.name || ""),
 		};
 		this.awareness.setLocalStateField("user", withColor);
 	},
@@ -520,16 +521,3 @@ const MilkdownEditor = {
 };
 
 export default MilkdownEditor;
-
-function pastelForName(name: string) {
-	let hash = 0;
-	for (let i = 0; i < name.length; i++) {
-		hash = name.charCodeAt(i) + ((hash << 5) - hash);
-		hash |= 0;
-	}
-
-	const hue = Math.abs(hash) % 360;
-	const color = `hsl(${hue}, 60%, 55%)`;
-
-	return { color };
-}

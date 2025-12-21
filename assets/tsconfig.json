@@ -20,18 +20,18 @@
 //
 // Feel free to adjust this configuration however you need.
 {
-  "compilerOptions": {
-    "baseUrl": ".",
-    "target": "ES2015",
-    "lib": ["ES2015", "DOM"],
-    "module": "esnext",
-    "moduleResolution": "node",
-    "types": ["node"],
-    "paths": {
-      "*": ["../deps/*"]
-    },
-    "allowJs": true,
-    "noEmit": true
+	"compilerOptions": {
+		"baseUrl": ".",
+		"target": "ES2017",
+		"lib": ["ES2017", "DOM"],
+		"module": "esnext",
+		"moduleResolution": "node",
+		"types": ["node"],
+		"paths": {
+			"*": ["../deps/*"]
+		},
+		"allowJs": true,
+		"noEmit": true
 	},
 	"include": ["js/**/*"]
 }

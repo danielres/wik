@@ -26,7 +26,7 @@ defmodule Wik.Wiki.BacklinkTest do
     """
 
     slugs = Utils.parse_slugs(markdown, group.slug) |> MapSet.to_list() |> Enum.sort()
-    assert slugs == ["Alpha page", "Beta-note"]
+    assert slugs == ["alpha-page", "beta-note"]
   end
 
   test "creating page with link records backlink to existing target" do

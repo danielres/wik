@@ -30,7 +30,6 @@ export function slashMenuWikilinksRegister(
 		throw new TypeError("rootPath must be a string");
 
 	const allPages = pages.slice();
-	const normalizedRootPath = rootPath.replace(/\/+$/, "");
 
 	ctx.set(slashMenuWikilinks.key, {
 		view: createSlashMenuView<PageItem>({
@@ -56,8 +55,7 @@ export function slashMenuWikilinksRegister(
 				insertWikilink(view, {
 					query,
 					label: item.label,
-					slug: item.slug,
-					rootPath: normalizedRootPath,
+					id: item.id,
 				});
 			},
 		}),
@@ -114,7 +112,7 @@ function filterPages(
 
 function insertWikilink(
 	view: EditorView,
-	opts: { query: string; label: string; slug: string; rootPath: string },
+	opts: { query: string; label: string; id: string },
 ) {
 	const { state } = view;
 	const { from } = state.selection;
@@ -123,14 +121,13 @@ function insertWikilink(
 	const start = Math.max(0, from - deleteLen);
 
 	const { schema } = state;
-	const linkMark = schema.marks["link"];
-	if (!linkMark) {
-		console.error("Link mark not found in schema");
+	const wikilinkType = schema.nodes["wikilink"];
+	if (!wikilinkType) {
+		console.error("Wikilink node not found in schema");
 		return;
 	}
 
-	const href = `${opts.rootPath}/${encodeURIComponent(opts.slug)}`;
-	const linkNode = schema.text(opts.label, [linkMark.create({ href })]);
+	const linkNode = wikilinkType.create({ id: opts.id, label: opts.label });
 
 	const tr = state.tr.replaceWith(start, from, linkNode);
 	const posAfter = start + linkNode.nodeSize;

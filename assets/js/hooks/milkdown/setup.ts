@@ -37,6 +37,13 @@ import {
 import { createSlashMenu } from "./slash-menus/slash-menu";
 import { overrideTableSchema, sanitizeDocPlugin } from "./sanitize-doc";
 import { ensureTitleHeadingPlugin } from "./ensure-title-heading";
+import { wikilinkPlugin } from "./wikilink-plugin";
+import {
+	remarkWikilinkPlugin,
+	wikilinkConfig,
+	wikilinkSchema,
+	wikilinkView,
+} from "./wikilink-node";
 import { createTagBadgePlugin } from "./tag-badge-plugin";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
 import { configurePasteHandlers } from "./utils/paste-handlers";
@@ -49,6 +56,14 @@ type SetupOpts = {
 	pages: SlashMenuWikilinksPage[];
 	rootPath: string;
 	isStatic: boolean;
+	wikilinks?: {
+		getPageById: (
+			id: string,
+		) => { id: string; slug: string; title: string } | null;
+		resolveRef: (
+			title: string,
+		) => Promise<{ id: string; slug: string; title: string } | null>;
+	};
 };
 
 export async function createMilkdownEditor({
@@ -57,11 +72,16 @@ export async function createMilkdownEditor({
 	pages,
 	rootPath,
 	isStatic,
+	wikilinks,
 }: SetupOpts) {
 	return (
 		Editor.make()
 			.config((ctx) => {
 				ctx.set(rootCtx, root);
+				ctx.set(wikilinkConfig.key, {
+					rootPath,
+					getPageById: wikilinks?.getPageById ?? (() => null),
+				});
 
 				if (isStatic) {
 					ctx.set(defaultValueCtx, markdown);
@@ -104,9 +124,13 @@ export async function createMilkdownEditor({
 			})
 
 			.config(configureLinkTooltip)
+			.use(wikilinkConfig)
+			.use(remarkWikilinkPlugin)
 			.use(commonmark)
 			.use(linkTooltipPlugin)
 			.use(gfm)
+			.use(wikilinkSchema)
+			.use(wikilinkView)
 			.use(overrideHeadingSchema)
 			.use(overrideTableSchema)
 			.use(history)
@@ -118,13 +142,18 @@ export async function createMilkdownEditor({
 			.use(slashMenuWikilinks)
 			.use(toolbarTooltip)
 			.use(cursorPlugin)
-			.use(inputRuleWikilink(rootPath))
+			.use(inputRuleWikilink)
 			// Ensure the sanitizer is appended after all other ProseMirror plugins.
 			.config((ctx) => {
 				ctx.update(prosePluginsCtx, (plugins) =>
 					plugins.concat(
 						sanitizeDocPlugin,
 						ensureTitleHeadingPlugin({ rootEl: root }),
+						wikilinks
+							? wikilinkPlugin({
+									resolveRef: wikilinks.resolveRef,
+								})
+							: [],
 					),
 				);
 			})

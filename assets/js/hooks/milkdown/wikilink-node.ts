@@ -99,8 +99,10 @@ export const wikilinkSchema = $nodeSchema("wikilink", (ctx: Ctx) => ({
 			priority: 100,
 			getAttrs: (dom) => {
 				if (!(dom instanceof HTMLElement)) return false;
+				const id = dom.getAttribute("data-wikilink-id") || "";
+				if (!id) return false;
 				return {
-					id: dom.getAttribute("data-wikilink-id") || "",
+					id,
 					label: dom.textContent || "",
 				};
 			},

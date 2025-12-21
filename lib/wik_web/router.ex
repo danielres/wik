@@ -90,7 +90,6 @@ defmodule WikWeb.Router do
         live "/map", GroupLive.WikimapLive, :show
         live "/wiki", GroupLive.PageLive.Index, :index
         live "/wiki/:page_slug", GroupLive.PageLive.Show, :show
-        live "/wiki/:page_slug/edit", GroupLive.PageLive.Show, :edit
         live "/wiki/:page_slug/v/:version", GroupLive.PageLive.History
         live "/tags", TagLive.Index
         live "/tags/*tag_name_segments", TagLive.Show

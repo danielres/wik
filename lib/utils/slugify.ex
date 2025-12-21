@@ -88,14 +88,17 @@ defmodule Utils.Slugify do
 
   Scope is required and must be provided via opts.
 
+  Unlike `ensure_unique_global_slug_from/3`, this function always
+  generates and sets a new slug, regardless of any existing value.
+
   ## Parameters
     - changeset: An Ash.Changeset struct
     - base: Source string to derive the slug from (nil/blank falls back)
     - opts: Options (scope, fallback_base)
   """
-  @spec ensure_unique_scoped_slug_from(Ash.Changeset.t(), String.t() | nil, keyword()) ::
+  @spec set_unique_scoped_slug_from(Ash.Changeset.t(), String.t() | nil, keyword()) ::
           Ash.Changeset.t()
-  def ensure_unique_scoped_slug_from(changeset, base, opts \\ []) do
+  def set_unique_scoped_slug_from(changeset, base, opts \\ []) do
     resource = changeset.resource
     scope = Keyword.get(opts, :scope, nil)
 

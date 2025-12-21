@@ -296,7 +296,7 @@ defmodule Wik.Wiki.Page do
       changeset
     else
       changeset
-      |> Utils.Slugify.ensure_unique_scoped_slug_from(title, scope: [group_id: group_id])
+      |> Utils.Slugify.set_unique_scoped_slug_from(title, scope: [group_id: group_id])
     end
   end
 

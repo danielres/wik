@@ -341,7 +341,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           {:ok, page} ->
             {:ok, page}
 
-          {:error, _} ->
+          {:error, %Ash.Error.Query.NotFound{}} ->
             Wik.Wiki.Page
             |> Ash.Changeset.for_create(
               :create,
@@ -350,13 +350,17 @@ defmodule WikWeb.GroupLive.PageLive.Show do
               context: %{shared: %{current_group_id: current_group.id}}
             )
             |> Ash.create()
+
+          {:error, _} ->
+            {:error, :lookup_failed}
         end
 
       case page_result do
         {:ok, page} ->
-          {:reply,
-           %{ok: true, page: %{id: page.id, slug: page.slug, title: page.title}},
-           socket}
+          {:reply, %{ok: true, page: %{id: page.id, slug: page.slug, title: page.title}}, socket}
+
+        {:error, :lookup_failed} ->
+          {:reply, %{ok: false, error: "lookup_failed"}, socket}
 
         {:error, _} ->
           {:reply, %{ok: false, error: "create_failed"}, socket}

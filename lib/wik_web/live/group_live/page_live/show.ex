@@ -321,6 +321,54 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   @impl true
+  def handle_event("wikilink_create", %{"title" => title}, socket) do
+    current_group = socket.assigns.ctx.current_group
+    current_user = socket.assigns.current_user
+
+    title = (title || "") |> String.trim()
+
+    if title == "" do
+      {:reply, %{ok: false, error: "title_required"}, socket}
+    else
+      slug = Wik.Wiki.Page.Utils.canonical_slug(title)
+
+      page_result =
+        case Wik.Wiki.Page
+             |> Ash.get(
+               %{group_id: current_group.id, slug: slug},
+               actor: current_user
+             ) do
+          {:ok, page} ->
+            {:ok, page}
+
+          {:error, %Ash.Error.Query.NotFound{}} ->
+            Wik.Wiki.Page
+            |> Ash.Changeset.for_create(
+              :create,
+              %{title: title, text: ""},
+              actor: current_user,
+              context: %{shared: %{current_group_id: current_group.id}}
+            )
+            |> Ash.create()
+
+          {:error, _} ->
+            {:error, :lookup_failed}
+        end
+
+      case page_result do
+        {:ok, page} ->
+          {:reply, %{ok: true, page: %{id: page.id, slug: page.slug, title: page.title}}, socket}
+
+        {:error, :lookup_failed} ->
+          {:reply, %{ok: false, error: "lookup_failed"}, socket}
+
+        {:error, _} ->
+          {:reply, %{ok: false, error: "create_failed"}, socket}
+      end
+    end
+  end
+
+  @impl true
   def handle_event("editor_state", params, socket) do
     state = %{
       synced?: Map.get(params, "synced?", true),

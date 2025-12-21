@@ -3,10 +3,12 @@
 }
 
 .milkdown-editor-container.editable-true {
-	/* @apply pl-6 min-h-48 border-l-2 border-primary/20; */
-
 	::selection {
-		@apply bg-primary;
+		@apply bg-accent;
+	}
+
+	a {
+		pointer-events: none;
 	}
 }
 
@@ -56,26 +58,26 @@
 		@apply w-full;
 	}
 
-	.tag-badge {
+	a.tag-badge {
 		@apply badge badge-primary badge-md bg-primary/60 transition hover:bg-primary/80 hover:text-base-content;
 		@apply inline-flex align-middle items-center gap-1 px-[0.5em];
 	}
 
-	a:not(.tag-badge) {
+	a.wikilink-node {
 		@apply px-1 bg-base-100 rounded opacity-80 hover:opacity-100 transition;
+	}
+
+	a[href^="http"] {
 		@apply inline-flex items-center gap-1;
 
-		/* external links */
-		&[href^="http"] {
-			&::after {
-				content: "";
-				@apply opacity-50 transition;
-				@apply hero-arrow-top-right-on-square-micro size-4;
-			}
+		&::after {
+			content: "";
+			@apply opacity-50 transition;
+			@apply hero-arrow-top-right-on-square-micro size-4;
+		}
 
-			&:hover::after {
-				@apply opacity-100;
-			}
+		&:hover::after {
+			@apply opacity-100;
 		}
 	}
 }

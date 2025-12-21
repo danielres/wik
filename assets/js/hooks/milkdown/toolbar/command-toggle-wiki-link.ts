@@ -1,5 +1,6 @@
 import { editorViewCtx } from "@milkdown/core";
 import type { Ctx } from "@milkdown/ctx";
+import { TextSelection } from "prosemirror-state";
 import { capitalize } from "../../../utils";
 
 export const toggleWikilinkCommand = (ctx: Ctx) => {
@@ -7,24 +8,21 @@ export const toggleWikilinkCommand = (ctx: Ctx) => {
 	const { state, dispatch } = view;
 	const { from, to } = state.selection;
 
-	console.log({ from, to });
 	// Get selected text
 	const text = state.doc.textBetween(from, to);
 	if (!text) return;
 
-	// Create the link node directly (same as input rule)
-	const rootPath = URL.parse(document.URL)
-		?.pathname.split("/")
-		.slice(0, 3)
-		.join("/");
-
-	console.log({ rootPath });
-	const pageSlug = encodeURIComponent(capitalize(text));
-	const linkNode = state.schema.text(capitalize(text), [
+	// Create a wikilink ref; the editor will resolve it to a stable `wikid:*` target.
+	const ref = capitalize(text);
+	const linkNode = state.schema.text(ref, [
 		state.schema.mark("link", {
-			href: `${rootPath}/${pageSlug}`,
+			href: `wikiref:${encodeURIComponent(ref)}`,
 		}),
 	]);
-	// Replace selection with link node
-	dispatch(state.tr.replaceWith(from, to, linkNode).scrollIntoView());
+
+	const tr = state.tr.replaceWith(from, to, linkNode);
+	const posAfter = from + linkNode.nodeSize;
+	tr.setSelection(TextSelection.create(tr.doc, posAfter));
+	tr.setStoredMarks([]);
+	dispatch(tr.scrollIntoView());
 };

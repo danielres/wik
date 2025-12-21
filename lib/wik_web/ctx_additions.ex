@@ -19,7 +19,7 @@ defmodule WikWeb.CtxAdditions do
       Wik.Wiki.Page
       |> Ash.Query.filter(group_id == ^current_group.id)
       |> Ash.Query.sort(updated_at: :desc)
-      |> Ash.Query.select([:id, :slug, :updated_at])
+      |> Ash.Query.select([:id, :slug, :title, :updated_at])
       |> Ash.read(actor: current_user)
       |> case do
         {:ok, pages} ->

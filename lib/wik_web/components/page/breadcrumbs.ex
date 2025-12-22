@@ -41,10 +41,10 @@ defmodule WikWeb.Components.Page.Breadcrumbs do
   end
 
   defp page_url_from_slug(group, slug) do
-    "/#{group.slug}/wiki/#{slug}"
+    WikWeb.GroupLive.PageLive.Show.page_url(group, %{slug: slug})
   end
 
-  defp build_breadcrumbs(page, pages) do
+  defp build_breadcrumbs(page, pages_map) do
     slug = page.slug || ""
     segments = slug |> String.split("/", trim: true)
 
@@ -53,11 +53,7 @@ defmodule WikWeb.Components.Page.Breadcrumbs do
     |> Enum.reduce({[], ""}, fn segment, {acc, prefix} ->
       slug_segment = if prefix == "", do: segment, else: prefix <> "/" <> segment
 
-      page_for_slug =
-        case pages do
-          list when is_list(list) -> Enum.find(list, &(&1.slug == slug_segment))
-          _ -> nil
-        end
+      page_for_slug = Map.get(pages_map || %{}, slug_segment)
 
       label =
         case page_for_slug do

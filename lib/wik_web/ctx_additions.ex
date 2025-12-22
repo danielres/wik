@@ -24,6 +24,12 @@ defmodule WikWeb.CtxAdditions do
       |> case do
         {:ok, pages} ->
           pages
+          |> Enum.reduce(%{}, fn page, acc ->
+            case page.slug do
+              slug when is_binary(slug) and slug != "" -> Map.put(acc, slug, page)
+              _ -> acc
+            end
+          end)
 
         {:error, error} ->
           Logger.error("""
@@ -33,7 +39,7 @@ defmodule WikWeb.CtxAdditions do
           Error: #{Exception.format(:error, error)}
           """)
 
-          []
+          %{}
       end
 
     socket =

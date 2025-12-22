@@ -15,7 +15,7 @@ defmodule WikWeb.CtxAdditions do
     current_group = socket.assigns.ctx.current_group
     current_user = socket.assigns[:current_user]
 
-    pages_map =
+    pages_by_slug =
       Wik.Wiki.Page
       |> Ash.Query.filter(group_id == ^current_group.id)
       |> Ash.Query.sort(updated_at: :desc)
@@ -44,7 +44,8 @@ defmodule WikWeb.CtxAdditions do
 
     socket =
       socket
-      |> Utils.Ctx.add(:pages_map, pages_map)
+      # pages_map is keyed by slug for fast lookup in views/components.
+      |> Utils.Ctx.add(:pages_map, pages_by_slug)
 
     {:cont, socket}
   end

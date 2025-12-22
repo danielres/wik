@@ -86,7 +86,7 @@ defmodule WikWeb.TagLive.Show do
                 <.link
                   navigate={
                     if idx == 0 do
-                      ~p"/#{@ctx.current_group.slug}/wiki/#{block.page.slug}"
+                      WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, block.page)
                     else
                       "/#{@ctx.current_group.slug}/wiki/#{block.page.slug}##{Enum.at(block.slug_stack, idx)}"
                     end

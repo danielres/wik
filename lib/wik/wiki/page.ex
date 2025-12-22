@@ -292,11 +292,36 @@ defmodule Wik.Wiki.Page do
     title = Ash.Changeset.get_attribute(changeset, :title)
     current_slug = Ash.Changeset.get_attribute(changeset, :slug)
 
-    if Utils.Slugify.generate(title) == current_slug do
+    parent_path =
+      case current_slug do
+        slug when is_binary(slug) ->
+          case String.split(slug, "/", trim: true) do
+            [_single] -> nil
+            [] -> nil
+            parts -> parts |> Enum.drop(-1) |> Enum.join("/")
+          end
+
+        _ ->
+          nil
+      end
+
+    leaf_slug = Utils.Slugify.generate(title)
+
+    desired_slug =
+      case parent_path do
+        nil -> leaf_slug
+        "" -> leaf_slug
+        _ -> parent_path <> "/" <> leaf_slug
+      end
+
+    if desired_slug == current_slug do
       changeset
     else
       changeset
-      |> Utils.Slugify.set_unique_scoped_slug_from(title, scope: [group_id: group_id])
+      |> Utils.Slugify.set_unique_scoped_slug_from(desired_slug,
+        scope: [group_id: group_id],
+        allow_slash: true
+      )
     end
   end
 

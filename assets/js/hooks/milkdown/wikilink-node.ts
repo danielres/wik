@@ -136,9 +136,11 @@ export const wikilinkView = $view(
 				const id = String(node.attrs?.id ?? "");
 				const storedLabel = String(node.attrs?.label ?? "");
 				const page = config.getPageById(id);
-				// Prefer resolved title, then stored label, then id, then a fallback.
-				const displayLabel =
-					page?.title?.trim() || storedLabel.trim() || id || "Untitled";
+				const displayLabel = resolveDisplayLabel(
+					storedLabel,
+					page?.title ?? "",
+					id,
+				);
 				const href = page?.slug
 					? `${config.rootPath}/${encodeSlugPath(page.slug)}`
 					: "#";
@@ -173,3 +175,41 @@ export const wikilinkView = $view(
 			};
 		},
 );
+
+function resolveDisplayLabel(
+	storedLabel: string,
+	pageTitle: string,
+	id: string,
+): string {
+	const label = storedLabel.trim();
+	const title = pageTitle.trim();
+
+	if (label !== "" && title !== "") {
+		const segments = normalizeLabelSegments(label);
+		if (segments.length === 0) return title;
+		segments[segments.length - 1] = title;
+		return segments.join("/");
+	}
+
+	if (label !== "") {
+		const normalized = normalizeLabelSegments(label).join("/");
+		return normalized === "" ? label : normalized;
+	}
+	if (title !== "") return title;
+	if (id) return id;
+	return "Untitled";
+}
+
+function normalizeLabelSegments(label: string): string[] {
+	return label
+		.split("/")
+		.map((segment) => segment.trim())
+		.filter((segment) => segment !== "")
+		.map((segment) => titleizeSegment(segment));
+}
+
+function titleizeSegment(segment: string): string {
+	const chars = Array.from(segment);
+	if (chars.length === 0) return "";
+	return chars[0].toUpperCase() + chars.slice(1).join("");
+}

@@ -17,6 +17,8 @@ defmodule Utils.Slugify do
 
   Returns an empty string if input is nil.
 
+  Pass `allow_slash: true` to preserve `/` as a segment separator.
+
   ## Examples
 
       iex> Utils.Slugify.generate("Hello World")
@@ -29,17 +31,28 @@ defmodule Utils.Slugify do
       ""
   """
   @spec generate(String.t() | nil) :: String.t()
-  def generate(nil), do: ""
+  def generate(title), do: generate(title, [])
 
-  def generate(title) when is_binary(title) do
-    title
-    |> String.downcase()
-    |> normalize_unicode()
-    |> String.replace(~r/[^\w\s-]/u, "")
-    |> String.replace(~r/_/u, "-")
-    |> String.replace(~r/\s+/u, "-")
-    |> String.replace(~r/-+/u, "-")
-    |> String.trim("-")
+  @spec generate(String.t() | nil, keyword()) :: String.t()
+  def generate(nil, _opts), do: ""
+
+  def generate(title, opts) when is_binary(title) do
+    allow_slash = Keyword.get(opts, :allow_slash, false)
+
+    normalized =
+      title
+      |> String.downcase()
+      |> normalize_unicode()
+
+    if allow_slash do
+      normalized
+      |> String.split("/", trim: true)
+      |> Enum.map(&slugify_segment/1)
+      |> Enum.reject(&(&1 == ""))
+      |> Enum.join("/")
+    else
+      slugify_segment(normalized)
+    end
   end
 
   @doc """
@@ -51,7 +64,7 @@ defmodule Utils.Slugify do
   ## Parameters
     - changeset: An Ash.Changeset struct
     - base: Source string to derive the slug from (nil/blank falls back)
-    - opts: Options (fallback_base)
+    - opts: Options (fallback_base, allow_slash)
 
   ## Returns
     The modified changeset with a unique slug set
@@ -65,16 +78,17 @@ defmodule Utils.Slugify do
 
     resource = changeset.resource
     fallback_base = Keyword.get(opts, :fallback_base, "")
+    allow_slash = Keyword.get(opts, :allow_slash, false)
     base = normalize_base(base, fallback_base)
 
     case Ash.Changeset.get_attribute(changeset, :slug) do
       nil ->
-        base = generate(base)
+        base = generate(base, allow_slash: allow_slash)
         unique = pick_unique_slug(resource, base, [])
         Ash.Changeset.change_attribute(changeset, :slug, unique)
 
       "" ->
-        base = generate(base)
+        base = generate(base, allow_slash: allow_slash)
         unique = pick_unique_slug(resource, base, [])
         Ash.Changeset.change_attribute(changeset, :slug, unique)
 
@@ -94,7 +108,7 @@ defmodule Utils.Slugify do
   ## Parameters
     - changeset: An Ash.Changeset struct
     - base: Source string to derive the slug from (nil/blank falls back)
-    - opts: Options (scope, fallback_base)
+    - opts: Options (scope, fallback_base, allow_slash)
   """
   @spec set_unique_scoped_slug_from(Ash.Changeset.t(), String.t() | nil, keyword()) ::
           Ash.Changeset.t()
@@ -117,8 +131,9 @@ defmodule Utils.Slugify do
     end
 
     fallback_base = Keyword.get(opts, :fallback_base, "")
+    allow_slash = Keyword.get(opts, :allow_slash, false)
     base = normalize_base(base, fallback_base)
-    base = generate(base)
+    base = generate(base, allow_slash: allow_slash)
     unique = pick_unique_slug(resource, base, scope)
     Ash.Changeset.change_attribute(changeset, :slug, unique)
   end
@@ -130,6 +145,15 @@ defmodule Utils.Slugify do
     string
     |> :unicode.characters_to_nfd_binary()
     |> String.replace(~r/\p{M}/u, "")
+  end
+
+  defp slugify_segment(segment) do
+    segment
+    |> String.replace(~r/[^\w\s-]/u, "")
+    |> String.replace(~r/_/u, "-")
+    |> String.replace(~r/\s+/u, "-")
+    |> String.replace(~r/-+/u, "-")
+    |> String.trim("-")
   end
 
   @spec pick_unique_slug(module(), String.t(), keyword()) :: String.t()

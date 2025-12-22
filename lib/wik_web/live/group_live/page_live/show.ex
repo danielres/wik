@@ -2,8 +2,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @moduledoc """
   LiveView for displaying a wiki page.
 
-  Handles viewing wiki pages within a group, automatically creating pages
-  that don't exist yet when accessed.
+  Handles viewing wiki pages within a group.
   """
   @env Mix.env()
 
@@ -16,208 +15,228 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>
-      <:sticky_toolbar>
-        <div class="toolbar-editor-controls">
-          <%= if Ash.can?({@page, :update}, @current_user)  do %>
-            <div class={["toolbar-actions", not @editing? and "opacity-0"]}>
+      <%= if @not_found? do %>
+        <div class="mx-auto max-w-2xl px-6 py-16 text-center">
+          <div class="text-5xl font-semibold">404</div>
+          <p class="mt-3 text-sm opacity-70">This page does not exist.</p>
+          <.link
+            navigate={~p"/#{@ctx.current_group.slug}/wiki"}
+            class="mt-6 inline-flex items-center gap-2 text-sm font-semibold hover:text-white"
+          >
+            <.icon name="hero-arrow-left-mini" /> Back to wiki
+          </.link>
+        </div>
+      <% else %>
+        <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />
+
+        <.live_component
+          module={WikWeb.Components.Page.FormMarkdown}
+          id={"form-page-#{@page.id}"}
+          form_id={"page-form-#{@page.id}"}
+          undo_button_id={"editor-undo-#{@page.id}"}
+          redo_button_id={"editor-redo-#{@page.id}"}
+          exit_after_save?={@exit_after_save?}
+          page={@page}
+          actor={@current_user}
+          group={@ctx.current_group}
+          editable={@editing?}
+          return_to={page_url(@ctx.current_group, @page)}
+          pages_map={@ctx.pages_map}
+        />
+
+        <.live_component
+          module={WikWeb.Components.Generic.Modal}
+          id="unsaved-exit-modal"
+          open?={@show_unsaved_modal}
+          mandatory?={false}
+          padding_class="p-4 space-y-4"
+          phx-click-close="cancel_exit_modal"
+        >
+          <div class="space-y-4">
+            <div class="text-lg font-semibold">Unsaved changes</div>
+            <p class="text-sm opacity-80">
+              You have edits that haven&apos;t been saved. What do you want to do?
+            </p>
+
+            <div class="flex flex-col gap-2">
               <button
-                id={"editor-undo-#{@page.id}"}
                 type="button"
-                class={[
-                  "action",
-                  if(@editing? and @editor_state.has_undo?,
-                    do: "action-enabled",
-                    else: "action-disabled"
-                  )
-                ]}
+                class="btn btn-sm btn-primary w-full"
+                phx-click="save_version_and_continue"
               >
-                <.icon name="hero-arrow-uturn-left-micro" />
-              </button>
-              <button
-                id={"editor-redo-#{@page.id}"}
-                type="button"
-                class={[
-                  "action",
-                  if(@editing? and @editor_state.has_redo?,
-                    do: "action-enabled",
-                    else: "action-disabled"
-                  )
-                ]}
-              >
-                <.icon name="hero-arrow-uturn-right-micro" />
+                Save version and continue
               </button>
 
-              <WikWeb.Components.tooltip position="bottom">
+              <button
+                type="button"
+                class="btn btn-sm btn-error w-full"
+                phx-click="discard_and_continue"
+              >
+                Forget changes and continue
+              </button>
+            </div>
+          </div>
+        </.live_component>
+      <% end %>
+
+      <:sticky_toolbar>
+        <%= if not @not_found? do %>
+          <div class="toolbar-editor-controls">
+            <%= if Ash.can?({@page, :update}, @current_user)  do %>
+              <div class={["toolbar-actions", not @editing? and "opacity-0"]}>
                 <button
-                  form={"page-form-#{@page.id}"}
-                  type="submit"
+                  id={"editor-undo-#{@page.id}"}
+                  type="button"
                   class={[
                     "action",
-                    if(@editing? and not @editor_state.synced?,
+                    if(@editing? and @editor_state.has_undo?,
                       do: "action-enabled",
                       else: "action-disabled"
                     )
                   ]}
                 >
-                  <.icon name="hero-arrow-down-tray-micro" />
+                  <.icon name="hero-arrow-uturn-left-micro" />
                 </button>
-                <:content>
-                  <span class="text-xs">
-                    Save as <span class="font-bold">v.{@page.versions_count + 1}</span>
-                  </span>
-                </:content>
-              </WikWeb.Components.tooltip>
-            </div>
-          <% end %>
-
-          <div class="toolbar-actions">
-            <%= if Ash.can?({@page, :update}, @current_user)  do %>
-              <WikWeb.Components.tooltip position="left">
                 <button
-                  :if={not @editing?}
+                  id={"editor-redo-#{@page.id}"}
+                  type="button"
+                  class={[
+                    "action",
+                    if(@editing? and @editor_state.has_redo?,
+                      do: "action-enabled",
+                      else: "action-disabled"
+                    )
+                  ]}
+                >
+                  <.icon name="hero-arrow-uturn-right-micro" />
+                </button>
+
+                <WikWeb.Components.tooltip position="bottom">
+                  <button
+                    form={"page-form-#{@page.id}"}
+                    type="submit"
+                    class={[
+                      "action",
+                      if(@editing? and not @editor_state.synced?,
+                        do: "action-enabled",
+                        else: "action-disabled"
+                      )
+                    ]}
+                  >
+                    <.icon name="hero-arrow-down-tray-micro" />
+                  </button>
+                  <:content>
+                    <span class="text-xs">
+                      Save as <span class="font-bold">v.{@page.versions_count + 1}</span>
+                    </span>
+                  </:content>
+                </WikWeb.Components.tooltip>
+              </div>
+            <% end %>
+
+            <div class="toolbar-actions">
+              <%= if Ash.can?({@page, :update}, @current_user)  do %>
+                <WikWeb.Components.tooltip position="left">
+                  <button
+                    :if={not @editing?}
+                    type="button"
+                    class={["action", "action-enabled"]}
+                    phx-click="toggle_editing"
+                  >
+                    <.icon name="hero-lock-closed-micro" />
+                  </button>
+                  <:content><span class="text-xs">Unlock to edit</span></:content>
+                </WikWeb.Components.tooltip>
+                <button
+                  :if={@editing?}
                   type="button"
                   class={["action", "action-enabled"]}
-                  phx-click="toggle_editing"
+                  phx-click="attempt_end_editing"
+                  phx-value-synced={@editor_state.synced?}
+                  phx-value-has_undo={@editor_state.has_undo?}
+                  phx-value-has_redo={@editor_state.has_redo?}
                 >
-                  <.icon name="hero-lock-closed-micro" />
+                  <.icon name="hero-lock-open-micro" />
                 </button>
-                <:content><span class="text-xs">Unlock to edit</span></:content>
-              </WikWeb.Components.tooltip>
-              <button
-                :if={@editing?}
-                type="button"
-                class={["action", "action-enabled"]}
-                phx-click="attempt_end_editing"
-                phx-value-synced={@editor_state.synced?}
-                phx-value-has_undo={@editor_state.has_undo?}
-                phx-value-has_redo={@editor_state.has_redo?}
+              <% end %>
+
+              <.link
+                class={[
+                  "action action-version",
+                  if(@editing?, do: "action-disabled", else: "action-enabled")
+                ]}
+                id={"page-version-link-#{@page.id}"}
+                patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"}
               >
-                <.icon name="hero-lock-open-micro" />
-              </button>
-            <% end %>
-
-            <.link
-              class={[
-                "action action-version",
-                if(@editing?, do: "action-disabled", else: "action-enabled")
-              ]}
-              id={"page-version-link-#{@page.id}"}
-              patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"}
-            >
-              v.{@page.versions_count}
-            </.link>
+                v.{@page.versions_count}
+              </.link>
+            </div>
           </div>
-        </div>
 
-        <div
-          :if={@env == :dev}
-          class={[
-            "toolbar-editor-controls ml-auto mt-2",
-            not @debug? and "opacity-0 hover:opacity-100"
-          ]}
-        >
-          <div class="toolbar-actions w-fit">
-            <.button type="button" class="action" phx-click="toggle_debug">
-              <.icon name="hero-bug-ant" />
-            </.button>
+          <div
+            :if={@env == :dev}
+            class={[
+              "toolbar-editor-controls ml-auto mt-2",
+              not @debug? and "opacity-0 hover:opacity-100"
+            ]}
+          >
+            <div class="toolbar-actions w-fit">
+              <.button type="button" class="action" phx-click="toggle_debug">
+                <.icon name="hero-bug-ant" />
+              </.button>
+            </div>
           </div>
-        </div>
-        <div
-          :if={@env == :dev and @debug?}
-          class="bg-base-300 w-fit ml-auto text-xs font-mono mt-2 p-4 rounded-lg"
-        >
-          <dd>page title: {@ctx.page.title}</dd>
-          <div>editing?: {@editing?}</div>
-          <div>synced?: {@editor_state.synced?}</div>
-          <div>has_undo?: {@editor_state.has_undo?}</div>
-          <div>has_redo?: {@editor_state.has_redo?}</div>
-          <div>exit_after_save?: {@exit_after_save?}</div>
-          <div>show_unsaved_modal?:{@show_unsaved_modal}</div>
-        </div>
+          <div
+            :if={@env == :dev and @debug?}
+            class="bg-base-300 w-fit ml-auto text-xs font-mono mt-2 p-4 rounded-lg"
+          >
+            <dd>page title: {@ctx.page.title}</dd>
+            <div>editing?: {@editing?}</div>
+            <div>synced?: {@editor_state.synced?}</div>
+            <div>has_undo?: {@editor_state.has_undo?}</div>
+            <div>has_redo?: {@editor_state.has_redo?}</div>
+            <div>exit_after_save?: {@exit_after_save?}</div>
+            <div>show_unsaved_modal?: {@show_unsaved_modal}</div>
+          </div>
+        <% end %>
       </:sticky_toolbar>
 
-      <.live_component
-        module={WikWeb.Components.Page.FormMarkdown}
-        id={"form-page-#{@page.id}"}
-        form_id={"page-form-#{@page.id}"}
-        undo_button_id={"editor-undo-#{@page.id}"}
-        redo_button_id={"editor-redo-#{@page.id}"}
-        exit_after_save?={@exit_after_save?}
-        page={@page}
-        actor={@current_user}
-        group={@ctx.current_group}
-        editable={@editing?}
-        return_to={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
-        pages_map={@ctx.pages_map}
-      />
-
-      <.live_component
-        module={WikWeb.Components.Generic.Modal}
-        id="unsaved-exit-modal"
-        open?={@show_unsaved_modal}
-        mandatory?={false}
-        padding_class="p-4 space-y-4"
-        phx-click-close="cancel_exit_modal"
-      >
-        <div class="space-y-4">
-          <div class="text-lg font-semibold">Unsaved changes</div>
-          <p class="text-sm opacity-80">
-            You have edits that haven&apos;t been saved. What do you want to do?
-          </p>
-
-          <div class="flex flex-col gap-2">
-            <button
-              type="button"
-              class="btn btn-sm btn-primary w-full"
-              phx-click="save_version_and_continue"
-            >
-              Save version and continue
-            </button>
-
-            <button
-              type="button"
-              class="btn btn-sm btn-error w-full"
-              phx-click="discard_and_continue"
-            >
-              Forget changes and continue
-            </button>
-          </div>
-        </div>
-      </.live_component>
-
       <:backlinks>
-        <div class="space-y-2">
-          <div class="flex items-center gap-2">
-            <i class="hero-link-mini size-4"></i>
-            <span class="uppercase tracking-wide text-xs opacity-70">Backlinks</span>
-          </div>
+        <%= if not @not_found? do %>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <i class="hero-link-mini size-4"></i>
+              <span class="uppercase tracking-wide text-xs opacity-70">Backlinks</span>
+            </div>
 
-          <ul class="list-disc list-inside">
-            <%= if Enum.empty?(@backlinks) do %>
-              <li class="text-sm opacity-70">No backlinks yet.</li>
-            <% else %>
-              <li :for={backlink <- @backlinks} class="text-xs">
-                <.link
-                  navigate={~p"/#{@ctx.current_group.slug}/wiki/#{backlink.source_page.slug}"}
-                  class="hover:text-white"
-                >
-                  {backlink.source_page.title || backlink.target_slug}
-                </.link>
-              </li>
-            <% end %>
-          </ul>
-        </div>
+            <ul class="list-disc list-inside">
+              <%= if Enum.empty?(@backlinks) do %>
+                <li class="text-sm opacity-70">No backlinks yet.</li>
+              <% else %>
+                <li :for={backlink <- @backlinks} class="text-xs">
+                  <.link
+                    navigate={page_url(@ctx.current_group, backlink.source_page)}
+                    class="hover:text-white"
+                  >
+                    {backlink.source_page.title || backlink.target_slug}
+                  </.link>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
       </:backlinks>
     </Layouts.app>
     """
   end
 
   def page_url(group, page) do
-    ~p"/#{group.slug}/wiki/#{page.slug}"
+    "/#{group.slug}/wiki/#{page.slug}"
   end
 
   @impl true
-  def mount(%{"page_slug" => page_slug}, _session, socket) do
+  def mount(%{"page_slug_segments" => page_slug_segments}, _session, socket) do
+    page_slug = page_slug_segments |> Enum.join("/")
     current_group = socket.assigns.ctx.current_group
     current_user = socket.assigns.current_user
 
@@ -239,6 +258,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
          socket
          |> assign(:env, @env)
          |> assign(:debug?, false)
+         |> assign(:not_found?, false)
          |> assign(:page_title, page.title)
          |> set_editing(false)
          |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
@@ -250,18 +270,18 @@ defmodule WikWeb.GroupLive.PageLive.Show do
          |> maybe_subscribe_backlinks(page)}
 
       {:error, _error} ->
-        page =
-          Wik.Wiki.Page
-          |> Ash.Changeset.for_create(
-            :create,
-            %{title: page_slug},
-            actor: current_user,
-            context: %{shared: %{current_group_id: current_group.id}}
-          )
-          |> Ash.create!()
-
-        redirect_url = page_url(current_group, page)
-        {:ok, socket |> push_navigate(to: redirect_url)}
+        {:ok,
+         socket
+         |> assign(:env, @env)
+         |> assign(:debug?, false)
+         |> assign(:not_found?, true)
+         |> assign(:page_title, "Page not found")
+         |> set_editing(false)
+         |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
+         |> assign(:show_unsaved_modal, false)
+         |> assign(:exit_after_save?, false)
+         |> assign(:updated_fields, [])
+         |> assign(:backlinks, [])}
     end
   end
 
@@ -318,51 +338,25 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     current_group = socket.assigns.ctx.current_group
     current_user = socket.assigns.current_user
 
-    title = (title || "") |> String.trim()
+    raw_title = title || ""
+    normalized_path = normalize_wikilink_title(raw_title)
 
-    if title == "" do
-      {:reply, %{ok: false, error: "title_required"}, socket}
-    else
-      slug = Utils.Slugify.generate(title)
+    case build_wikilink_segments(normalized_path) do
+      {:error, :title_required} ->
+        {:reply, %{ok: false, error: "title_required"}, socket}
 
-      page_result =
-        case Wik.Wiki.Page
-             |> Ash.get(
-               %{group_id: current_group.id, slug: slug},
-               actor: current_user
-             ) do
+      {:ok, segments} ->
+        case ensure_wikilink_pages(current_group, current_user, segments) do
           {:ok, page} ->
-            {:ok, page}
+            {:reply, %{ok: true, page: %{id: page.id, slug: page.slug, title: page.title}},
+             socket}
 
-          {:error, %Ash.Error.Invalid{errors: errors}} when is_list(errors) ->
-            if Enum.any?(errors, &match?(%Ash.Error.Query.NotFound{}, &1)) do
-              Wik.Wiki.Page
-              |> Ash.Changeset.for_create(
-                :create,
-                %{title: title, text: ""},
-                actor: current_user,
-                context: %{shared: %{current_group_id: current_group.id}}
-              )
-              |> Ash.create()
-            else
-              {:error, :lookup_failed}
-            end
+          {:error, :lookup_failed} ->
+            {:reply, %{ok: false, error: "lookup_failed"}, socket}
 
-          {:error, reason} ->
-            Logger.error("🔴 Failed to lookup: #{inspect(reason)}")
-            {:error, :lookup_failed}
+          {:error, _} ->
+            {:reply, %{ok: false, error: "create_failed"}, socket}
         end
-
-      case page_result do
-        {:ok, page} ->
-          {:reply, %{ok: true, page: %{id: page.id, slug: page.slug, title: page.title}}, socket}
-
-        {:error, :lookup_failed} ->
-          {:reply, %{ok: false, error: "lookup_failed"}, socket}
-
-        {:error, _} ->
-          {:reply, %{ok: false, error: "create_failed"}, socket}
-      end
     end
   end
 
@@ -390,11 +384,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   @impl true
   def handle_params(_params, url, socket) do
-    socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
-    WikWeb.Presence.track_in_liveview(socket, url)
     current_path = URI.parse(url).path
+    socket = Utils.Ctx.add(socket, :current_path, current_path)
+    WikWeb.Presence.track_in_liveview(socket, url)
     socket = socket |> assign(current_path: current_path)
-
     {:noreply, socket}
   end
 
@@ -488,6 +481,83 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   defp parse_bool(false, _default), do: false
   defp parse_bool(nil, default), do: default
   defp parse_bool(_, default), do: default
+
+  defp normalize_wikilink_title(title) do
+    title
+    |> String.split("/", trim: false)
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.map(&Utils.String.titleize/1)
+    |> Enum.join("/")
+  end
+
+  defp build_wikilink_segments(normalized_path) do
+    segments = normalized_path |> String.split("/", trim: true)
+
+    if segments == [] do
+      {:error, :title_required}
+    else
+      pairs =
+        Enum.map(segments, fn segment ->
+          {segment, Utils.Slugify.generate(segment)}
+        end)
+
+      if Enum.any?(pairs, fn {_title, slug} -> slug == "" end) do
+        {:error, :title_required}
+      else
+        {:ok, pairs}
+      end
+    end
+  end
+
+  defp ensure_wikilink_pages(current_group, current_user, segments) do
+    result =
+      Wik.Repo.transaction(fn ->
+        Enum.reduce(segments, {nil, ""}, fn {title, slug_segment}, {_page, prefix} ->
+          slug = if prefix == "", do: slug_segment, else: prefix <> "/" <> slug_segment
+
+          case get_or_create_page_by_slug(current_group, current_user, slug, title) do
+            {:ok, page} -> {page, slug}
+            {:error, reason} -> Wik.Repo.rollback(reason)
+          end
+        end)
+      end)
+
+    case result do
+      {:ok, {page, _}} -> {:ok, page}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp get_or_create_page_by_slug(current_group, current_user, slug, title) do
+    case Wik.Wiki.Page
+         |> Ash.get(
+           %{group_id: current_group.id, slug: slug},
+           actor: current_user
+         ) do
+      {:ok, page} ->
+        {:ok, page}
+
+      {:error, %Ash.Error.Invalid{errors: errors}} when is_list(errors) ->
+        if Enum.any?(errors, &match?(%Ash.Error.Query.NotFound{}, &1)) do
+          Wik.Wiki.Page
+          |> Ash.Changeset.for_create(
+            :create,
+            %{title: title, text: ""},
+            actor: current_user,
+            context: %{shared: %{current_group_id: current_group.id}}
+          )
+          |> Ash.Changeset.change_attribute(:slug, slug)
+          |> Ash.create()
+        else
+          {:error, :lookup_failed}
+        end
+
+      {:error, reason} ->
+        Logger.error("🔴 Failed to lookup: #{inspect(reason)}")
+        {:error, :lookup_failed}
+    end
+  end
 
   defp load_backlinks(page) do
     Wik.Wiki.Backlink.Utils.list_for_page(page)

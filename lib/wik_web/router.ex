@@ -89,8 +89,8 @@ defmodule WikWeb.Router do
         live "/members", GroupLive.MemberLive.Index, :index
         live "/map", GroupLive.WikimapLive, :show
         live "/wiki", GroupLive.PageLive.Index, :index
-        live "/wiki/:page_slug", GroupLive.PageLive.Show, :show
         live "/wiki/:page_slug/v/:version", GroupLive.PageLive.History
+        live "/wiki/*page_slug_segments", GroupLive.PageLive.Show, :show
         live "/tags", TagLive.Index
         live "/tags/*tag_name_segments", TagLive.Show
       end

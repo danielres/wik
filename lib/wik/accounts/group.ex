@@ -7,6 +7,8 @@ defmodule Wik.Accounts.Group do
     notifiers: [Wik.Notifiers.ResourceMutation],
     extensions: [AshEvents.Events]
 
+  require Logger
+
   defimpl String.Chars do
     def to_string(group), do: group.title
   end
@@ -60,6 +62,25 @@ defmodule Wik.Accounts.Group do
           type: :append_and_remove,
           authorize?: false
         )
+      end
+
+      change fn changeset, context ->
+        Ash.Changeset.after_action(changeset, fn _changeset, group ->
+          text = home_template()
+
+          case Ash.create(Wik.Wiki.Page, %{title: "Home", text: text},
+                 actor: context.actor,
+                 authorize?: false,
+                 context: %{shared: %{current_group_id: group.id}}
+               ) do
+            {:ok, _page} ->
+              {:ok, group}
+
+            {:error, reason} ->
+              Logger.error("🔴 Failed to create home page: #{inspect(reason)}")
+              {:ok, group}
+          end
+        end)
       end
     end
 
@@ -137,6 +158,19 @@ defmodule Wik.Accounts.Group do
 
   identities do
     identity :unique_slug, [:slug], eager_check_with: Wik.Accounts
+  end
+
+  defp home_template do
+    path = Path.join(:code.priv_dir(:wik), "templates/home.md")
+
+    case File.read(path) do
+      {:ok, content} ->
+        content
+
+      {:error, reason} ->
+        Logger.error("🔴 Failed to read home template: #{inspect(reason)}")
+        "# Home\n\nWelcome to your new wiki.\n"
+    end
   end
 end
 

@@ -85,7 +85,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
               <div class="toolbar-actions ">
                 <.link
                   class="action !btn-ghost opacity-40 hover:opacity-100 transition"
-                  patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}"}
+                  patch={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, @page)}
                 >
                   <.icon name="hero-x-mark size-6" />
                 </.link>

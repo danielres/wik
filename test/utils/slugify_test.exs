@@ -96,4 +96,23 @@ defmodule Utils.SlugifyTest do
       assert Slugify.generate(slug) == slug
     end
   end
+
+  describe "generate/2 with allow_slash" do
+    test "preserves slash-separated segments" do
+      assert Slugify.generate("Parent/Child", allow_slash: true) == "parent/child"
+    end
+
+    test "slugifies each segment independently" do
+      assert Slugify.generate("Parent Page/Child Page", allow_slash: true) ==
+               "parent-page/child-page"
+    end
+
+    test "collapses repeated slashes" do
+      assert Slugify.generate("Parent///Child/", allow_slash: true) == "parent/child"
+    end
+
+    test "normalizes accents per segment" do
+      assert Slugify.generate("Café/Résumé", allow_slash: true) == "cafe/resume"
+    end
+  end
 end

@@ -102,7 +102,7 @@ defmodule WikWeb.GroupLive.Show do
             <.link
               :for={p <- @group.last_updated_pages}
               class={[content_class, "grid grid-cols-3 hover:opacity-100"]}
-              navigate={~p"/#{@group.slug}/wiki/#{p.slug}"}
+              navigate={WikWeb.GroupLive.PageLive.Show.page_url(@group, p)}
             >
               <div>{p.title}</div>
               <div>

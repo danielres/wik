@@ -38,6 +38,8 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-root-path={"/#{@group.slug}/wiki"}
             data-pages-json={
               @pages_map
+              |> Kernel.||(%{})
+              |> Map.values()
               |> Enum.map(fn page ->
                 {page.id,
                  %{id: page.id, slug: page.slug, title: page.title, updated_at: page.updated_at}}

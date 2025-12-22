@@ -15,7 +15,7 @@ defmodule WikWeb.CtxAdditions do
     current_group = socket.assigns.ctx.current_group
     current_user = socket.assigns[:current_user]
 
-    pages_map =
+    pages_by_slug =
       Wik.Wiki.Page
       |> Ash.Query.filter(group_id == ^current_group.id)
       |> Ash.Query.sort(updated_at: :desc)
@@ -24,6 +24,12 @@ defmodule WikWeb.CtxAdditions do
       |> case do
         {:ok, pages} ->
           pages
+          |> Enum.reduce(%{}, fn page, acc ->
+            case page.slug do
+              slug when is_binary(slug) and slug != "" -> Map.put(acc, slug, page)
+              _ -> acc
+            end
+          end)
 
         {:error, error} ->
           Logger.error("""
@@ -33,12 +39,13 @@ defmodule WikWeb.CtxAdditions do
           Error: #{Exception.format(:error, error)}
           """)
 
-          []
+          %{}
       end
 
     socket =
       socket
-      |> Utils.Ctx.add(:pages_map, pages_map)
+      # pages_map is keyed by slug for fast lookup in views/components.
+      |> Utils.Ctx.add(:pages_map, pages_by_slug)
 
     {:cont, socket}
   end

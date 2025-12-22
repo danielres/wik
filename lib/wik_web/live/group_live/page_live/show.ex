@@ -27,6 +27,8 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           </.link>
         </div>
       <% else %>
+        <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />
+
         <.live_component
           module={WikWeb.Components.Page.FormMarkdown}
           id={"form-page-#{@page.id}"}

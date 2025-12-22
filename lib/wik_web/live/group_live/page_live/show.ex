@@ -400,6 +400,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
+    old_slug = socket.assigns.page.slug
     updated_page = reload_page!(payload.data.slug, socket)
     updated_fields = Map.keys(payload.changeset.attributes)
 
@@ -416,8 +417,16 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           updated_fields: updated_fields,
           backlinks: load_backlinks(updated_page)
         )
+        |> Utils.Ctx.add(:page, updated_page)
         |> RealtimeToast.put_update_toast(payload)
         |> maybe_push_saved_version(updated_fields, updated_page)
+
+      socket =
+        if updated_page.slug != old_slug do
+          push_patch(socket, to: page_url(socket.assigns.ctx.current_group, updated_page))
+        else
+          socket
+        end
 
       {:noreply, socket}
     end
@@ -486,7 +495,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   defp maybe_subscribe_backlinks(socket, page) do
     if connected?(socket) do
-      Phoenix.PubSub.subscribe(Wik.PubSub, "backlinks:slug:#{page.group_id}:#{page.slug}")
       Phoenix.PubSub.subscribe(Wik.PubSub, "backlinks:page:#{page.group_id}:#{page.id}")
     end
 

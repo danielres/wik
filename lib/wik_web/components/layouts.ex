@@ -129,7 +129,7 @@ defmodule WikWeb.Layouts do
           <% else %>
             <.link
               class={[link_class(@ctx, "/wiki")]}
-              navigate={~p"/#{@ctx[:current_group].slug}/wiki/Home"}
+              navigate={~p"/#{@ctx[:current_group].slug}/wiki/home"}
             >
               Wiki
             </.link>

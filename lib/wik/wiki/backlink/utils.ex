@@ -8,47 +8,23 @@ defmodule Wik.Wiki.Backlink.Utils do
   alias Wik.Wiki.Page
 
   @doc """
-  Parse markdown for backlink target slugs.
+  Parse markdown for backlink target ids.
 
-  Supports `[[wikilink]]` and relative markdown links like `[text](/group-slug/wiki/slug)`.
-  Only returns slugs scoped to the given group_slug. Deduplicates results.
+  Only supports `[text](wikid:UUID)` links. Deduplicates results.
   """
-  @spec parse_slugs(String.t() | nil, String.t()) :: MapSet.t(String.t())
-  def parse_slugs(markdown, group_slug) when is_binary(group_slug) do
+  @spec parse_wikilink_ids(String.t() | nil) :: MapSet.t(String.t())
+  def parse_wikilink_ids(markdown) do
     markdown = markdown || ""
 
-    wikilinks =
-      Regex.scan(~r/\[\[([^\[\]]+)\]\]/, markdown, capture: :all_but_first)
-      |> Enum.map(&hd/1)
-
-    relative_links =
-      Regex.scan(~r/\[[^\]]*\]\((\/[^\s\)]+)\)/, markdown, capture: :all_but_first)
-      |> Enum.map(&hd/1)
-      |> Enum.flat_map(&extract_slug_from_path(&1, group_slug))
-
-    (wikilinks ++ relative_links)
-    |> Enum.map(&normalize_slug/1)
-    |> Enum.map(&Utils.Slugify.generate/1)
+    Regex.scan(~r/\[[^\]]*\]\(wikid:([^\)]+)\)/, markdown, capture: :all_but_first)
+    |> Enum.map(&hd/1)
+    |> Enum.map(&normalize_id/1)
     |> Enum.reject(&is_nil/1)
     |> MapSet.new()
   end
 
-  defp extract_slug_from_path(path, group_slug) do
-    # Only accept relative links within the same group, in the form /<group_slug>/wiki/<slug>
-    cond do
-      String.contains?(path, "..") ->
-        []
-
-      String.starts_with?(path, "/#{group_slug}/wiki/") ->
-        [path |> String.trim_trailing("/") |> String.split("/", parts: 4) |> List.last()]
-
-      true ->
-        []
-    end
-  end
-
-  defp normalize_slug(slug) do
-    slug
+  defp normalize_id(id) do
+    id
     |> URI.decode()
     |> String.trim()
     |> case do
@@ -64,52 +40,68 @@ defmodule Wik.Wiki.Backlink.Utils do
   """
   @spec rebuild_for_page(Page.t(), Ash.Changeset.t()) :: :ok | {:error, term()}
   def rebuild_for_page(%Page{} = page, _changeset) do
-    with {:ok, group_slug} <- fetch_group_slug(page),
-         slugs <- parse_slugs(page.text, group_slug) do
-      do_rebuild(page, slugs)
+    ids = parse_wikilink_ids(page.text)
+
+    if MapSet.size(ids) == 0 do
+      do_rebuild(page, MapSet.new())
+    else
+      do_rebuild(page, ids)
     end
   end
 
-  defp do_rebuild(page, slugs) do
+  defp do_rebuild(page, ids) do
     {:ok, existing} =
       Backlink
       |> Ash.Query.filter(source_page_id == ^page.id and group_id == ^page.group_id)
       |> Ash.read(authorize?: false)
 
-    existing_slugs = MapSet.new(existing, & &1.target_slug)
-    to_delete = Enum.filter(existing, fn bl -> bl.target_slug not in slugs end)
-    to_create = MapSet.difference(slugs, existing_slugs)
+    existing_ids =
+      existing
+      |> Enum.map(& &1.target_page_id)
+      |> Enum.reject(&is_nil/1)
+      |> MapSet.new()
+
+    to_delete =
+      Enum.filter(existing, fn bl ->
+        is_nil(bl.target_page_id) or bl.target_page_id not in ids
+      end)
+
+    to_create = MapSet.difference(ids, existing_ids)
 
     Enum.each(to_delete, fn backlink -> Ash.destroy!(backlink, authorize?: false) end)
 
     target_pages =
       if MapSet.size(to_create) > 0 do
         Page
-        |> Ash.Query.filter(group_id == ^page.group_id and slug in ^MapSet.to_list(to_create))
+        |> Ash.Query.filter(group_id == ^page.group_id and id in ^MapSet.to_list(to_create))
         |> Ash.read!(authorize?: false)
-        |> Map.new(fn p -> {p.slug, p} end)
+        |> Map.new(fn p -> {p.id, p} end)
       else
         %{}
       end
 
-    Enum.each(to_create, fn slug ->
-      target_page_id = target_pages[slug] && target_pages[slug].id
+    Enum.each(to_create, fn id ->
+      target_page = target_pages[id]
+      target_page_id = target_page && target_page.id
+      target_slug = target_page && target_page.slug
 
-      Backlink
-      |> Ash.Changeset.for_create(
-        :create,
-        %{
-          group_id: page.group_id,
-          source_page_id: page.id,
-          target_slug: slug,
-          target_page_id: target_page_id
-        },
-        authorize?: false
-      )
-      |> Ash.create!(authorize?: false)
+      if target_page_id do
+        Backlink
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            group_id: page.group_id,
+            source_page_id: page.id,
+            target_slug: target_slug,
+            target_page_id: target_page_id
+          },
+          authorize?: false
+        )
+        |> Ash.create!(authorize?: false)
+      end
     end)
 
-    broadcast_updates(page.group_id, slugs, Map.values(target_pages))
+    broadcast_updates(page.group_id, ids)
     :ok
   end
 
@@ -132,7 +124,7 @@ defmodule Wik.Wiki.Backlink.Utils do
     end)
 
     if backlinks != [] do
-      broadcast_updates(page.group_id, [page.slug], [page])
+      broadcast_updates(page.group_id, [page.id])
     end
 
     :ok
@@ -143,13 +135,8 @@ defmodule Wik.Wiki.Backlink.Utils do
   """
   @spec list_for_page(Page.t()) :: [Backlink.t()]
   def list_for_page(%Page{} = page) do
-    page_slug = Utils.Slugify.generate(page.slug)
-
     Backlink
-    |> Ash.Query.filter(
-      group_id == ^page.group_id and
-        (target_page_id == ^page.id or target_slug == ^page_slug)
-    )
+    |> Ash.Query.filter(group_id == ^page.group_id and target_page_id == ^page.id)
     |> Ash.Query.load([:source_page])
     |> Ash.Query.sort(updated_at: :desc)
     |> Ash.read!(authorize?: false)
@@ -171,28 +158,11 @@ defmodule Wik.Wiki.Backlink.Utils do
     :ok
   end
 
-  defp fetch_group_slug(%Page{group: %{slug: slug}}) when is_binary(slug), do: {:ok, slug}
-
-  defp fetch_group_slug(%Page{group_id: group_id}) do
-    group = Wik.Accounts.Group |> Ash.get!(group_id, authorize?: false)
-    {:ok, group.slug}
-  rescue
-    _ -> {:error, :group_not_found}
-  end
-
-  defp broadcast_updates(group_id, slugs, target_pages) do
-    Enum.each(slugs, fn slug ->
+  defp broadcast_updates(group_id, target_ids) do
+    Enum.each(target_ids, fn id ->
       Phoenix.PubSub.broadcast(
         Wik.PubSub,
-        "backlinks:slug:#{group_id}:#{slug}",
-        :backlinks_updated
-      )
-    end)
-
-    Enum.each(target_pages, fn page ->
-      Phoenix.PubSub.broadcast(
-        Wik.PubSub,
-        "backlinks:page:#{group_id}:#{page.id}",
+        "backlinks:page:#{group_id}:#{id}",
         :backlinks_updated
       )
     end)

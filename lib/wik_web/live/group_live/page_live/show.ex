@@ -486,15 +486,8 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     |> String.split("/", trim: false)
     |> Enum.map(&String.trim/1)
     |> Enum.reject(&(&1 == ""))
-    |> Enum.map(&titleize_segment/1)
+    |> Enum.map(&Utils.String.titleize/1)
     |> Enum.join("/")
-  end
-
-  defp titleize_segment(segment) do
-    case String.next_grapheme(segment) do
-      {first, rest} -> String.upcase(first) <> rest
-      nil -> ""
-    end
   end
 
   defp build_wikilink_segments(normalized_path) do

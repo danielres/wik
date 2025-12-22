@@ -9,8 +9,8 @@ defmodule Wik.Wiki.Backlink.CascadeTest do
     user = generate(user(authorize?: false))
     group = generate(group(actor: user, authorize?: false))
 
-    _target = create_page(group, user, "Target")
-    _source = create_page(group, user, "Source", "See [[Target]]")
+    target = create_page(group, user, "Target")
+    _source = create_page(group, user, "Source", "See [Target](wikid:#{target.id})")
 
     assert backlink_count() == 1
 
@@ -24,7 +24,7 @@ defmodule Wik.Wiki.Backlink.CascadeTest do
     group = generate(group(actor: user, authorize?: false))
 
     target = create_page(group, user, "Target")
-    source = create_page(group, user, "Source", "See [[Target]]")
+    source = create_page(group, user, "Source", "See [Target](wikid:#{target.id})")
 
     assert backlink_count() == 1
 
@@ -39,7 +39,7 @@ defmodule Wik.Wiki.Backlink.CascadeTest do
     group = generate(group(actor: user, authorize?: false))
 
     target = create_page(group, user, "Target")
-    _source = create_page(group, user, "Source", "See [[Target]]")
+    _source = create_page(group, user, "Source", "See [Target](wikid:#{target.id})")
 
     assert backlink_count() == 1
 

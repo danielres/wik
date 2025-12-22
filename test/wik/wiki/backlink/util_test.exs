@@ -15,18 +15,20 @@ defmodule Wik.Wiki.BacklinkTest do
     |> Ash.create!()
   end
 
-  test "parse_slugs extracts wikilinks and relative links scoped to group" do
+  test "parse_wikilink_ids extracts wikid links" do
     user = generate(user(authorize?: false))
-    group = generate(group(actor: user, authorize?: false))
 
     markdown = """
-    Intro [[Alpha Page]]
-    See [beta](/#{group.slug}/wiki/Beta-Note)
-    Ignore [other](/other/wiki/Skip)
+    Intro [Alpha](wikid:019b1111-1111-7111-8111-111111111111)
+    See [beta](wikid:019b2222-2222-7222-8222-222222222222)
     """
 
-    slugs = Utils.parse_slugs(markdown, group.slug) |> MapSet.to_list() |> Enum.sort()
-    assert slugs == ["alpha-page", "beta-note"]
+    ids = Utils.parse_wikilink_ids(markdown) |> MapSet.to_list() |> Enum.sort()
+
+    assert ids == [
+             "019b1111-1111-7111-8111-111111111111",
+             "019b2222-2222-7222-8222-222222222222"
+           ]
   end
 
   test "creating page with link records backlink to existing target" do
@@ -34,7 +36,7 @@ defmodule Wik.Wiki.BacklinkTest do
     group = generate(group(actor: user, authorize?: false))
 
     target = create_page(group, user, "Target Page", "Content")
-    _source = create_page(group, user, "Source", "See [[#{target.slug}]] for details")
+    _source = create_page(group, user, "Source", "See [link](wikid:#{target.id}) for details")
 
     backlinks = Utils.list_for_page(target)
     assert length(backlinks) == 1
@@ -43,30 +45,16 @@ defmodule Wik.Wiki.BacklinkTest do
     assert hd(backlinks).target_slug == target.slug
   end
 
-  test "backlinks to missing slug are promoted when page is created" do
+  test "backlinks are recorded for wikid links" do
     user = generate(user(authorize?: false))
     group = generate(group(actor: user, authorize?: false))
 
-    missing_slug = "Missing Page"
-    source = create_page(group, user, "Source", "Link to [[#{missing_slug}]]")
+    target = create_page(group, user, "Target Page", "Content")
+    source = create_page(group, user, "Source", "Link to [target](wikid:#{target.id})")
 
-    # Backlink exists but with nil target_page_id
-    backlinks_for_missing_slug =
-      Utils.list_for_page(%Wik.Wiki.Page{
-        id: Ecto.UUID.generate(),
-        slug: missing_slug,
-        group_id: group.id
-      })
-
-    assert length(backlinks_for_missing_slug) == 1
-    assert hd(backlinks_for_missing_slug).target_page_id == nil
-    assert hd(backlinks_for_missing_slug).source_page_id == source.id
-
-    missing = create_page(group, user, missing_slug, "# #{missing_slug}")
-
-    promoted = Utils.list_for_page(missing)
-    assert length(promoted) == 1
-    assert hd(promoted).target_page_id == missing.id
-    assert hd(promoted).source_page_id == source.id
+    backlinks = Utils.list_for_page(target)
+    assert length(backlinks) == 1
+    assert hd(backlinks).source_page_id == source.id
+    assert hd(backlinks).target_page_id == target.id
   end
 end

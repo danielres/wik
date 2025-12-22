@@ -196,7 +196,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             <div>has_undo?: {@editor_state.has_undo?}</div>
             <div>has_redo?: {@editor_state.has_redo?}</div>
             <div>exit_after_save?: {@exit_after_save?}</div>
-            <div>show_unsaved_modal?:{@show_unsaved_modal}</div>
+            <div>show_unsaved_modal?: {@show_unsaved_modal}</div>
           </div>
         <% end %>
       </:sticky_toolbar>
@@ -384,11 +384,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   @impl true
   def handle_params(_params, url, socket) do
-    socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
-    WikWeb.Presence.track_in_liveview(socket, url)
     current_path = URI.parse(url).path
+    socket = Utils.Ctx.add(socket, :current_path, current_path)
+    WikWeb.Presence.track_in_liveview(socket, url)
     socket = socket |> assign(current_path: current_path)
-
     {:noreply, socket}
   end
 

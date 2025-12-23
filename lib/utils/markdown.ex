@@ -53,54 +53,38 @@ defmodule Utils.Markdown do
   def extract_toc(md) when is_binary(md) do
     md
     |> String.split("\n", trim: false)
-    |> Utils.Markdown.extract_toc()
+    |> extract_toc()
   end
 
   @spec extract_toc([String.t()]) :: list(map())
   def extract_toc(lines) do
-    {toc, _state} =
-      lines
-      |> Enum.with_index()
-      |> Enum.reduce({[], %{fenced?: false, fence: nil}}, fn {line, idx}, {acc, state} ->
-        {state, fence_line?} = update_fence_state(state, line)
+    lines
+    |> reject_code_lines()
+    |> Enum.reduce([], fn {line, idx}, acc ->
+      case Regex.run(@header_regex, line, capture: :all_but_first) do
+        [hashes, title] ->
+          level = String.length(hashes)
+          tags = extract_tags(title)
+          clean_title = title |> strip_tags() |> String.trim()
+          slug = generate_milkdown_slug(String.trim(title))
 
-        cond do
-          fence_line? ->
-            {acc, state}
+          [
+            %{
+              level: level,
+              title: clean_title,
+              title_with_tags: String.trim(title),
+              slug: slug,
+              tags: tags,
+              line_index: idx
+            }
+            | acc
+          ]
 
-          state.fenced? ->
-            {acc, state}
-
-          indented_code_line?(line) ->
-            {acc, state}
-
-          true ->
-            case Regex.run(@header_regex, line, capture: :all_but_first) do
-              [hashes, title] ->
-                level = String.length(hashes)
-                tags = extract_tags(title)
-                clean_title = title |> strip_tags() |> String.trim()
-                slug = generate_milkdown_slug(String.trim(title))
-
-                {[
-                   %{
-                     level: level,
-                     title: clean_title,
-                     title_with_tags: String.trim(title),
-                     slug: slug,
-                     tags: tags,
-                     line_index: idx
-                   }
-                   | acc
-                 ], state}
-
-              _ ->
-                {acc, state}
-            end
-        end
-      end)
-
-    Enum.reverse(toc)
+        _ ->
+          acc
+      end
+    end)
+    |> Enum.reverse()
   end
 
   @doc """
@@ -193,35 +177,14 @@ defmodule Utils.Markdown do
   """
   @spec extract_tags(String.t()) :: [String.t()]
   def extract_tags(text) do
-    lines = String.split(text || "", "\n", trim: false)
-
-    {tag_groups, _state} =
-      Enum.reduce(lines, {[], %{fenced?: false, fence: nil}}, fn line, {acc, state} ->
-        {state, fence_line?} = update_fence_state(state, line)
-
-        cond do
-          fence_line? ->
-            {acc, state}
-
-          state.fenced? ->
-            {acc, state}
-
-          indented_code_line?(line) ->
-            {acc, state}
-
-          true ->
-            tags =
-              line
-              |> strip_inline_code()
-              |> scan_tags()
-
-            {[tags | acc], state}
-        end
-      end)
-
-    tag_groups
-    |> Enum.reverse()
-    |> List.flatten()
+    text
+    |> String.split("\n", trim: false)
+    |> reject_code_lines()
+    |> Enum.flat_map(fn {line, _idx} ->
+      line
+      |> strip_inline_code()
+      |> scan_tags()
+    end)
   end
 
   defp scan_tags(text) do
@@ -232,6 +195,23 @@ defmodule Utils.Markdown do
 
   defp strip_inline_code(text) do
     Regex.replace(~r/`+[^`]*`+/, text, "")
+  end
+
+  defp reject_code_lines(lines) do
+    {filtered, _state} =
+      lines
+      |> Enum.with_index()
+      |> Enum.reduce({[], %{fenced?: false, fence: nil}}, fn {line, idx}, {acc, state} ->
+        {state, fence_line?} = update_fence_state(state, line)
+
+        if fence_line? or state.fenced? or indented_code_line?(line) do
+          {acc, state}
+        else
+          {[{line, idx} | acc], state}
+        end
+      end)
+
+    Enum.reverse(filtered)
   end
 
   defp indented_code_line?(line) do

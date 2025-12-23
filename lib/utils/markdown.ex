@@ -49,6 +49,13 @@ defmodule Utils.Markdown do
   @doc """
   Extracts a TOC from lines, returning maps with level, titles, tags, slug, and line index.
   """
+
+  def extract_toc(md) when is_binary(md) do
+    md
+    |> String.split("\n", trim: false)
+    |> Utils.Markdown.extract_toc()
+  end
+
   @spec extract_toc([String.t()]) :: list(map())
   def extract_toc(lines) do
     {toc, _state} =

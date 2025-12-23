@@ -269,9 +269,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
         socket = socket |> Utils.Ctx.add(:page, page)
 
-        lines = String.split(page.text, "\n", trim: false)
-        toc = Utils.Markdown.extract_toc(lines)
-
         {:ok,
          socket
          |> assign(:env, @env)
@@ -285,7 +282,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
          |> assign(:page, page)
          |> assign(:updated_fields, [])
          |> assign(:backlinks, load_backlinks(page))
-         |> assign(:toc, toc)
+         |> assign(:toc, Utils.Markdown.extract_toc(page.text))
          |> maybe_subscribe_backlinks(page)}
 
       {:error, _error} ->
@@ -429,6 +426,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           updated_fields: updated_fields,
           backlinks: load_backlinks(updated_page)
         )
+        |> assign(:toc, Utils.Markdown.extract_toc(updated_page.text))
         |> Utils.Ctx.add(:page, updated_page)
         |> RealtimeToast.put_update_toast(payload)
         |> maybe_push_saved_version(updated_fields, updated_page)

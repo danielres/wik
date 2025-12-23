@@ -193,9 +193,15 @@ defmodule Utils.Markdown do
         {state, fence_line?} = update_fence_state(state, line)
 
         cond do
-          fence_line? -> {acc, state}
-          state.fenced? -> {acc, state}
-          indented_code_line?(line) -> {acc, state}
+          fence_line? ->
+            {acc, state}
+
+          state.fenced? ->
+            {acc, state}
+
+          indented_code_line?(line) ->
+            {acc, state}
+
           true ->
             tags =
               line

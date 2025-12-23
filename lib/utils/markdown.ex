@@ -49,10 +49,17 @@ defmodule Utils.Markdown do
   @doc """
   Extracts a TOC from lines, returning maps with level, titles, tags, slug, and line index.
   """
+
+  def extract_toc(md) when is_binary(md) do
+    md
+    |> String.split("\n", trim: false)
+    |> extract_toc()
+  end
+
   @spec extract_toc([String.t()]) :: list(map())
   def extract_toc(lines) do
     lines
-    |> Enum.with_index()
+    |> reject_code_lines()
     |> Enum.reduce([], fn {line, idx}, acc ->
       case Regex.run(@header_regex, line, capture: :all_but_first) do
         [hashes, title] ->
@@ -169,10 +176,78 @@ defmodule Utils.Markdown do
   Scans a title for tag names, returning downcased bare names (no leading '#').
   """
   @spec extract_tags(String.t()) :: [String.t()]
-  def extract_tags(title) do
+  def extract_tags(text) do
+    # Fast path for single-line input (common case in extract_toc)
+    if not String.contains?(text, "\n") do
+      text
+      |> strip_inline_code()
+      |> scan_tags()
+    else
+      text
+      |> String.split("\n", trim: false)
+      |> reject_code_lines()
+      |> Enum.flat_map(fn {line, _idx} ->
+        line
+        |> strip_inline_code()
+        |> scan_tags()
+      end)
+    end
+  end
+
+  defp scan_tags(text) do
     @tag_regex
-    |> Regex.scan(title)
+    |> Regex.scan(text)
     |> Enum.map(fn [_, t] -> String.downcase(t) end)
+  end
+
+  defp strip_inline_code(text) do
+    Regex.replace(~r/`+[^`]*`+/, text, "")
+  end
+
+  defp reject_code_lines(lines) do
+    {filtered, _state} =
+      lines
+      |> Enum.with_index()
+      |> Enum.reduce({[], %{fenced?: false, fence: nil}}, fn {line, idx}, {acc, state} ->
+        {state, fence_line?} = update_fence_state(state, line)
+
+        if fence_line? or state.fenced? or indented_code_line?(line) do
+          {acc, state}
+        else
+          {[{line, idx} | acc], state}
+        end
+      end)
+
+    Enum.reverse(filtered)
+  end
+
+  defp indented_code_line?(line) do
+    String.match?(line, ~r/^(?:\t| {4,})/)
+  end
+
+  defp update_fence_state(%{fenced?: false} = state, line) do
+    case Regex.run(~r/^\s{0,3}(`{3,}|~{3,})/, line, capture: :all_but_first) do
+      [marker] ->
+        fence = {String.at(marker, 0), String.length(marker)}
+        {%{state | fenced?: true, fence: fence}, true}
+
+      _ ->
+        {state, false}
+    end
+  end
+
+  defp update_fence_state(%{fenced?: true, fence: {char, len}} = state, line) do
+    pattern =
+      case char do
+        "`" -> ~r/^\s{0,3}`{#{len},}/
+        "~" -> ~r/^\s{0,3}~{#{len},}/
+      end
+
+    if Regex.match?(pattern, line) do
+      {%{state | fenced?: false, fence: nil}, true}
+    else
+      {state, false}
+    end
   end
 
   @doc """

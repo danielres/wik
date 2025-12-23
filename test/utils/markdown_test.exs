@@ -25,6 +25,22 @@ defmodule Utils.MarkdownTest do
     assert Markdown.strip_tags(title) |> String.trim() == "Title"
   end
 
+  test "extract_tags ignores fenced, indented, and inline code" do
+    text = """
+    # Title #one
+
+    ```
+    ## Carrot cake #recipes
+    ```
+
+        ### Indented #tasks
+
+    Inline `#ignore` and text #two
+    """
+
+    assert Markdown.extract_tags(text) == ["one", "two"]
+  end
+
   test "find_block_end picks next same-or-higher header or end" do
     lines = ["# A", "## B", "### C", "## D", "# E"]
     toc = Markdown.extract_toc(lines)
@@ -41,6 +57,10 @@ defmodule Utils.MarkdownTest do
   test "extract_toc captures levels, tags, slugs, and line indexes" do
     lines = [
       "# Title #Main",
+      "```",
+      "## Carrot cake #recipes",
+      "```",
+      "    ### Indented",
       "## Child #One #Two",
       "### NoTag",
       "Paragraph"
@@ -51,8 +71,8 @@ defmodule Utils.MarkdownTest do
 
     [
       %{level: 1, title: "Title", slug: "title-#main", tags: ["main"], line_index: 0},
-      %{level: 2, title: "Child", slug: "child-#one-#two", tags: ["one", "two"], line_index: 1},
-      %{level: 3, title: "NoTag", slug: "notag", tags: [], line_index: 2}
+      %{level: 2, title: "Child", slug: "child-#one-#two", tags: ["one", "two"], line_index: 5},
+      %{level: 3, title: "NoTag", slug: "notag", tags: [], line_index: 6}
     ] = toc
   end
 

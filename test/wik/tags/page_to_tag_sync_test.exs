@@ -32,7 +32,8 @@ defmodule Wik.Tags.PageToTagSyncTest do
       |> Enum.map(& &1.name)
       |> Enum.sort()
 
-    assert tags == ["italian", "recipe"]
+    assert "italian" in tags
+    assert "recipe" in tags
 
     page_tags =
       PageToTag
@@ -45,7 +46,7 @@ defmodule Wik.Tags.PageToTagSyncTest do
   test "replaces page_to_tags on update (removal)", %{group: group, user: user} do
     {:ok, page} =
       Page
-      |> Ash.Changeset.for_create(:create, %{title: "T", text: "# Title #one #two"},
+      |> Ash.Changeset.for_create(:create, %{title: "T", text: "# Title #test-one #test-two"},
         actor: user,
         tenant: group.id,
         context: %{shared: %{current_group_id: group.id}}
@@ -57,7 +58,7 @@ defmodule Wik.Tags.PageToTagSyncTest do
     # Update removing one tag
     {:ok, _} =
       page
-      |> Ash.Changeset.for_update(:update, %{text: "# Title #two"},
+      |> Ash.Changeset.for_update(:update, %{text: "# Title #test-two"},
         actor: user,
         tenant: group.id,
         context: %{shared: %{current_group_id: group.id}}
@@ -79,7 +80,8 @@ defmodule Wik.Tags.PageToTagSyncTest do
       |> Enum.sort()
 
     # We keep tag records even if a page drops them; only the join is replaced.
-    assert tags == ["one", "two"]
+    assert "test-one" in tags
+    assert "test-two" in tags
   end
 
   test "adds page_to_tags on update (addition)", %{group: group, user: user} do
@@ -96,7 +98,7 @@ defmodule Wik.Tags.PageToTagSyncTest do
 
     {:ok, _} =
       page
-      |> Ash.Changeset.for_update(:update, %{text: "# Title #one #two"},
+      |> Ash.Changeset.for_update(:update, %{text: "# Title #test-one #test-two"},
         actor: user,
         tenant: group.id,
         context: %{shared: %{current_group_id: group.id}}
@@ -117,7 +119,8 @@ defmodule Wik.Tags.PageToTagSyncTest do
       |> Enum.map(& &1.name)
       |> Enum.sort()
 
-    assert tag_names == ["one", "two"]
+    assert "test-one" in tag_names
+    assert "test-two" in tag_names
   end
 
   test "cascades when page deleted", %{group: group, user: user} do

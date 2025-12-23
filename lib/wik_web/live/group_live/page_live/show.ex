@@ -29,20 +29,36 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       <% else %>
         <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />
 
-        <.live_component
-          module={WikWeb.Components.Page.FormMarkdown}
-          id={"form-page-#{@page.id}"}
-          form_id={"page-form-#{@page.id}"}
-          undo_button_id={"editor-undo-#{@page.id}"}
-          redo_button_id={"editor-redo-#{@page.id}"}
-          exit_after_save?={@exit_after_save?}
-          page={@page}
-          actor={@current_user}
-          group={@ctx.current_group}
-          editable={@editing?}
-          return_to={page_url(@ctx.current_group, @page)}
-          pages_map={@ctx.pages_map}
-        />
+        <div class="grid grid-cols-[1fr_auto] gap-4">
+          <.live_component
+            module={WikWeb.Components.Page.FormMarkdown}
+            id={"form-page-#{@page.id}"}
+            form_id={"page-form-#{@page.id}"}
+            undo_button_id={"editor-undo-#{@page.id}"}
+            redo_button_id={"editor-redo-#{@page.id}"}
+            exit_after_save?={@exit_after_save?}
+            page={@page}
+            actor={@current_user}
+            group={@ctx.current_group}
+            editable={@editing?}
+            return_to={page_url(@ctx.current_group, @page)}
+            pages_map={@ctx.pages_map}
+          />
+
+          <div class="w-56">
+            <div class="card p-4 pr-3 bg-base-300/50 text-sm">
+              <div
+                :for={item <- @toc}
+                class="overflow-hidden text-ellipsis text-nowrap"
+                style={ "margin-left: #{( item.level - 1 )/2}rem;" }
+              >
+                <a class="opacity-70 hover:opacity-100 transition" href={ "##{item.slug}" }>
+                  {item.title}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <.live_component
           module={WikWeb.Components.Generic.Modal}
@@ -267,6 +283,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
          |> assign(:page, page)
          |> assign(:updated_fields, [])
          |> assign(:backlinks, load_backlinks(page))
+         |> assign(:toc, Utils.Markdown.extract_toc(page.text))
          |> maybe_subscribe_backlinks(page)}
 
       {:error, _error} ->
@@ -410,6 +427,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           updated_fields: updated_fields,
           backlinks: load_backlinks(updated_page)
         )
+        |> assign(:toc, Utils.Markdown.extract_toc(updated_page.text))
         |> Utils.Ctx.add(:page, updated_page)
         |> RealtimeToast.put_update_toast(payload)
         |> maybe_push_saved_version(updated_fields, updated_page)

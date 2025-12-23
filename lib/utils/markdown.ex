@@ -177,14 +177,21 @@ defmodule Utils.Markdown do
   """
   @spec extract_tags(String.t()) :: [String.t()]
   def extract_tags(text) do
-    text
-    |> String.split("\n", trim: false)
-    |> reject_code_lines()
-    |> Enum.flat_map(fn {line, _idx} ->
-      line
+    # Fast path for single-line input (common case in extract_toc)
+    if not String.contains?(text, "\n") do
+      text
       |> strip_inline_code()
       |> scan_tags()
-    end)
+    else
+      text
+      |> String.split("\n", trim: false)
+      |> reject_code_lines()
+      |> Enum.flat_map(fn {line, _idx} ->
+        line
+        |> strip_inline_code()
+        |> scan_tags()
+      end)
+    end
   end
 
   defp scan_tags(text) do

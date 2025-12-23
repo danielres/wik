@@ -29,7 +29,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       <% else %>
         <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />
 
-        <div class="grid grid-cols-[1fr_16rem] gap-4">
+        <div class="grid grid-cols-[1fr_auto] gap-4">
           <.live_component
             module={WikWeb.Components.Page.FormMarkdown}
             id={"form-page-#{@page.id}"}
@@ -45,10 +45,11 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             pages_map={@ctx.pages_map}
           />
 
-          <div>
+          <div class="w-56">
             <div class="card p-4 pr-3 bg-base-300/50 text-sm">
               <div
                 :for={item <- @toc}
+                class="overflow-hidden text-ellipsis text-nowrap"
                 style={ "margin-left: #{( item.level - 1 )/2}rem;" }
               >
                 <a class="opacity-70 hover:opacity-100 transition" href={ "##{item.slug}" }>

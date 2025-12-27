@@ -3,10 +3,14 @@ defmodule WikWeb.GroupLive.PageLive.History do
   use WikWeb.Presence.Handlers
   require Ash.Query
 
+  def page_url(group, page, version) do
+    "/#{group.slug}/v/#{version}/wiki/#{page.slug}"
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
       <:sticky_toolbar>
         <div class="toolbar-editor-controls">
           <div class="space-y-1">
@@ -15,11 +19,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
                 <div class="toolbar-actions items-center text-xs">
                   <.link
                     class={["action", @v == 1 and "action-disabled"]}
-                    patch={
-                      if @v == 1,
-                        do: "#",
-                        else: ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/1"
-                    }
+                    patch={if @v == 1, do: "#", else: page_url(@ctx.current_group, @page, 1)}
                     aria-disabled={@v == 1}
                     tabindex={@v == 1 && "-1"}
                   >
@@ -27,11 +27,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
                   </.link>
                   <.link
                     class={["action", @v == 1 and "action-disabled"]}
-                    patch={
-                      if @v > 1,
-                        do: ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v - 1}",
-                        else: "#"
-                    }
+                    patch={if @v > 1, do: page_url(@ctx.current_group, @page, @v - 1), else: "#"}
                     aria-disabled={@v == 1}
                     tabindex={@v == 1 && "-1"}
                   >
@@ -45,7 +41,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
                   <.link
                     patch={
                       if @v < @page.versions_count,
-                        do: ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v + 1}",
+                        do: page_url(@ctx.current_group, @page, @v + 1),
                         else: "#"
                     }
                     class={["action", @v == @page.versions_count and "action-disabled"]}
@@ -55,9 +51,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
                     <.icon name="hero-chevron-right-mini" />
                   </.link>
                   <.link
-                    patch={
-                      ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"
-                    }
+                    patch={page_url(@ctx.current_group, @page, @page.versions_count)}
                     class={["action", @v == @page.versions_count and "action-disabled"]}
                     aria-disabled={@v == @page.versions_count}
                     tabindex={@v == @page.versions_count && "-1"}
@@ -106,7 +100,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
       <% else %>
         <div class="opacity-50">(Empty)</div>
       <% end %>
-    </Layouts.app>
+    </Layouts.drawer>
     """
   end
 
@@ -122,7 +116,10 @@ defmodule WikWeb.GroupLive.PageLive.History do
   end
 
   @impl true
-  def mount(%{"page_slug" => page_slug}, _session, socket) do
+
+  def mount(%{"page_slug_segments" => page_slug_segments}, _session, socket) do
+    page_slug = page_slug_segments |> Enum.join("/")
+
     page =
       Wik.Wiki.Page
       |> Ash.get!(

@@ -6,6 +6,61 @@ defmodule WikWeb.Components do
   use WikWeb, :html
 
   use Phoenix.Component
+
+  attr :class, :string, default: ""
+
+  def footer(assigns) do
+    ~H"""
+    <footer class={["footer sm:footer-horizontal", @class]}>
+      <nav>
+        <h6 class="footer-title">Services</h6>
+        <a class="link link-hover">Branding</a>
+        <a class="link link-hover">Design</a>
+        <a class="link link-hover">Marketing</a>
+        <a class="link link-hover">Advertisement</a>
+      </nav>
+      <nav>
+        <h6 class="footer-title">Company</h6>
+        <a class="link link-hover">About us</a>
+        <a class="link link-hover">Contact</a>
+        <a class="link link-hover">Jobs</a>
+        <a class="link link-hover">Press kit</a>
+      </nav>
+      <nav>
+        <h6 class="footer-title">Legal</h6>
+        <a class="link link-hover">Terms of use</a>
+        <a class="link link-hover">Privacy policy</a>
+        <a class="link link-hover">Cookie policy</a>
+      </nav>
+    </footer>
+    """
+  end
+
+  slot :sidebar, required: false
+
+  def drawer(assigns) do
+    ~H"""
+    <div class="grid min-h-svh grid-rows-[auto_1fr]">
+      {render_slot(@header)}
+
+      <div class="drawer drawer-end drawer-open">
+        <input id="my-drawer-4" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-content grid">
+          {render_slot(@inner_block)}
+        </div>
+
+        {# <div class="drawer-side h-full is-drawer-open:overflow-visible is-drawer-close:overflow-visible"> }
+        <div class="drawer-side h-full">
+          <label for="my-drawer-4" aria-label="close sidebar" class="drawer-overlay"></label>
+          <div class="h-full grid is-drawer-close:w-12 is-drawer-open:w-64">
+            {render_slot(@sidebar)}
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   attr :open?, :boolean, default: false
   attr :class, :string, default: ""
   attr :position, :string, default: "bottom"

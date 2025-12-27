@@ -13,7 +13,7 @@
 }
 
 .ProseMirror.editor {
-	white-space: pre-wrap;
+	@apply wrap-anywhere;
 
 	> * {
 		@apply mb-6 text-base-content/70;

@@ -265,7 +265,6 @@ li::marker {
 
 .stacked {
 	display: grid;
-	place-content: center;
 
 	> * {
 		grid-area: 1 / 1;

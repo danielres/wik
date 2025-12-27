@@ -77,12 +77,12 @@
 	}
 
 	a.tag-badge {
-		@apply badge badge-primary badge-md bg-primary/60 transition hover:bg-primary/80 hover:text-base-content;
+		@apply badge badge-primary badge-md bg-primary/80 transition hover:bg-primary/100 hover:text-base-content;
 		@apply inline-flex align-middle items-center gap-1 px-[0.5em];
 	}
 
 	a.wikilink-node {
-		@apply px-1 bg-base-100 rounded opacity-80 hover:opacity-100 transition;
+		@apply px-1 rounded bg-base-100 hover:text-white transition text-info-content text-sm py-1 px-2;
 	}
 
 	a[href^="http"] {

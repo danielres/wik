@@ -25,6 +25,160 @@ defmodule WikWeb.Layouts do
       </Layouts.app>
 
   """
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :ctx, :any
+
+  attr :current_scope, :map,
+    default: nil,
+    doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
+
+  slot :inner_block, required: true
+  slot :backlinks, required: false
+  slot :sticky_toolbar, required: false
+  slot :toc
+
+  def drawer(assigns) do
+    ~H"""
+    <WikWeb.Components.drawer id="layout-drawer">
+      <:header>
+        <.layout_header {assigns} />
+      </:header>
+
+      {# {render_slot(@sticky_toolbar)} }
+      <div class="mx-auto flex flex-col " style="width: min(75ch, 100%)">
+        {if assigns[:sticky_toolbar], do: render_slot(@sticky_toolbar)}
+        <main>{render_slot(@inner_block)}</main>
+        {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
+      </div>
+
+      <:sidebar>
+        {if assigns[:sidebar], do: render_slot(@sidebar)}
+      </:sidebar>
+    </WikWeb.Components.drawer>
+
+    <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
+    """
+  end
+
+  def layout_header(assigns) do
+    ~H"""
+    <nav class={[
+      "px-4 sm:px-6 lg:px-8",
+      "bg-base-300 pb-2",
+      "space-y-2"
+    ]}>
+      <div class="flex justify-between w-full">
+        <div class="flex items-center gap-1 mt-2 font-bold text-xs">
+          <%= if @ctx[:current_group] do %>
+            <.link class="opacity-50 hover:opacity-100 transition" navigate={~p"/"}>
+              Groups
+            </.link>
+
+            <.icon name="hero-chevron-right-micro" class="opacity-40" />
+
+            <.link
+              class={[link_class(@ctx, "", false)]}
+              navigate={~p"/#{@ctx[:current_group].slug}"}
+            >
+              {@ctx[:current_group].title}
+            </.link>
+          <% end %>
+        </div>
+
+        <WikWeb.Components.dropdown position="end">
+          <span class="opacity-50 hover:opacity-100 transition cursor-pointer font-semibold text-xs">
+            {@ctx.current_user |> to_string}
+          </span>
+          <:content>
+            <div class="card card-sm w-48 shadow-md">
+              <div class="card-body bg-base-300 rounded-lg">
+                <.link
+                  navigate={~p"/sign-out"}
+                  class="flex gap-3 justify-center items-center hover:bg-white/5 transition px-2 py-2 rounded opacity-80 hover:opacity-100"
+                >
+                  <span>Log out</span>
+                  <.icon name="hero-chevron-right" />
+                </.link>
+
+                <hr class="opacity-20 my-2" />
+
+                <div class="py-2 space-y-4 flex flex-col items-center opacity-80 hover:opacity-100">
+                  <div>Theme</div>
+                  <div><.theme_toggle /></div>
+                </div>
+              </div>
+            </div>
+          </:content>
+        </WikWeb.Components.dropdown>
+      </div>
+
+      <%= if(@ctx[:current_group]) do %>
+        <div class="flex gap-4">
+          <%= if link_active?(@ctx, "/wiki") or link_active?(@ctx, "/map") do %>
+            <WikWeb.Components.dropdown>
+              <.link
+                class={[link_class(@ctx, "/wiki"), "group"]}
+                navigate={~p"/#{@ctx[:current_group].slug}/wiki/home"}
+              >
+                Wiki
+                <.icon
+                  name="hero-chevron-down-micro"
+                  class="opacity-50 group-hover:opacity-100 transition"
+                />
+              </.link>
+
+              <:content>
+                <ul class={[
+                  "menu bg-base-300 rounded backdrop-blur",
+                  "text-sm [&_a]:whitespace-nowrap",
+                  "[&_.icon]:opacity-50"
+                ]}>
+                  <li>
+                    <.link navigate={~p"/#{@ctx[:current_group].slug}/wiki/home"}>
+                      <.icon name="hero-home-mini" /> Home
+                    </.link>
+                  </li>
+
+                  <li>
+                    <.link navigate={~p"/#{@ctx.current_group.slug}/wiki"}>
+                      <.icon name="hero-book-open-mini" /> All pages
+                    </.link>
+                  </li>
+                  <li>
+                    <.link navigate={~p"/#{@ctx.current_group.slug}/map"}>
+                      <.icon name="hero-map-pin-mini" /> Map
+                    </.link>
+                  </li>
+                </ul>
+              </:content>
+            </WikWeb.Components.dropdown>
+          <% else %>
+            <.link
+              class={[link_class(@ctx, "/wiki")]}
+              navigate={~p"/#{@ctx[:current_group].slug}/wiki/home"}
+            >
+              Wiki
+            </.link>
+          <% end %>
+
+          <.link
+            class={[link_class(@ctx, "/tags")]}
+            navigate={~p"/#{@ctx[:current_group].slug}/tags"}
+          >
+            Tags
+          </.link>
+
+          <.link
+            class={[link_class(@ctx, "/members")]}
+            navigate={~p"/#{@ctx[:current_group].slug}/members"}
+          >
+            Members
+          </.link>
+        </div>
+      <% end %>
+    </nav>
+    """
+  end
 
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :ctx, :any
@@ -152,7 +306,7 @@ defmodule WikWeb.Layouts do
       <% end %>
     </header>
 
-    <%= if WikWeb.Helpers.slot_has_content?(@sticky_toolbar) do %>
+    <%= if  WikWeb.Helpers.slot_has_content?(@sticky_toolbar) do %>
       <div id="layout-sticky-toolbar-sentinel" />
       <div id="LayoutStickyToolbar" class="layout-sticky-toolbar" phx-hook="LayoutStickyToolbar">
         {render_slot(@sticky_toolbar)}

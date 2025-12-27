@@ -15,7 +15,6 @@
 @import "./milkdown/link-tooltip.css";
 @import "./prose-markdown.css";
 @import "./toolbar-editor-controls.css";
-@import "./layout.css";
 
 @source "../../deps/ash_authentication_phoenix";
 @source "../css";
@@ -262,4 +261,13 @@ body:has([data-theme="dark"]) {
 
 li::marker {
 	color: color-mix(in oklab, var(--color-base-content) 20%, transparent);
+}
+
+.stacked {
+	display: grid;
+	place-content: center;
+
+	> * {
+		grid-area: 1 / 1;
+	}
 }

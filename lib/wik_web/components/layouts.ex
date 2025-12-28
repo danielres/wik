@@ -25,31 +25,23 @@ defmodule WikWeb.Layouts do
       </Layouts.app>
 
   """
+  attr :ctx, :any, required: true
   attr :flash, :map, required: true, doc: "the map of flash messages"
-  attr :ctx, :any
-
-  attr :current_scope, :map,
-    default: nil,
-    doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
-
-  slot :inner_block, required: true
-  slot :backlinks, required: false
   slot :sticky_toolbar, required: false
-  slot :toc
+  slot :inner_block, required: true
+  slot :sidebar
 
   def drawer(assigns) do
     ~H"""
-    <WikWeb.Components.drawer id="layout-drawer">
+    <WikWeb.Components.drawer>
       <:header>
-        <.layout_header {assigns} />
+        <.layout_header ctx={@ctx} />
       </:header>
 
-      {# {render_slot(@sticky_toolbar)} }
-      <div class="mx-auto flex flex-col " style="width: min(75ch, 100%)">
-        {if assigns[:sticky_toolbar], do: render_slot(@sticky_toolbar)}
-        <main>{render_slot(@inner_block)}</main>
-        {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
-      </div>
+      {# if assigns[:sticky_toolbar], do: render_slot(@sticky_toolbar)}
+
+      {render_slot(@inner_block)}
+      {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
 
       <:sidebar>
         {if assigns[:sidebar], do: render_slot(@sidebar)}
@@ -59,6 +51,8 @@ defmodule WikWeb.Layouts do
     <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
     """
   end
+
+  attr :ctx, :any, required: true
 
   def layout_header(assigns) do
     ~H"""

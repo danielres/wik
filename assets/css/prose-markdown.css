@@ -22,8 +22,8 @@
 	h1 {
 		@apply text-3xl;
 		@apply text-base-content;
-		@apply mt-8;
 		&:not(:first-child) {
+			@apply mt-8;
 			&:before {
 				content: "";
 				@apply block h-[1px] mb-16 mt-16;

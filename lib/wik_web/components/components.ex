@@ -37,25 +37,28 @@ defmodule WikWeb.Components do
   end
 
   slot :sidebar, required: false
+  slot :header, required: true
+  slot :inner_block, required: true
 
   def drawer(assigns) do
     ~H"""
-    <div class="grid min-h-svh grid-rows-[auto_1fr]">
-      {render_slot(@header)}
+    {render_slot(@header)}
 
-      <div class="drawer drawer-end drawer-open">
+    <div class="stacked">
+      <div class="drawer drawer-open drawer-end">
         <input id="my-drawer-4" type="checkbox" class="drawer-toggle" />
-        <div class="drawer-content grid">
-          {render_slot(@inner_block)}
-        </div>
 
-        {# <div class="drawer-side h-full is-drawer-open:overflow-visible is-drawer-close:overflow-visible"> }
-        <div class="drawer-side h-full">
-          <label for="my-drawer-4" aria-label="close sidebar" class="drawer-overlay"></label>
-          <div class="h-full grid is-drawer-close:w-12 is-drawer-open:w-64">
+        <div class="drawer-side">
+          <div class={[
+            "flex h-full",
+            "is-drawer-close:w-12 md:is-drawer-close:w-64 is-drawer-open:w-64"
+          ]}>
             {render_slot(@sidebar)}
           </div>
         </div>
+      </div>
+      <div class="drawer-content md:mr-64">
+        {render_slot(@inner_block)}
       </div>
     </div>
     """

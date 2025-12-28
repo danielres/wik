@@ -36,6 +36,7 @@ defmodule WikWeb.Components do
     """
   end
 
+  attr :sidebar?, :boolean, default: false
   slot :sidebar, required: false
   slot :header, required: true
   slot :inner_block, required: true
@@ -48,7 +49,7 @@ defmodule WikWeb.Components do
       <div class="drawer drawer-open drawer-end">
         <input id="my-drawer-4" type="checkbox" class="drawer-toggle" />
 
-        <div class="drawer-side">
+        <div :if={@sidebar?} class="drawer-side">
           <div class={[
             "flex h-full",
             "is-drawer-close:w-12 md:is-drawer-close:w-64 is-drawer-open:w-64"
@@ -57,7 +58,11 @@ defmodule WikWeb.Components do
           </div>
         </div>
       </div>
-      <div class="drawer-content md:mr-64">
+
+      <div class={[
+        "drawer-content",
+        @sidebar? and "md:mr-64"
+      ]}>
         {render_slot(@inner_block)}
       </div>
     </div>

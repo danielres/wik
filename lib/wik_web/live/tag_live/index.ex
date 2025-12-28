@@ -14,33 +14,38 @@ defmodule WikWeb.TagLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        Tags
-        <:actions></:actions>
-      </.header>
-
-      <ul :if={Enum.any?(@tags)} id="tags" class="grid gap-3 sm:grid-cols-2">
-        <li :for={tag <- @tags} id={"tag-#{tag.id}"} class="contents">
-          <WikWeb.Components.Tag.badge tag={tag} ctx={@ctx} />
-
-          <span class="flex items-center gap-1 text-xs opacity-80">
-            <i class="hero-document-micro size-4 opacity-80">
-              page{(tag.pages_count != 1 && "s") || ""}
-            </i>
-            {tag.pages_count || 0}
-          </span>
-        </li>
-      </ul>
-
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
       <div
-        :if={Enum.empty?(@tags)}
-        class="text-base-content/70 card bg-base-200 p-4 text-center my-8"
+        class="px-4 mx-auto"
+        style="width: min(75ch, 100%)"
       >
-        <p>No tags found yet.</p>
-        <p>Add hashtags to headings in wiki pages to create tags.</p>
+        <.header>
+          Tags
+          <:actions></:actions>
+        </.header>
+
+        <ul :if={Enum.any?(@tags)} id="tags" class="grid gap-3 sm:grid-cols-2">
+          <li :for={tag <- @tags} id={"tag-#{tag.id}"} class="contents">
+            <WikWeb.Components.Tag.badge tag={tag} ctx={@ctx} />
+
+            <span class="flex items-center gap-1 text-xs opacity-80">
+              <i class="hero-document-micro size-4 opacity-80">
+                page{(tag.pages_count != 1 && "s") || ""}
+              </i>
+              {tag.pages_count || 0}
+            </span>
+          </li>
+        </ul>
+
+        <div
+          :if={Enum.empty?(@tags)}
+          class="text-base-content/70 card bg-base-200 p-4 text-center my-8"
+        >
+          <p>No tags found yet.</p>
+          <p>Add hashtags to headings in wiki pages to create tags.</p>
+        </div>
       </div>
-    </Layouts.app>
+    </Layouts.drawer>
     """
   end
 

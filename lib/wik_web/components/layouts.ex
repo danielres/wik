@@ -27,13 +27,14 @@ defmodule WikWeb.Layouts do
   """
   attr :ctx, :any, required: true
   attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :sidebar?, :boolean, default: false
   slot :sticky_toolbar, required: false
   slot :inner_block, required: true
-  slot :sidebar
+  slot :sidebar, required: false
 
   def drawer(assigns) do
     ~H"""
-    <WikWeb.Components.drawer>
+    <WikWeb.Components.drawer sidebar?={@sidebar?}>
       <:header>
         <.layout_header ctx={@ctx} />
       </:header>
@@ -43,9 +44,7 @@ defmodule WikWeb.Layouts do
       {render_slot(@inner_block)}
       {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
 
-      <:sidebar>
-        {if assigns[:sidebar], do: render_slot(@sidebar)}
-      </:sidebar>
+      <:sidebar>{render_slot(@sidebar)}</:sidebar>
     </WikWeb.Components.drawer>
 
     <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />

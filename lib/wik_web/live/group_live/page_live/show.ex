@@ -18,32 +18,30 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx}>
+    <Layouts.drawer flash={@flash} ctx={@ctx} sidebar?>
       <%= if @not_found? do %>
         <.dialog_404 {assigns} />
       <% else %>
-        <div>
-          <div
-            class="px-4 mx-auto mt-8"
-            style="width: min(75ch, 100%)"
-          >
-            <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />
+        <div
+          class="px-4 mx-auto mt-8"
+          style="width: min(75ch, 100%)"
+        >
+          <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />
 
-            <.live_component
-              module={WikWeb.Components.Page.FormMarkdown}
-              id={"form-page-#{@page.id}"}
-              form_id={"page-form-#{@page.id}"}
-              undo_button_id={"editor-undo-#{@page.id}"}
-              redo_button_id={"editor-redo-#{@page.id}"}
-              exit_after_save?={@exit_after_save?}
-              page={@page}
-              actor={@current_user}
-              group={@ctx.current_group}
-              editable={@editing?}
-              return_to={page_url(@ctx.current_group, @page)}
-              pages_map={@ctx.pages_map}
-            />
-          </div>
+          <.live_component
+            module={WikWeb.Components.Page.FormMarkdown}
+            id={"form-page-#{@page.id}"}
+            form_id={"page-form-#{@page.id}"}
+            undo_button_id={"editor-undo-#{@page.id}"}
+            redo_button_id={"editor-redo-#{@page.id}"}
+            exit_after_save?={@exit_after_save?}
+            page={@page}
+            actor={@current_user}
+            group={@ctx.current_group}
+            editable={@editing?}
+            return_to={page_url(@ctx.current_group, @page)}
+            pages_map={@ctx.pages_map}
+          />
         </div>
 
         <.modal_unsaved_exit {assigns} />
@@ -240,7 +238,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       </div>
     </.sidebar_panel>
 
-    <%= if @env == :dev and false do %>
+    <%= if @env == :dev do %>
       <.sidebar_panel title="Debug" icon="hero-bug-ant" class="opacity-0 hover:opacity-100 transition">
         <div class="font-mono text-xs opacity-70">
           <dd>page title: {@ctx.page.title}</dd>

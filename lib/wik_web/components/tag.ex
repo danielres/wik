@@ -27,7 +27,8 @@ defmodule WikWeb.Components.Tag do
         @size_class
       ]}
     >
-      <span class="opacity-50">#</span>{"#{@tag.name}"}
+      <span class="opacity-50">#</span>
+      <span class="opacity-90">{@tag.name}</span>
     </.link>
     """
   end

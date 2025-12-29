@@ -169,6 +169,9 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   def sidebar_panels(assigns) do
+    descendants = build_descendant_tree(assigns.page, assigns.ctx.pages_map)
+    assigns = assign(assigns, :descendants, descendants)
+
     ~H"""
     <.sidebar_panel>
       <ul class="text-sm">
@@ -223,6 +226,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       </ul>
     </.sidebar_panel>
 
+    <.sidebar_panel :if={@descendants != []} title="Subtree" icon="hero-folder-open">
+      <.descendants_list nodes={@descendants} ctx={@ctx} />
+    </.sidebar_panel>
+
     <.sidebar_panel :if={@toc != []} title="TOC" icon="hero-book-open">
       <div class="text-xs w-46">
         <div
@@ -257,6 +264,35 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     """
   end
 
+  attr :nodes, :list, required: true
+  attr :ctx, :map, required: true
+  attr :nested?, :boolean, default: false
+
+  def descendants_list(assigns) do
+    ~H"""
+    <ul class={[
+      "list-disc list-inside space-y-1 text-xs",
+      @nested? && "ml-4"
+    ]}>
+      <li :for={node <- @nodes}>
+        <.link
+          navigate={page_url(@ctx.current_group, node.page || %{slug: node.slug})}
+          class="opacity-70 hover:opacity-100 transition"
+        >
+          {node.title}
+        </.link>
+
+        <.descendants_list
+          :if={node.children != []}
+          nodes={node.children}
+          ctx={@ctx}
+          nested?={true}
+        />
+      </li>
+    </ul>
+    """
+  end
+
   attr :class, :string, default: ""
   attr :title, :string, default: nil
   attr :icon, :string, default: nil
@@ -275,6 +311,70 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       {render_slot(@inner_block)}
     </div>
     """
+  end
+
+  defp build_descendant_tree(page, pages_map) do
+    current_slug = page.slug || ""
+    prefix = current_slug <> "/"
+
+    descendants =
+      pages_map
+      |> Map.values()
+      |> Enum.filter(fn descendant ->
+        slug = descendant.slug
+        is_binary(slug) and slug != "" and String.starts_with?(slug, prefix)
+      end)
+
+    descendants
+    |> Enum.reduce(%{}, fn descendant, acc ->
+      segments = descendant_segments(current_slug, descendant.slug)
+      insert_descendant_node(acc, segments, current_slug, pages_map)
+    end)
+    |> nodes_from_map()
+  end
+
+  defp descendant_segments(current_slug, slug) do
+    slug
+    |> String.replace_prefix(current_slug <> "/", "")
+    |> String.split("/", trim: true)
+  end
+
+  defp insert_descendant_node(nodes, [segment | rest], current_slug, pages_map, path \\ []) do
+    full_path = path ++ [segment]
+    full_slug = current_slug <> "/" <> Enum.join(full_path, "/")
+    page = Map.get(pages_map, full_slug)
+    title = descendant_title(page, segment)
+
+    node =
+      Map.get(nodes, full_slug, %{
+        slug: full_slug,
+        title: title,
+        page: page,
+        children: %{}
+      })
+
+    children =
+      if rest == [] do
+        node.children
+      else
+        insert_descendant_node(node.children, rest, current_slug, pages_map, full_path)
+      end
+
+    Map.put(nodes, full_slug, %{node | children: children})
+  end
+
+  defp descendant_title(%{title: title}, _fallback) when is_binary(title) and title != "",
+    do: title
+
+  defp descendant_title(_page, fallback), do: fallback
+
+  defp nodes_from_map(map) do
+    map
+    |> Map.values()
+    |> Enum.map(fn node ->
+      %{node | children: nodes_from_map(node.children)}
+    end)
+    |> Enum.sort_by(fn node -> String.downcase(node.title || "") end)
   end
 
   def modal_unsaved_exit(assigns) do

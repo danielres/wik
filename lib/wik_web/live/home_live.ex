@@ -15,7 +15,7 @@ defmodule WikWeb.HomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
       <Layouts.page_container>
         <:title>
           Hi, {@current_user |> to_string}!
@@ -103,7 +103,7 @@ defmodule WikWeb.HomeLive do
           </section>
         </div>
       </Layouts.page_container>
-    </Layouts.app>
+    </Layouts.drawer>
     """
   end
 

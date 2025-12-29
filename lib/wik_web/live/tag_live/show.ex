@@ -15,7 +15,7 @@ defmodule WikWeb.TagLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
       <Layouts.page_container>
         <:title>
           <div class="flex items-center gap-1">
@@ -113,7 +113,7 @@ defmodule WikWeb.TagLive.Show do
           </div>
         </div>
       </Layouts.page_container>
-    </Layouts.app>
+    </Layouts.drawer>
     """
   end
 

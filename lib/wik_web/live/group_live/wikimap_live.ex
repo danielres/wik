@@ -6,22 +6,26 @@ defmodule WikWeb.GroupLive.WikimapLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx}>
+    <Layouts.drawer flash={@flash} ctx={@ctx} backdrop?>
+      <:backdrop>
+        <div
+          id="wikimap-canvas"
+          phx-hook="Wikimap"
+          phx-update="ignore"
+          data-graph={@graph_json}
+          data-group-slug={@ctx.current_group.slug}
+          class="w-full h-full rounded-lg bg-base-200 border border-base-300"
+        >
+        </div>
+      </:backdrop>
+
       <Layouts.page_container>
-        <:title>Wiki map</:title>
+        <:title>
+          <div class="w-fit bg-base-200/50 backdrop-blur">Wiki map</div>
+        </:title>
 
-        <div class="space-y-4">
-          <div
-            id="wikimap-canvas"
-            phx-hook="Wikimap"
-            phx-update="ignore"
-            data-graph={@graph_json}
-            data-group-slug={@ctx.current_group.slug}
-            class="w-full h-[70vh] rounded-lg bg-base-200 border border-base-300"
-          >
-          </div>
-
-          <div :if={@orphan_pages != []} class="card bg-base-200 border border-base-300 p-3">
+        <div class="space-y-4 grid w-fit">
+          <div :if={@orphan_pages != []} class="card bg-base-300/20 p-3 backdrop-blur">
             <h3 class="text-xs uppercase tracking-wide opacity-70 mb-2">
               <i class="hero-exclamation-triangle-micro text-yellow-400"></i> Orphan pages
             </h3>

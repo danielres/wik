@@ -28,24 +28,34 @@ defmodule WikWeb.Layouts do
   attr :ctx, :any, required: true
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :sidebar?, :boolean, default: false
+  attr :backdrop?, :boolean, default: false
   slot :sticky_toolbar, required: false
   slot :inner_block, required: true
   slot :sidebar, required: false
+  slot :backdrop, required: false
 
   def drawer(assigns) do
     ~H"""
-    <WikWeb.Components.drawer sidebar?={@sidebar?}>
-      {if assigns[:sticky_toolbar], do: render_slot(@sticky_toolbar)}
+    <div class={@backdrop? and "stacked min-h-svh"}>
+      <div :if={@backdrop?}>
+        {render_slot(@backdrop)}
+      </div>
 
-      <:header>
-        <.layout_header ctx={@ctx} />
-      </:header>
+      <div class={@backdrop? and "pointer-events-none [&>*>*>*]:pointer-events-auto"}>
+        <WikWeb.Components.drawer sidebar?={@sidebar?}>
+          {render_slot(@sticky_toolbar)}
 
-      {render_slot(@inner_block)}
-      {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
+          <:header>
+            <.layout_header ctx={@ctx} />
+          </:header>
 
-      <:sidebar :let={drawer_id}>{render_slot(@sidebar, drawer_id)}</:sidebar>
-    </WikWeb.Components.drawer>
+          {render_slot(@inner_block)}
+          {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
+
+          <:sidebar :let={drawer_id}>{render_slot(@sidebar, drawer_id)}</:sidebar>
+        </WikWeb.Components.drawer>
+      </div>
+    </div>
 
     <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
     """

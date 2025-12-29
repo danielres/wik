@@ -258,8 +258,8 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   attr :class, :string, default: ""
-  attr :title, :string
-  attr :icon, :string
+  attr :title, :string, default: nil
+  attr :icon, :string, default: nil
   slot :inner_block, required: true
 
   def sidebar_panel(assigns) do

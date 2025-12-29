@@ -11,22 +11,26 @@ defmodule WikWeb.GroupLive.PageLive.History do
   def render(assigns) do
     ~H"""
     <Layouts.drawer flash={@flash} ctx={@ctx}>
-      <Layouts.page_container>
-        <%= if @version.data["text"] do %>
-          <div
-            id={"milkdown-editor-#{@v}"}
-            phx-hook="MilkdownEditor"
-            phx-update="ignore"
-            data-markdown={@version.data["text"]}
-            data-mode="static"
-          />
-        <% else %>
-          <div class="opacity-50">(Empty)</div>
-        <% end %>
-      </Layouts.page_container>
+      <%= if(@not_found?) do %>
+        <WikWeb.Components.dialog_page_not_found ctx={@ctx} />
+      <% else %>
+        <Layouts.page_container>
+          <%= if @version.data["text"] do %>
+            <div
+              id={"milkdown-editor-#{@v}"}
+              phx-hook="MilkdownEditor"
+              phx-update="ignore"
+              data-markdown={@version.data["text"]}
+              data-mode="static"
+            />
+          <% else %>
+            <div class="opacity-50">(Empty)</div>
+          <% end %>
+        </Layouts.page_container>
+      <% end %>
 
       <:sticky_toolbar>
-        <div class="toolbar-editor-controls">
+        <div :if={not @not_found?} class="toolbar-editor-controls">
           <div class="space-y-1">
             <div class="flex gap-2 items-start">
               <div>
@@ -118,39 +122,47 @@ defmodule WikWeb.GroupLive.PageLive.History do
   end
 
   @impl true
-
   def mount(%{"page_slug_segments" => page_slug_segments}, _session, socket) do
     page_slug = page_slug_segments |> Enum.join("/")
 
-    page =
-      Wik.Wiki.Page
-      |> Ash.get!(
-        %{group_id: socket.assigns.ctx.current_group.id, slug: page_slug},
-        actor: socket.assigns.current_user,
-        load: [:versions_count]
-      )
+    case Wik.Wiki.Page
+         |> Ash.get(
+           %{group_id: socket.assigns.ctx.current_group.id, slug: page_slug},
+           actor: socket.assigns.current_user,
+           load: [:versions_count]
+         ) do
+      {:ok, page} ->
+        {:ok, socket |> assign(:page, page) |> assign(:not_found?, false)}
 
-    socket = socket |> assign(:page, page)
-    {:ok, socket}
+      {:error, _} ->
+        {:ok,
+         socket
+         |> assign(:not_found?, true)
+         |> assign(:page_title, "Page not found")}
+    end
   end
 
   @impl true
   def handle_params(%{"version" => v}, url, socket) do
-    socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
-    WikWeb.Presence.track_in_liveview(socket, url)
+    if(socket.assigns.not_found?) do
+      {:noreply, socket}
+    else
+      socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
+      WikWeb.Presence.track_in_liveview(socket, url)
 
-    v = v |> String.to_integer()
+      v = v |> String.to_integer()
 
-    {:ok, version} = get_page_version(socket.assigns.page.id, v, socket.assigns.current_user)
-    author_id = version.user_id
-    author = Wik.Accounts.User |> Ash.get!(author_id, actor: socket.assigns.current_user)
+      {:ok, version} = get_page_version(socket.assigns.page.id, v, socket.assigns.current_user)
+      author_id = version.user_id
+      author = Wik.Accounts.User |> Ash.get!(author_id, actor: socket.assigns.current_user)
 
-    socket =
-      socket
-      |> assign(:version, version)
-      |> assign(:v, v)
-      |> assign(:author, author)
+      socket =
+        socket
+        |> assign(:version, version)
+        |> assign(:v, v)
+        |> assign(:author, author)
 
-    {:noreply, socket}
+      {:noreply, socket}
+    end
   end
 end

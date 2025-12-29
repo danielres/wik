@@ -47,9 +47,9 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         <.modal_unsaved_exit {assigns} />
       <% end %>
 
-      <:sidebar>
+      <:sidebar :let={drawer_id}>
         <div :if={not @not_found?} class="grid grid-cols-[auto_1fr] w-full">
-          <.sidebar_actions {assigns} />
+          <.sidebar_actions {assigns} drawer_id={drawer_id} />
 
           <div inert={@editing?} class="bg-base-300/60 backdrop-blur">
             <.sidebar_panels {assigns} />
@@ -83,11 +83,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       "rounded-none",
       "backdrop-blur"
     ] %>
-
     <menu>
       <ul class="menu w-full p-0">
         <li class={[@editing? and "hidden", "md:hidden"]}>
-          <label for="my-drawer-4" class={btn_class}>
+          <label for={@drawer_id} class={btn_class}>
             <.icon name="hero-chevron-left-micro" class="is-drawer-open:hidden" />
             <.icon name="hero-chevron-right-micro" class="is-drawer-close:hidden" />
           </label>

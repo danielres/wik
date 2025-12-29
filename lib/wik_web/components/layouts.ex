@@ -44,7 +44,7 @@ defmodule WikWeb.Layouts do
       {render_slot(@inner_block)}
       {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
 
-      <:sidebar>{render_slot(@sidebar)}</:sidebar>
+      <:sidebar :let={drawer_id}>{render_slot(@sidebar, drawer_id)}</:sidebar>
     </WikWeb.Components.drawer>
 
     <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />

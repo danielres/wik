@@ -42,19 +42,22 @@ defmodule WikWeb.Components do
   slot :inner_block, required: true
 
   def drawer(assigns) do
+    drawer_id = "drawer-" <> Ecto.UUID.generate()
+    assigns = assigns |> assign(drawer_id: drawer_id)
+
     ~H"""
     {render_slot(@header)}
 
     <div class="stacked">
       <div class="drawer drawer-open drawer-end">
-        <input id="my-drawer-4" type="checkbox" class="drawer-toggle" />
+        <input id={@drawer_id} type="checkbox" class="drawer-toggle" />
 
         <div :if={@sidebar?} class="drawer-side">
           <div class={[
             "flex h-full",
             "is-drawer-close:w-12 md:is-drawer-close:w-64 is-drawer-open:w-64"
           ]}>
-            {render_slot(@sidebar)}
+            {render_slot(@sidebar, @drawer_id)}
           </div>
         </div>
       </div>

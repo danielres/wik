@@ -53,7 +53,10 @@ const Wikimap = {
 		this.canvas?.removeEventListener("pointerdown", this._pointerDownHandler);
 		this.canvas?.removeEventListener("pointermove", this._pointerMoveHandler);
 		this.canvas?.removeEventListener("pointerup", this._pointerUpHandler);
-		this.canvas?.removeEventListener("pointercancel", this._pointerCancelHandler);
+		this.canvas?.removeEventListener(
+			"pointercancel",
+			this._pointerCancelHandler,
+		);
 		window.removeEventListener("resize", this.resizeHandler);
 	},
 	setupCanvas() {
@@ -191,7 +194,8 @@ const Wikimap = {
 	},
 	handlePointerMove(event) {
 		if (!this.pointerActive || event.pointerId !== this.pointerId) {
-			if (event.pointerType === "mouse") this.updateHover(event.clientX, event.clientY);
+			if (event.pointerType === "mouse")
+				this.updateHover(event.clientX, event.clientY);
 			return;
 		}
 

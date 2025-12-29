@@ -50,16 +50,16 @@ const Wikimap = {
 	},
 	destroyed() {
 		cancelAnimationFrame(this.rafId);
-		this.canvas?.removeEventListener("mousemove", this._hoverHandler);
-		this.canvas?.removeEventListener("click", this._clickHandler);
-		this.canvas?.removeEventListener("mousedown", this._dragStartHandler);
-		window.removeEventListener("mousemove", this._dragMoveHandler);
-		window.removeEventListener("mouseup", this._dragEndHandler);
+		this.canvas?.removeEventListener("pointerdown", this._pointerDownHandler);
+		this.canvas?.removeEventListener("pointermove", this._pointerMoveHandler);
+		this.canvas?.removeEventListener("pointerup", this._pointerUpHandler);
+		this.canvas?.removeEventListener("pointercancel", this._pointerCancelHandler);
 		window.removeEventListener("resize", this.resizeHandler);
 	},
 	setupCanvas() {
 		this.canvas = document.createElement("canvas");
 		this.canvas.className = "w-full h-full";
+		this.canvas.style.touchAction = "none";
 		this.el.innerHTML = "";
 		this.el.appendChild(this.canvas);
 		this.ctx = this.canvas.getContext("2d");
@@ -76,16 +76,14 @@ const Wikimap = {
 		window.addEventListener("resize", resize);
 		this.scale = 1;
 		this.offset = { x: 0, y: 0 };
-		this._clickHandler = (e) => this.handleClick(e);
-		this._hoverHandler = (e) => this.handleHover(e);
-		this._dragStartHandler = (e) => this.handleDragStart(e);
-		this._dragMoveHandler = (e) => this.handleDragMove(e);
-		this._dragEndHandler = () => this.handleDragEnd();
-		this.canvas.addEventListener("click", this._clickHandler);
-		this.canvas.addEventListener("mousemove", this._hoverHandler);
-		this.canvas.addEventListener("mousedown", this._dragStartHandler);
-		window.addEventListener("mousemove", this._dragMoveHandler);
-		window.addEventListener("mouseup", this._dragEndHandler);
+		this._pointerDownHandler = (e) => this.handlePointerDown(e);
+		this._pointerMoveHandler = (e) => this.handlePointerMove(e);
+		this._pointerUpHandler = (e) => this.handlePointerUp(e);
+		this._pointerCancelHandler = (e) => this.handlePointerCancel(e);
+		this.canvas.addEventListener("pointerdown", this._pointerDownHandler);
+		this.canvas.addEventListener("pointermove", this._pointerMoveHandler);
+		this.canvas.addEventListener("pointerup", this._pointerUpHandler);
+		this.canvas.addEventListener("pointercancel", this._pointerCancelHandler);
 	},
 	initPositions() {
 		this.pos = {};
@@ -178,45 +176,83 @@ const Wikimap = {
 		}
 	},
 
-	handleClick(event) {
+	handlePointerDown(event) {
+		if (event.pointerType === "mouse" && event.button !== 0) return;
+		if (event.pointerType !== "mouse") event.preventDefault();
+		this.pointerActive = true;
+		this.pointerId = event.pointerId;
+		this.pointerType = event.pointerType;
+		this.dragging = false;
+		this.pointerMoved = false;
+		this.dragStart = { x: event.clientX, y: event.clientY };
+		this.startOffset = { ...this.offset };
+		this.canvas.setPointerCapture?.(event.pointerId);
+		this.canvas.style.cursor = "grabbing";
+	},
+	handlePointerMove(event) {
+		if (!this.pointerActive || event.pointerId !== this.pointerId) {
+			if (event.pointerType === "mouse") this.updateHover(event.clientX, event.clientY);
+			return;
+		}
+
+		const dx = event.clientX - this.dragStart.x;
+		const dy = event.clientY - this.dragStart.y;
+		if (Math.abs(dx) > 14 || Math.abs(dy) > 14) {
+			this.pointerMoved = true;
+			this.dragging = true;
+		}
+
+		if (this.dragging) {
+			this.offset.x = this.startOffset.x + dx;
+			this.offset.y = this.startOffset.y + dy;
+			if (!this.rafId) this.draw();
+		} else if (event.pointerType === "mouse") {
+			this.updateHover(event.clientX, event.clientY);
+		}
+	},
+	handlePointerUp(event) {
+		if (!this.pointerActive || event.pointerId !== this.pointerId) return;
+		this.canvas.releasePointerCapture?.(event.pointerId);
+		if (!this.pointerMoved) {
+			const navigation = event.pointerType === "touch" ? "same-tab" : "new-tab";
+			this.activateNodeAt(event.clientX, event.clientY, navigation);
+		}
+		this.pointerActive = false;
+		this.dragging = false;
+		this.pointerId = null;
+		this.canvas.style.cursor = "default";
+	},
+	handlePointerCancel(event) {
+		if (!this.pointerActive || event.pointerId !== this.pointerId) return;
+		this.pointerActive = false;
+		this.dragging = false;
+		this.pointerId = null;
+		this.canvas.style.cursor = "default";
+	},
+	updateHover(clientX, clientY) {
+		const hit = this.nodeAt(clientX, clientY);
+		this.canvas.style.cursor = hit ? "pointer" : "default";
+	},
+	nodeAt(clientX, clientY) {
 		const rect = this.canvas.getBoundingClientRect();
-		const relX = event.clientX - rect.left; // CSS pixels
-		const relY = event.clientY - rect.top; // CSS pixels
+		const relX = clientX - rect.left; // CSS pixels
+		const relY = clientY - rect.top; // CSS pixels
 		const x = (relX - this.width / 2 - this.offset.x) / this.scale;
 		const y = (relY - this.height / 2 - this.offset.y) / this.scale;
-		const hit = this.pickNode(x, y);
+		return this.pickNode(x, y);
+	},
+	activateNodeAt(clientX, clientY, navigation = "new-tab") {
+		const hit = this.nodeAt(clientX, clientY);
 		if (hit && hit.slug) {
 			const groupSlug =
 				this.graph.group_slug || this.el.dataset.groupSlug || "";
 			const url = `/${groupSlug}/wiki/${encodeURIComponent(hit.slug)}`;
-			window.open(url, "_blank");
+			if (navigation === "same-tab") {
+				window.location.assign(url);
+			} else {
+				window.open(url, "_blank");
+			}
 		}
-	},
-	handleHover(event) {
-		const rect = this.canvas.getBoundingClientRect();
-		const relX = event.clientX - rect.left; // CSS pixels
-		const relY = event.clientY - rect.top; // CSS pixels
-		const x = (relX - this.width / 2 - this.offset.x) / this.scale;
-		const y = (relY - this.height / 2 - this.offset.y) / this.scale;
-		const over = !!this.pickNode(x, y);
-		this.canvas.style.cursor = over ? "pointer" : "default";
-	},
-	handleDragStart(event) {
-		this.dragging = true;
-		this.dragStart = { x: event.clientX, y: event.clientY };
-		this.startOffset = { ...this.offset };
-		this.canvas.style.cursor = "grabbing";
-	},
-	handleDragMove(event) {
-		if (!this.dragging) return;
-		const dx = event.clientX - this.dragStart.x;
-		const dy = event.clientY - this.dragStart.y;
-		this.offset.x = this.startOffset.x + dx;
-		this.offset.y = this.startOffset.y + dy;
-	},
-	handleDragEnd() {
-		this.dragging = false;
-		this.canvas.style.cursor = "default";
 	},
 	pickNode(x, y) {
 		const { hit, label } = CONFIG;

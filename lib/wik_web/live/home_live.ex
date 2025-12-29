@@ -16,88 +16,93 @@ defmodule WikWeb.HomeLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        Hi, {@current_user |> to_string}
-      </.header>
+      <Layouts.page_container>
+        <:title>
+          Hi, {@current_user |> to_string}!
+        </:title>
 
-      <div class="space-y-8">
-        <section>
-          <h1 class="flex justify-between text-lg font-semibold">
-            Your groups
-            <div>
-              <%= if Ash.can?({Wik.Accounts.Group, :create}, @current_user) do %>
-                <.link class="btn btn-neutral btn-circle hover:btn-primary" navigate={~p"/new-group"}>
-                  <.icon name="hero-plus" />
-                </.link>
-              <% end %>
-            </div>
-          </h1>
-
-          <.live_component
-            module={WikWeb.Components.Generic.Modal}
-            mandatory?
-            id="modal-form-group-new"
-            open?={@live_action == :new}
-            phx-click-close={JS.patch(~p"/")}
-          >
-            <.live_component
-              module={WikWeb.Components.Group.Form}
-              id="form-group-new"
-              group={nil}
-              actor={@current_user}
-              return_to={~p"/"}
-            >
-            </.live_component>
-          </.live_component>
-
-          <.table
-            id="groups"
-            rows={@streams.groups}
-            row_click={fn {_id, group} -> JS.navigate(~p"/#{group.slug}/wiki/home") end}
-            row_class={
-              fn {_id, group} ->
-                (group.id in @highlighted_group_ids && "animate-reload") ||
-                  "hover:bg-base-200 transition"
-              end
-            }
-          >
-            <:col :let={{_id, group}} label="Title">{group.title}</:col>
-            <:col :let={{_id, group}} label="Slug">{group.slug}</:col>
-            <:col :let={{_id, group}} label="Text">{group.text}</:col>
-            <:col :let={{_id, group}} label="Author">{group.author |> to_string}</:col>
-
-            <:action :let={{_id, group}}>
-              <%= if Ash.can?({group, :destroy}, @current_user) do %>
-                <.link
-                  phx-click={JS.push("delete", value: %{id: group.id})}
-                  data-confirm="Are you sure?"
-                >
-                  <.icon name="hero-trash" />
-                </.link>
-              <% end %>
-            </:action>
-          </.table>
-        </section>
-
-        <section
-          :if={@env == :dev}
-          class="bg-base-300 p-4 space-y-4 opacity-30 hover:opacity-100 transition"
-        >
-          <h1 class="flex text-lg font-semibold items-center gap-2">
-            <.icon name="hero-bug-ant-mini" /> Other groups
-          </h1>
-          <div class="space-y-2">
-            <div :for={group <- @other_groups} class="grid grid-cols-2">
-              <div>{group.title}</div>
+        <div class="space-y-8">
+          <section>
+            <h1 class="flex justify-between text-lg font-semibold">
+              Your groups
               <div>
-                <.button class="btn btn-xs" phx-click="join_group" phx-value-id={group.id}>
-                  join
-                </.button>
+                <%= if Ash.can?({Wik.Accounts.Group, :create}, @current_user) do %>
+                  <.link
+                    class="btn btn-neutral btn-circle hover:btn-primary"
+                    navigate={~p"/new-group"}
+                  >
+                    <.icon name="hero-plus" />
+                  </.link>
+                <% end %>
+              </div>
+            </h1>
+
+            <.live_component
+              module={WikWeb.Components.Generic.Modal}
+              mandatory?
+              id="modal-form-group-new"
+              open?={@live_action == :new}
+              phx-click-close={JS.patch(~p"/")}
+            >
+              <.live_component
+                module={WikWeb.Components.Group.Form}
+                id="form-group-new"
+                group={nil}
+                actor={@current_user}
+                return_to={~p"/"}
+              >
+              </.live_component>
+            </.live_component>
+
+            <.table
+              id="groups"
+              rows={@streams.groups}
+              row_click={fn {_id, group} -> JS.navigate(~p"/#{group.slug}/wiki/home") end}
+              row_class={
+                fn {_id, group} ->
+                  (group.id in @highlighted_group_ids && "animate-reload") ||
+                    "hover:bg-base-200 transition"
+                end
+              }
+            >
+              <:col :let={{_id, group}} label="Title">{group.title}</:col>
+              <:col :let={{_id, group}} label="Slug">{group.slug}</:col>
+              <:col :let={{_id, group}} label="Text">{group.text}</:col>
+              <:col :let={{_id, group}} label="Author">{group.author |> to_string}</:col>
+
+              <:action :let={{_id, group}}>
+                <%= if Ash.can?({group, :destroy}, @current_user) do %>
+                  <.link
+                    phx-click={JS.push("delete", value: %{id: group.id})}
+                    data-confirm="Are you sure?"
+                  >
+                    <.icon name="hero-trash" />
+                  </.link>
+                <% end %>
+              </:action>
+            </.table>
+          </section>
+
+          <section
+            :if={@env == :dev}
+            class="bg-base-300 p-4 space-y-4 opacity-30 hover:opacity-100 transition"
+          >
+            <h1 class="flex text-lg font-semibold items-center gap-2">
+              <.icon name="hero-bug-ant-mini" /> Other groups
+            </h1>
+            <div class="space-y-2">
+              <div :for={group <- @other_groups} class="grid grid-cols-2">
+                <div>{group.title}</div>
+                <div>
+                  <.button class="btn btn-xs" phx-click="join_group" phx-value-id={group.id}>
+                    join
+                  </.button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      </div>
+          </section>
+        </div>
+      </Layouts.page_container>
     </Layouts.app>
     """
   end

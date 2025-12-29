@@ -15,17 +15,11 @@ defmodule WikWeb.TagLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.drawer flash={@flash} ctx={@ctx}>
-      <div
-        class="px-4 mx-auto"
-        style="width: min(75ch, 100%)"
-      >
-        <.header>
-          Tags
-          <:actions></:actions>
-        </.header>
+      <Layouts.page_container>
+        <:title>Tags</:title>
 
-        <ul :if={Enum.any?(@tags)} id="tags" class="grid gap-3 sm:grid-cols-2">
-          <li :for={tag <- @tags} id={"tag-#{tag.id}"} class="contents">
+        <ul :if={Enum.any?(@tags)} id="tags" class="space-y-4">
+          <li :for={tag <- @tags} id={"tag-#{tag.id}"} class="grid grid-cols-2">
             <WikWeb.Components.Tag.badge tag={tag} ctx={@ctx} />
 
             <span class="flex items-center gap-1 text-xs opacity-80">
@@ -42,9 +36,9 @@ defmodule WikWeb.TagLive.Index do
           class="text-base-content/70 card bg-base-200 p-4 text-center my-8"
         >
           <p>No tags found yet.</p>
-          <p>Add hashtags to headings in wiki pages to create tags.</p>
+          <p>Add hashtags to wiki pages headings to use this feature.</p>
         </div>
-      </div>
+      </Layouts.page_container>
     </Layouts.drawer>
     """
   end

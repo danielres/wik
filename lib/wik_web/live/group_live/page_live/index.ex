@@ -7,65 +7,60 @@ defmodule WikWeb.GroupLive.PageLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        Pages
-        <:actions></:actions>
-      </.header>
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
+      <Layouts.page_container>
+        <:title>All pages</:title>
 
-      <div
-        class="grid gap-1"
-        phx-update="stream"
-        id="pages-stream"
-      >
-        <div
-          :for={{id, page} <- @streams.pages}
-          id={id}
-          class="card rounded bg-base-200/50 space-y-0 px-4 py-2 has-[a.title:hover]:bg-base-300/60 transition"
-        >
-          <div class="grid grid-cols-[4fr_2fr_1fr_1fr_1fr_auto] gap-x-8 items-baseline">
-            <.link
-              navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, page)}
-              class="title hover:text-white text-sm text-balance break-all"
-            >
-              {page.title}
-            </.link>
-
-            <div class="justify-self-end">
+        <div class="grid gap-1" phx-update="stream" id="pages-stream">
+          <div
+            :for={{id, page} <- @streams.pages}
+            id={id}
+            class="card rounded bg-base-200/50 space-y-0 px-4 py-2 has-[a.title:hover]:bg-base-300/60 transition"
+          >
+            <div class="grid grid-cols-[4fr_2fr_1fr_1fr_1fr_auto] gap-x-8 items-baseline">
               <.link
-                class="btn btn-sm opacity-70 hover:opacity-100 transition"
-                patch={~p"/#{@ctx.current_group.slug}/wiki/#{page.slug}/v/#{page.versions_count}"}
+                navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, page)}
+                class="title hover:text-white text-sm text-balance break-all"
               >
-                v. {page.versions_count}
+                {page.title}
+              </.link>
+
+              <div class="justify-self-end">
+                <.link
+                  class="btn btn-sm opacity-70 hover:opacity-100 transition"
+                  patch={~p"/#{@ctx.current_group.slug}/wiki/#{page.slug}/v/#{page.versions_count}"}
+                >
+                  v. {page.versions_count}
+                </.link>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <i class="hero-clock-micro size-3 opacity-70"></i>
+                <WikWeb.Components.Time.pretty
+                  datetime={page.updated_at}
+                  class="text-xs whitespace-nowrap"
+                />
+              </div>
+
+              <div class="text-xs text-right tabular-nums">
+                <i class="hero-link-solid size-3 opacity-70"></i>
+                <span>{page.backlinks_count || 0}</span>
+              </div>
+
+              <.link
+                phx-click={JS.push("delete", value: %{id: page.id}) |> hide("##{id}")}
+                data-confirm="Are you sure?"
+                class="opacity-40 hover:opacity-100 transition flex justify-end"
+              >
+                <i class="hero-trash size-4">
+                  delete
+                </i>
               </.link>
             </div>
-
-            <div class="flex items-center gap-2">
-              <i class="hero-clock-micro size-3 opacity-70"></i>
-              <WikWeb.Components.Time.pretty
-                datetime={page.updated_at}
-                class="text-xs whitespace-nowrap"
-              />
-            </div>
-
-            <div class="text-xs text-right tabular-nums">
-              <i class="hero-link-solid size-3 opacity-70"></i>
-              <span>{page.backlinks_count || 0}</span>
-            </div>
-
-            <.link
-              phx-click={JS.push("delete", value: %{id: page.id}) |> hide("##{id}")}
-              data-confirm="Are you sure?"
-              class="opacity-40 hover:opacity-100 transition flex justify-end"
-            >
-              <i class="hero-trash size-4">
-                delete
-              </i>
-            </.link>
           </div>
         </div>
-      </div>
-    </Layouts.app>
+      </Layouts.page_container>
+    </Layouts.drawer>
     """
   end
 

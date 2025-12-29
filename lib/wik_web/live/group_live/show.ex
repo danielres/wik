@@ -6,114 +6,120 @@ defmodule WikWeb.GroupLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        <:actions>
-          <WikWeb.Components.ButtonEdit.button
-            :if={Ash.can?({@group, :update}, @current_user)}
-            link={~p"/#{@group.slug}/edit"}
-            watch_path={@current_path <> "/edit"}
-            presences={@ctx.presences}
-          />
-        </:actions>
-      </.header>
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
+      <Layouts.page_container>
+        <:title>
+          <div class="flex items-center justify-between" }>
+            {@group.title}
+            <WikWeb.Components.ButtonEdit.button
+              :if={Ash.can?({@group, :update}, @current_user)}
+              link={~p"/#{@group.slug}/edit"}
+              watch_path={@current_path <> "/edit"}
+              presences={@ctx.presences}
+            />
+          </div>
+        </:title>
+        <:subtitle>
+          Group details
+        </:subtitle>
 
-      <.live_component
-        module={WikWeb.Components.Generic.Modal}
-        mandatory?
-        id={ "modal-form-group-#{@group.id}" }
-        open?={@live_action == :edit}
-        phx-click-close={JS.patch(~p"/#{@group.slug}")}
-      >
         <.live_component
-          module={WikWeb.Components.Group.Form}
-          id={ "form-group-#{@group.id}" }
-          group={@group}
-          actor={@current_user}
-          return_to={~p"/#{@group.slug}"}
+          module={WikWeb.Components.Generic.Modal}
+          mandatory?
+          id={ "modal-form-group-#{@group.id}" }
+          open?={@live_action == :edit}
+          phx-click-close={JS.patch(~p"/#{@group.slug}")}
         >
+          <.live_component
+            module={WikWeb.Components.Group.Form}
+            id={ "form-group-#{@group.id}" }
+            group={@group}
+            actor={@current_user}
+            return_to={~p"/#{@group.slug}"}
+          >
+          </.live_component>
         </.live_component>
-      </.live_component>
 
-      <% heading_class = "font-bold" %>
-      <% content_class = "opacity-70 text-sm" %>
+        <% heading_class = "font-bold" %>
+        <% content_class = "opacity-70 text-sm" %>
 
-      <div class="space-y-4">
-        <div class="card bg-base-200 p-4 space-y-2">
-          <h2 class={heading_class}>
-            Created by
-          </h2>
-          <div class={content_class}>
-            {@group.author |> to_string}
-          </div>
-        </div>
-
-        <div class="card bg-base-200 p-4 space-y-2">
-          <h2 class={heading_class}>
-            Description
-          </h2>
-          <div class={[:text in @updated_fields && "animate-reload", content_class]}>
-            {@group.text || "(no description)"}
-          </div>
-        </div>
-
-        <div class="card bg-base-200 p-4 space-y-2">
-          <h2 class={heading_class}>
-            Members<sup class="opacity-75 ml-1">{@group.users |> length()}</sup>
-          </h2>
-          <ul class={[content_class, "list list-disc ml-4"]}>
-            <li :for={member <- @group.users}>
-              {member |> to_string()}
-            </li>
-          </ul>
-        </div>
-
-        <div class="card bg-base-200 p-4 space-y-2">
-          <div class="flex justify-between">
+        <div class="space-y-4">
+          <div class="card bg-base-200 p-4 space-y-2">
             <h2 class={heading_class}>
-              Pages
+              Created by
             </h2>
-
-            <div>
-              <.link
-                class="indicator btn btn-xs btn-neutral opacity-60 hover:opacity-100 transition"
-                navigate={~p"/#{@ctx.current_group.slug}/map"}
-              >
-                Map
-              </.link>
-
-              <.link
-                class="indicator btn btn-xs btn-neutral opacity-60 hover:opacity-100 transition"
-                navigate={~p"/#{@ctx.current_group.slug}/wiki"}
-              >
-                All pages
-                <span class="indicator-item badge badge-neutral border text-base-content/70 rounded-full text-xs p-0 aspect-square">
-                  {@group.pages_count}
-                </span>
-              </.link>
+            <div class={content_class}>
+              {@group.author |> to_string}
             </div>
           </div>
 
-          <h3 class={[heading_class, "text-sm opacity-60"]}>
-            Recently updated
-          </h3>
+          <div class="card bg-base-200 p-4 space-y-2">
+            <h2 class={heading_class}>
+              Description
+            </h2>
+            <div class={[:text in @updated_fields && "animate-reload", content_class]}>
+              {@group.text || "(no description)"}
+            </div>
+          </div>
 
-          <div>
-            <.link
-              :for={p <- @group.last_updated_pages}
-              class={[content_class, "grid grid-cols-3 hover:opacity-100"]}
-              navigate={WikWeb.GroupLive.PageLive.Show.page_url(@group, p)}
-            >
-              <div>{p.title}</div>
+          <div class="card bg-base-200 p-4 space-y-2">
+            <h2 class={heading_class}>
+              Members<sup class="opacity-75 ml-1">{@group.users |> length()}</sup>
+            </h2>
+            <ul class={[content_class, "list list-disc ml-4"]}>
+              <li :for={member <- @group.users}>
+                {member |> to_string()}
+              </li>
+            </ul>
+          </div>
+
+          <div class="card bg-base-200 p-4 space-y-2">
+            <div class="flex justify-between">
+              <h2 class={heading_class}>
+                Pages
+              </h2>
+
               <div>
-                <WikWeb.Components.Time.pretty datetime={p.updated_at} />
+                <.link
+                  class="indicator btn btn-xs btn-neutral opacity-60 hover:opacity-100 transition"
+                  navigate={~p"/#{@ctx.current_group.slug}/map"}
+                >
+                  Map
+                </.link>
+
+                <.link
+                  class="indicator btn btn-xs btn-neutral opacity-60 hover:opacity-100 transition"
+                  navigate={~p"/#{@ctx.current_group.slug}/wiki"}
+                >
+                  All pages
+                  <span class="indicator-item badge badge-neutral border text-base-content/70 rounded-full text-xs p-0 aspect-square">
+                    {@group.pages_count}
+                  </span>
+                </.link>
               </div>
-              <div><span class="opacity-50">by</span> {p.author |> to_string}</div>
-            </.link>
+            </div>
+
+            <h3 class={[heading_class, "text-sm opacity-60"]}>
+              Recently updated
+            </h3>
+
+            <div>
+              <.link
+                :for={p <- @group.last_updated_pages}
+                class={[content_class, "grid grid-cols-3 hover:opacity-100"]}
+                navigate={WikWeb.GroupLive.PageLive.Show.page_url(@group, p)}
+              >
+                <div>{p.title}</div>
+                <div>
+                  <WikWeb.Components.Time.pretty datetime={p.updated_at} />
+                </div>
+                <div><span class="opacity-50">by</span> {p.author |> to_string}</div>
+              </.link>
+            </div>
           </div>
         </div>
-      </div>
-    </Layouts.app>
+      </Layouts.page_container>
+    </Layouts.drawer>
     """
   end
 

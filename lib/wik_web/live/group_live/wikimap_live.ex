@@ -6,40 +6,40 @@ defmodule WikWeb.GroupLive.WikimapLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        Wiki map
-        <:actions></:actions>
-      </.header>
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
+      <Layouts.page_container>
+        <:title>Wiki map</:title>
 
-      <div class="space-y-4">
-        <div
-          id="wikimap-canvas"
-          phx-hook="Wikimap"
-          phx-update="ignore"
-          data-graph={@graph_json}
-          data-group-slug={@ctx.current_group.slug}
-          class="w-full h-[70vh] rounded-lg bg-base-200 border border-base-300"
-        >
-        </div>
+        <div class="space-y-4">
+          <div
+            id="wikimap-canvas"
+            phx-hook="Wikimap"
+            phx-update="ignore"
+            data-graph={@graph_json}
+            data-group-slug={@ctx.current_group.slug}
+            class="w-full h-[70vh] rounded-lg bg-base-200 border border-base-300"
+          >
+          </div>
 
-        <div :if={@orphan_pages != []} class="card bg-base-200 border border-base-300 p-3">
-          <h3 class="text-xs uppercase tracking-wide opacity-70 mb-2">
-            <i class="hero-exclamation-triangle-micro text-yellow-400"></i> Orphan pages
-          </h3>
-          <ul class="flex flex-wrap gap-2 text-sm">
-            <li :for={slug <- @orphan_pages}>
-              <.link
-                navigate={"/#{@ctx.current_group.slug}/wiki/#{slug}"}
-                class="px-2 py-1 rounded bg-base-300/60"
-              >
-                {slug}
-              </.link>
-            </li>
-          </ul>
+          <div :if={@orphan_pages != []} class="card bg-base-200 border border-base-300 p-3">
+            <h3 class="text-xs uppercase tracking-wide opacity-70 mb-2">
+              <i class="hero-exclamation-triangle-micro text-yellow-400"></i> Orphan pages
+            </h3>
+
+            <ul class="flex flex-wrap gap-2 text-sm">
+              <li :for={slug <- @orphan_pages}>
+                <.link
+                  navigate={"/#{@ctx.current_group.slug}/wiki/#{slug}"}
+                  class="px-2 py-1 rounded bg-base-300/60"
+                >
+                  {slug}
+                </.link>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </Layouts.app>
+      </Layouts.page_container>
+    </Layouts.drawer>
     """
   end
 

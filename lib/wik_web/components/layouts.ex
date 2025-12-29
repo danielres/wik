@@ -51,7 +51,24 @@ defmodule WikWeb.Layouts do
     """
   end
 
-  attr :ctx, :any, required: true
+  slot :title, required: false
+  slot :subtitle, required: false
+  slot :inner_block, required: true
+
+  def page_container(assigns) do
+    ~H"""
+    <div class="grid grid-cols-[1fr_min(75ch,100%)_1fr] [&>*]:col-start-2 [&>*]:px-6">
+      <header class="mt-16 mb-6">
+        <h1 :if={@title != []} class="text-3xl">{render_slot(@title)}</h1>
+        <p :if={@subtitle != []} class="text-sm text-base-content/70">
+          {render_slot(@subtitle)}
+        </p>
+      </header>
+
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
 
   def layout_header(assigns) do
     ~H"""

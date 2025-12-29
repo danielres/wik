@@ -66,7 +66,7 @@ defmodule WikWeb.Components do
     {render_slot(@header)}
 
     <div class="stacked">
-      <div class="drawer drawer-open drawer-end">
+      <div class="drawer drawer-open drawer-end border pointer-events-none">
         <input id={@drawer_id} type="checkbox" class="drawer-toggle" />
 
         <div :if={@sidebar?} class="drawer-side">

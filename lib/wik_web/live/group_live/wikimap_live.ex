@@ -163,6 +163,5 @@ defmodule WikWeb.GroupLive.WikimapLive do
           acc
       end
     end)
-    |> Enum.reverse()
   end
 end

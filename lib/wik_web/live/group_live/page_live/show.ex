@@ -20,7 +20,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     ~H"""
     <Layouts.drawer flash={@flash} ctx={@ctx} sidebar?>
       <%= if @not_found? do %>
-        <.dialog_404 {assigns} />
+        <WikWeb.Components.dialog_page_not_found ctx={@ctx} />
       <% else %>
         <div
           class="px-4 mx-auto mt-8"
@@ -57,21 +57,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         </div>
       </:sidebar>
     </Layouts.drawer>
-    """
-  end
-
-  def dialog_404(assigns) do
-    ~H"""
-    <div class="mx-auto px-6 py-16 text-center w-svw">
-      <h1 class="text-2xl">Ooopsie...</h1>
-      <p class="mt-3 text-sm opacity-70">This page does not exist.</p>
-      <.link
-        navigate={page_url(@ctx.current_group, %{slug: "home"})}
-        class="btn mt-3"
-      >
-        <.icon name="hero-arrow-left-mini" /> <span>Back to wiki</span>
-      </.link>
-    </div>
     """
   end
 

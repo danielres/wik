@@ -25,6 +25,7 @@ import { slashFactory } from "@milkdown/kit/plugin/slash";
 import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { collab, collabServiceCtx } from "@milkdown/plugin-collab";
+import { clipboard } from "@milkdown/kit/plugin/clipboard";
 import { getMarkdown } from "@milkdown/utils";
 import { setupBlockHandle } from "./block-handle";
 import { inputRuleWikilink } from "./input-rule-wikilink";
@@ -142,6 +143,7 @@ export async function createMilkdownEditor({
 			.use(slashMenuWikilinks)
 			.use(toolbarTooltip)
 			.use(cursorPlugin)
+			.use(clipboard)
 			.use(inputRuleWikilink)
 			// Ensure the sanitizer is appended after all other ProseMirror plugins.
 			.config((ctx) => {

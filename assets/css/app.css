@@ -263,6 +263,7 @@ li::marker {
 	color: color-mix(in oklab, var(--color-base-content) 20%, transparent);
 }
 
+/* Utility for stacking elements on top of each other using CSS Grid */
 .stacked {
 	display: grid;
 

@@ -17,6 +17,7 @@
 
 	> * {
 		@apply mb-6 text-base-content/70;
+		@apply hyphens-auto;
 	}
 
 	h1 {

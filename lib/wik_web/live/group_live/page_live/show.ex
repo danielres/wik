@@ -237,6 +237,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       </div>
     </.sidebar_panel>
 
+    <.sidebar_panel title="Presences" icon="hero-users">
+      <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
+    </.sidebar_panel>
+
     <%= if @env == :dev do %>
       <.sidebar_panel title="Debug" icon="hero-bug-ant" class="opacity-0 hover:opacity-100 transition">
         <div class="font-mono text-xs opacity-70">

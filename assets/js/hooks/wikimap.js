@@ -4,7 +4,7 @@ const CONFIG = {
 		repel: 40000,
 		spring: 0.22,
 		damping: 0.86,
-		springLength: 90,
+		springLength: 20,
 		step: 0.03,
 	},
 	stop: {

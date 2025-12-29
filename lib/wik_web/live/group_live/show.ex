@@ -9,7 +9,7 @@ defmodule WikWeb.GroupLive.Show do
     <Layouts.drawer flash={@flash} ctx={@ctx}>
       <Layouts.page_container>
         <:title>
-          <div class="flex items-center justify-between" }>
+          <div class="flex items-center justify-between">
             {@group.title}
             <WikWeb.Components.ButtonEdit.button
               :if={Ash.can?({@group, :update}, @current_user)}

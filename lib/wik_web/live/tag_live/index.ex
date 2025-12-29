@@ -36,7 +36,7 @@ defmodule WikWeb.TagLive.Index do
           class="text-base-content/70 card bg-base-200 p-4 text-center my-8"
         >
           <p>No tags found yet.</p>
-          <p>Add hashtags to wiki pages headings to use this feature.</p>
+          <p>Add hashtags to headings in wiki pages to use this feature.</p>
         </div>
       </Layouts.page_container>
     </Layouts.drawer>

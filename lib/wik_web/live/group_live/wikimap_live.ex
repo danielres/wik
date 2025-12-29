@@ -24,23 +24,21 @@ defmodule WikWeb.GroupLive.WikimapLive do
           <div class="w-fit bg-base-200/50 backdrop-blur">Wiki map</div>
         </:title>
 
-        <div class="space-y-4 grid w-fit">
-          <div :if={@orphan_pages != []} class="card bg-base-300/20 p-3 backdrop-blur">
-            <h3 class="text-xs uppercase tracking-wide opacity-70 mb-2">
-              <i class="hero-exclamation-triangle-micro text-yellow-400"></i> Orphan pages
-            </h3>
+        <div :if={@orphan_pages != []} class="card bg-base-300/20 p-3 backdrop-blur w-fit">
+          <h3 class="text-xs uppercase tracking-wide opacity-70 mb-2">
+            <i class="hero-exclamation-triangle-micro text-yellow-400"></i> Orphan pages
+          </h3>
 
-            <ul class="flex flex-wrap gap-2 text-sm">
-              <li :for={slug <- @orphan_pages}>
-                <.link
-                  navigate={"/#{@ctx.current_group.slug}/wiki/#{slug}"}
-                  class="px-2 py-1 rounded bg-base-300/60"
-                >
-                  {slug}
-                </.link>
-              </li>
-            </ul>
-          </div>
+          <ul class="flex flex-wrap gap-2 text-sm">
+            <li :for={slug <- @orphan_pages}>
+              <.link
+                navigate={"/#{@ctx.current_group.slug}/wiki/#{slug}"}
+                class="px-2 py-1 rounded bg-base-300/60"
+              >
+                {slug}
+              </.link>
+            </li>
+          </ul>
         </div>
       </Layouts.page_container>
     </Layouts.drawer>

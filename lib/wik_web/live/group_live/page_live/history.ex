@@ -11,6 +11,20 @@ defmodule WikWeb.GroupLive.PageLive.History do
   def render(assigns) do
     ~H"""
     <Layouts.drawer flash={@flash} ctx={@ctx}>
+      <Layouts.page_container>
+        <%= if @version.data["text"] do %>
+          <div
+            id={"milkdown-editor-#{@v}"}
+            phx-hook="MilkdownEditor"
+            phx-update="ignore"
+            data-markdown={@version.data["text"]}
+            data-mode="static"
+          />
+        <% else %>
+          <div class="opacity-50">(Empty)</div>
+        <% end %>
+      </Layouts.page_container>
+
       <:sticky_toolbar>
         <div class="toolbar-editor-controls">
           <div class="space-y-1">
@@ -88,18 +102,6 @@ defmodule WikWeb.GroupLive.PageLive.History do
           </div>
         </div>
       </:sticky_toolbar>
-
-      <%= if @version.data["text"] do %>
-        <div
-          id={"milkdown-editor-#{@v}"}
-          phx-hook="MilkdownEditor"
-          phx-update="ignore"
-          data-markdown={@version.data["text"]}
-          data-mode="static"
-        />
-      <% else %>
-        <div class="opacity-50">(Empty)</div>
-      <% end %>
     </Layouts.drawer>
     """
   end

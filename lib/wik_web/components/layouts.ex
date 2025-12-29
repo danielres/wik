@@ -35,11 +35,11 @@ defmodule WikWeb.Layouts do
   def drawer(assigns) do
     ~H"""
     <WikWeb.Components.drawer sidebar?={@sidebar?}>
+      {if assigns[:sticky_toolbar], do: render_slot(@sticky_toolbar)}
+
       <:header>
         <.layout_header ctx={@ctx} />
       </:header>
-
-      {# if assigns[:sticky_toolbar], do: render_slot(@sticky_toolbar)}
 
       {render_slot(@inner_block)}
       {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
@@ -55,7 +55,7 @@ defmodule WikWeb.Layouts do
   slot :subtitle, required: false
   slot :inner_block, required: true
 
-  defp page_container(assigns) do
+  def page_container(assigns) do
     ~H"""
     <div class="grid grid-cols-[1fr_min(75ch,100%)_1fr] [&>*]:col-start-2 [&>*]:px-6">
       <header class="mt-16 mb-6">

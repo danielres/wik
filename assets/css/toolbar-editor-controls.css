@@ -1,8 +1,8 @@
 .toolbar-editor-controls {
-	@apply flex gap-2 justify-end items-center;
+	@apply flex justify-end sticky top-0 z-50;
 
 	.toolbar-actions {
-		@apply bg-base-300 rounded-lg p-2 flex gap-2 transition;
+		@apply bg-base-300 p-2 flex gap-2 transition;
 	}
 
 	.action {

@@ -13,26 +13,45 @@
 }
 
 .ProseMirror.editor {
-	white-space: pre-wrap;
+	@apply wrap-anywhere;
 
 	> * {
-		@apply mb-6;
+		@apply mb-6 text-base-content/70;
+		@apply hyphens-auto;
 	}
 
 	h1 {
 		@apply text-3xl;
+		@apply text-base-content;
+		&:not(:first-child) {
+			@apply mt-8;
+			&:before {
+				content: "";
+				@apply block h-[1px] mb-16 mt-16;
+				@apply bg-gradient-to-b from-base-content/0 via-base-300 to-base-content/0;
+				@apply border-b border-b-base-content/20 border-dashed;
+			}
+		}
 	}
 
 	h2 {
-		@apply text-2xl;
+		@apply text-xl;
+		@apply text-base-content;
 	}
 
 	h3 {
 		@apply text-xl;
+		@apply text-base-content/90;
 	}
 
 	h4 {
 		@apply text-lg;
+		@apply text-base-content/80;
+	}
+
+	h5 {
+		@apply text-sm font-bold;
+		@apply text-base-content/80;
 	}
 
 	ul {
@@ -59,12 +78,12 @@
 	}
 
 	a.tag-badge {
-		@apply badge badge-primary badge-md bg-primary/60 transition hover:bg-primary/80 hover:text-base-content;
+		@apply badge badge-primary badge-md bg-primary/80 transition hover:bg-primary/100 hover:text-base-content;
 		@apply inline-flex align-middle items-center gap-1 px-[0.5em];
 	}
 
 	a.wikilink-node {
-		@apply px-1 bg-base-100 rounded opacity-80 hover:opacity-100 transition;
+		@apply px-1 rounded bg-base-100 hover:text-white transition text-info-content text-sm py-1 px-2;
 	}
 
 	a[href^="http"] {

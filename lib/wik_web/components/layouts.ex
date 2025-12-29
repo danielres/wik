@@ -25,22 +25,58 @@ defmodule WikWeb.Layouts do
       </Layouts.app>
 
   """
-
+  attr :ctx, :any, required: true
   attr :flash, :map, required: true, doc: "the map of flash messages"
-  attr :ctx, :any
-
-  attr :current_scope, :map,
-    default: nil,
-    doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
-
-  slot :inner_block, required: true
-  slot :backlinks, required: false
+  attr :sidebar?, :boolean, default: false
   slot :sticky_toolbar, required: false
-  slot :aside
+  slot :inner_block, required: true
+  slot :sidebar, required: false
 
-  def app(assigns) do
+  def drawer(assigns) do
     ~H"""
-    <header class="layout-header">
+    <WikWeb.Components.drawer sidebar?={@sidebar?}>
+      {if assigns[:sticky_toolbar], do: render_slot(@sticky_toolbar)}
+
+      <:header>
+        <.layout_header ctx={@ctx} />
+      </:header>
+
+      {render_slot(@inner_block)}
+      {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
+
+      <:sidebar :let={drawer_id}>{render_slot(@sidebar, drawer_id)}</:sidebar>
+    </WikWeb.Components.drawer>
+
+    <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
+    """
+  end
+
+  slot :title, required: false
+  slot :subtitle, required: false
+  slot :inner_block, required: true
+
+  def page_container(assigns) do
+    ~H"""
+    <div class="grid grid-cols-[1fr_min(75ch,100%)_1fr] [&>*]:col-start-2 [&>*]:px-6">
+      <header class="mt-16 mb-6">
+        <h1 :if={@title != []} class="text-3xl">{render_slot(@title)}</h1>
+        <p :if={@subtitle != []} class="text-sm text-base-content/70">
+          {render_slot(@subtitle)}
+        </p>
+      </header>
+
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  defp layout_header(assigns) do
+    ~H"""
+    <nav class={[
+      "px-4 sm:px-6 lg:px-8",
+      "bg-base-300 pb-2",
+      "space-y-2"
+    ]}>
       <div class="flex justify-between w-full">
         <div class="flex items-center gap-1 mt-2 font-bold text-xs">
           <%= if @ctx[:current_group] do %>
@@ -150,39 +186,7 @@ defmodule WikWeb.Layouts do
           </.link>
         </div>
       <% end %>
-    </header>
-
-    <%= if WikWeb.Helpers.slot_has_content?(@sticky_toolbar) do %>
-      <div id="layout-sticky-toolbar-sentinel" />
-      <div id="LayoutStickyToolbar" class="layout-sticky-toolbar" phx-hook="LayoutStickyToolbar">
-        {render_slot(@sticky_toolbar)}
-      </div>
-    <% end %>
-
-    <main class="layout-main">
-      {render_slot(@inner_block)}
-
-      <footer
-        :if={@ctx[:page]}
-        class={[
-          "mt-20 grid md:grid-cols-3 gap-8",
-          "md:[&>*]:border-r-2 [&>:last-child]:border-r-0 [&>*]:border-base-content/10"
-        ]}
-      >
-        <div class="space-y-2">
-          <div class="flex items-center gap-2">
-            <i class="hero-user-mini size-4"></i>
-            <span class="uppercase tracking-wide text-xs opacity-70">Presences</span>
-          </div>
-
-          <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
-        </div>
-
-        {render_slot(@backlinks)}
-      </footer>
-    </main>
-
-    <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
+    </nav>
     """
   end
 

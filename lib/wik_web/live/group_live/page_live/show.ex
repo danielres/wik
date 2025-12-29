@@ -11,25 +11,23 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   alias WikWeb.Components.RealtimeToast
   require Logger
 
+  def page_url(group, page) do
+    "/#{group.slug}/wiki/#{page.slug}"
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
+    <Layouts.drawer flash={@flash} ctx={@ctx} sidebar?>
       <%= if @not_found? do %>
-        <div class="mx-auto max-w-2xl px-6 py-16 text-center">
-          <div class="text-5xl font-semibold">404</div>
-          <p class="mt-3 text-sm opacity-70">This page does not exist.</p>
-          <.link
-            navigate={~p"/#{@ctx.current_group.slug}/wiki"}
-            class="mt-6 inline-flex items-center gap-2 text-sm font-semibold hover:text-white"
-          >
-            <.icon name="hero-arrow-left-mini" /> Back to wiki
-          </.link>
-        </div>
+        <WikWeb.Components.dialog_page_not_found ctx={@ctx} />
       <% else %>
-        <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />
+        <div
+          class="px-4 mx-auto mt-8"
+          style="width: min(75ch, 100%)"
+        >
+          <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />
 
-        <div class="grid grid-cols-[1fr_auto] gap-4">
           <.live_component
             module={WikWeb.Components.Page.FormMarkdown}
             id={"form-page-#{@page.id}"}
@@ -44,210 +42,362 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             return_to={page_url(@ctx.current_group, @page)}
             pages_map={@ctx.pages_map}
           />
-
-          <div class="w-56">
-            <div class="card p-4 pr-3 bg-base-300/50 text-sm">
-              <div
-                :for={item <- @toc}
-                class="overflow-hidden text-ellipsis text-nowrap"
-                style={ "margin-left: #{( item.level - 1 )/2}rem;" }
-              >
-                <a class="opacity-70 hover:opacity-100 transition" href={ "##{item.slug}" }>
-                  {item.title}
-                </a>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <.live_component
-          module={WikWeb.Components.Generic.Modal}
-          id="unsaved-exit-modal"
-          open?={@show_unsaved_modal}
-          mandatory?={false}
-          padding_class="p-4 space-y-4"
-          phx-click-close="cancel_exit_modal"
-        >
-          <div class="space-y-4">
-            <div class="text-lg font-semibold">Unsaved changes</div>
-            <p class="text-sm opacity-80">
-              You have edits that haven&apos;t been saved. What do you want to do?
-            </p>
-
-            <div class="flex flex-col gap-2">
-              <button
-                type="button"
-                class="btn btn-sm btn-primary w-full"
-                phx-click="save_version_and_continue"
-              >
-                Save version and continue
-              </button>
-
-              <button
-                type="button"
-                class="btn btn-sm btn-error w-full"
-                phx-click="discard_and_continue"
-              >
-                Forget changes and continue
-              </button>
-            </div>
-          </div>
-        </.live_component>
+        <.modal_unsaved_exit {assigns} />
       <% end %>
 
-      <:sticky_toolbar>
-        <%= if not @not_found? do %>
-          <div class="toolbar-editor-controls">
-            <%= if Ash.can?({@page, :update}, @current_user)  do %>
-              <div class={["toolbar-actions", not @editing? and "opacity-0"]}>
-                <button
-                  id={"editor-undo-#{@page.id}"}
-                  type="button"
-                  class={[
-                    "action",
-                    if(@editing? and @editor_state.has_undo?,
-                      do: "action-enabled",
-                      else: "action-disabled"
-                    )
-                  ]}
-                >
-                  <.icon name="hero-arrow-uturn-left-micro" />
-                </button>
-                <button
-                  id={"editor-redo-#{@page.id}"}
-                  type="button"
-                  class={[
-                    "action",
-                    if(@editing? and @editor_state.has_redo?,
-                      do: "action-enabled",
-                      else: "action-disabled"
-                    )
-                  ]}
-                >
-                  <.icon name="hero-arrow-uturn-right-micro" />
-                </button>
+      <:sidebar :let={drawer_id}>
+        <div :if={not @not_found?} class="grid grid-cols-[auto_1fr] w-full">
+          <.sidebar_actions {assigns} drawer_id={drawer_id} />
 
-                <WikWeb.Components.tooltip position="bottom">
-                  <button
-                    form={"page-form-#{@page.id}"}
-                    type="submit"
-                    class={[
-                      "action",
-                      if(@editing? and not @editor_state.synced?,
-                        do: "action-enabled",
-                        else: "action-disabled"
-                      )
-                    ]}
-                  >
-                    <.icon name="hero-arrow-down-tray-micro" />
-                  </button>
-                  <:content>
-                    <span class="text-xs">
-                      Save as <span class="font-bold">v.{@page.versions_count + 1}</span>
-                    </span>
-                  </:content>
-                </WikWeb.Components.tooltip>
-              </div>
-            <% end %>
-
-            <div class="toolbar-actions">
-              <%= if Ash.can?({@page, :update}, @current_user)  do %>
-                <WikWeb.Components.tooltip position="left">
-                  <button
-                    :if={not @editing?}
-                    type="button"
-                    class={["action", "action-enabled"]}
-                    phx-click="toggle_editing"
-                  >
-                    <.icon name="hero-lock-closed-micro" />
-                  </button>
-                  <:content><span class="text-xs">Unlock to edit</span></:content>
-                </WikWeb.Components.tooltip>
-                <button
-                  :if={@editing?}
-                  type="button"
-                  class={["action", "action-enabled"]}
-                  phx-click="attempt_end_editing"
-                  phx-value-synced={@editor_state.synced?}
-                  phx-value-has_undo={@editor_state.has_undo?}
-                  phx-value-has_redo={@editor_state.has_redo?}
-                >
-                  <.icon name="hero-lock-open-micro" />
-                </button>
-              <% end %>
-
-              <.link
-                class={[
-                  "action action-version",
-                  if(@editing?, do: "action-disabled", else: "action-enabled")
-                ]}
-                id={"page-version-link-#{@page.id}"}
-                patch={~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"}
-              >
-                v.{@page.versions_count}
-              </.link>
-            </div>
+          <div inert={@editing?} class="bg-base-300/60 backdrop-blur">
+            <.sidebar_panels {assigns} />
           </div>
-
-          <div
-            :if={@env == :dev}
-            class={[
-              "toolbar-editor-controls ml-auto mt-2",
-              not @debug? and "opacity-0 hover:opacity-100"
-            ]}
-          >
-            <div class="toolbar-actions w-fit">
-              <.button type="button" class="action" phx-click="toggle_debug">
-                <.icon name="hero-bug-ant" />
-              </.button>
-            </div>
-          </div>
-          <div
-            :if={@env == :dev and @debug?}
-            class="bg-base-300 w-fit ml-auto text-xs font-mono mt-2 p-4 rounded-lg"
-          >
-            <dd>page title: {@ctx.page.title}</dd>
-            <div>editing?: {@editing?}</div>
-            <div>synced?: {@editor_state.synced?}</div>
-            <div>has_undo?: {@editor_state.has_undo?}</div>
-            <div>has_redo?: {@editor_state.has_redo?}</div>
-            <div>exit_after_save?: {@exit_after_save?}</div>
-            <div>show_unsaved_modal?: {@show_unsaved_modal}</div>
-          </div>
-        <% end %>
-      </:sticky_toolbar>
-
-      <:backlinks>
-        <%= if not @not_found? do %>
-          <div class="space-y-2">
-            <div class="flex items-center gap-2">
-              <i class="hero-link-mini size-4"></i>
-              <span class="uppercase tracking-wide text-xs opacity-70">Backlinks</span>
-            </div>
-
-            <ul class="list-disc list-inside">
-              <%= if Enum.empty?(@backlinks) do %>
-                <li class="text-sm opacity-70">No backlinks yet.</li>
-              <% else %>
-                <li :for={backlink <- @backlinks} class="text-xs">
-                  <.link
-                    navigate={page_url(@ctx.current_group, backlink.source_page)}
-                    class="hover:text-white"
-                  >
-                    {backlink.source_page.title || backlink.target_slug}
-                  </.link>
-                </li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
-      </:backlinks>
-    </Layouts.app>
+        </div>
+      </:sidebar>
+    </Layouts.drawer>
     """
   end
 
-  def page_url(group, page) do
-    "/#{group.slug}/wiki/#{page.slug}"
+  def sidebar_actions(assigns) do
+    ~H"""
+    <% btn_class = [
+      "flex aspect-square items-center",
+      "tooltip tooltip-left",
+      "rounded-none",
+      "backdrop-blur"
+    ] %>
+    <menu>
+      <ul class="menu w-full p-0">
+        <li class={[@editing? and "hidden", "md:hidden"]}>
+          <label for={@drawer_id} class={btn_class}>
+            <.icon name="hero-chevron-left-micro" class="is-drawer-open:hidden" />
+            <.icon name="hero-chevron-right-micro" class="is-drawer-close:hidden" />
+          </label>
+        </li>
+      </ul>
+
+      <ul class={["menu w-full p-0", @editing? and "bg-accent/50 rounded-bl backdrop-blur"]}>
+        <%= if Ash.can?({@page, :update}, @current_user)  do %>
+          <% editing_btn_class = btn_class ++ ["tooltip-accent"] %>
+          <% editing_btn_class_disabled =
+            editing_btn_class ++ ["pointer-events-none text-base-content/40"] %>
+          <li>
+            <%= if @editing? do %>
+              <button
+                type="button"
+                class={
+                  if(@editor_state.synced?, do: editing_btn_class, else: editing_btn_class_disabled)
+                }
+                data-tip="Finish editing"
+                phx-click="attempt_end_editing"
+                phx-value-synced={@editor_state.synced?}
+                phx-value-has_undo={@editor_state.has_undo?}
+                phx-value-has_redo={@editor_state.has_redo?}
+              >
+                <.icon name="hero-x-mark-micro" class="" />
+              </button>
+            <% else %>
+              <button
+                type="button"
+                class={[btn_class]}
+                phx-click="toggle_editing"
+                data-tip="Edit page"
+              >
+                <.icon name="hero-pencil-solid" />
+              </button>
+            <% end %>
+          </li>
+          <%= if @editing? do %>
+            <li>
+              <button
+                form={"page-form-#{@page.id}"}
+                type="submit"
+                class={
+                  if(@editor_state.synced?, do: editing_btn_class_disabled, else: editing_btn_class)
+                }
+                data-tip={ "Save as v.#{@page.versions_count + 1}" }
+              >
+                <.icon name="hero-arrow-down-tray-micro" />
+              </button>
+            </li>
+            <li>
+              <button
+                id={"editor-undo-#{@page.id}"}
+                type="button"
+                data-tip="Undo"
+                class={
+                  if(@editor_state.has_undo?, do: editing_btn_class, else: editing_btn_class_disabled)
+                }
+              >
+                <.icon name="hero-arrow-uturn-left-micro" />
+              </button>
+            </li>
+            <li>
+              <button
+                id={"editor-redo-#{@page.id}"}
+                type="button"
+                class={
+                  if(@editor_state.has_redo?, do: editing_btn_class, else: editing_btn_class_disabled)
+                }
+                data-tip="Redo"
+              >
+                <.icon name="hero-arrow-uturn-right-micro" />
+              </button>
+            </li>
+          <% end %>
+        <% end %>
+      </ul>
+    </menu>
+    """
+  end
+
+  def sidebar_panels(assigns) do
+    descendants = build_descendant_tree(assigns.page, assigns.ctx.pages_map)
+    assigns = assign(assigns, :descendants, descendants)
+
+    ~H"""
+    <.sidebar_panel>
+      <ul class="text-sm">
+        <li>
+          <.link
+            navigate={
+              WikWeb.GroupLive.PageLive.History.page_url(
+                @ctx.current_group,
+                @page,
+                @page.versions_count
+              )
+            }
+            class="group flex opacity-70 hover:opacity-100 transition items-center gap-2"
+          >
+            <!-- https://icon-sets.iconify.design/akar-icons/history/ -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+              <path
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4.266 16.06a8.92 8.92 0 0 0 3.915 3.978a8.7 8.7 0 0 0 5.471.832a8.8 8.8 0 0 0 4.887-2.64a9.07 9.07 0 0 0 2.388-5.079a9.14 9.14 0 0 0-1.044-5.53a8.9 8.9 0 0 0-4.069-3.815a8.7 8.7 0 0 0-5.5-.608c-1.85.401-3.366 1.313-4.62 2.755c-.151.16-.735.806-1.22 1.781M7.5 8l-3.609.72L3 5m9 4v4l3 2"
+              />
+            </svg>
+
+            <div class="uppercase tracking-wide text-xs">Version <b>{@page.versions_count}</b></div>
+
+            <.icon
+              name="hero-chevron-right-mini "
+              class="opacity-40 group-hover:opacity-100 ml-auto"
+            />
+          </.link>
+        </li>
+      </ul>
+    </.sidebar_panel>
+
+    <.sidebar_panel title="Backlinks" icon="hero-link-mini">
+      <ul class="list-disc list-inside">
+        <%= if Enum.empty?(@backlinks) do %>
+          <li class="text-sm opacity-70">No backlinks yet.</li>
+        <% else %>
+          <li :for={backlink <- @backlinks} class="text-sm">
+            <.link
+              navigate={page_url(@ctx.current_group, backlink.source_page)}
+              class="opacity-70 hover:opacity-100 transition"
+            >
+              {backlink.source_page.title || backlink.target_slug}
+            </.link>
+          </li>
+        <% end %>
+      </ul>
+    </.sidebar_panel>
+
+    <.sidebar_panel :if={@descendants != []} title="Subtree" icon="hero-folder-open">
+      <.descendants_list nodes={@descendants} ctx={@ctx} />
+    </.sidebar_panel>
+
+    <.sidebar_panel :if={@toc != []} title="TOC" icon="hero-book-open">
+      <div class="text-xs w-46">
+        <div
+          :for={item <- @toc}
+          class="overflow-hidden text-ellipsis text-nowrap"
+          style={ "margin-left: #{( item.level - 1 )/2}rem;" }
+        >
+          <a class="opacity-70 hover:opacity-100 transition" href={ "##{item.slug}" }>
+            {item.title}
+          </a>
+        </div>
+      </div>
+    </.sidebar_panel>
+
+    <.sidebar_panel title="Presences" icon="hero-users">
+      <WikWeb.Components.OnlineUsers.list presences={@ctx[:presences]} />
+    </.sidebar_panel>
+
+    <%= if @env == :dev do %>
+      <.sidebar_panel title="Debug" icon="hero-bug-ant" class="opacity-0 hover:opacity-100 transition">
+        <div class="font-mono text-xs opacity-70">
+          <dd>page title: {@page.title}</dd>
+          <div>editing?: {@editing?}</div>
+          <div>synced?: {@editor_state.synced?}</div>
+          <div>has_undo?: {@editor_state.has_undo?}</div>
+          <div>has_redo?: {@editor_state.has_redo?}</div>
+          <div>exit_after_save?: {@exit_after_save?}</div>
+          <div>show_unsaved_modal?: {@show_unsaved_modal}</div>
+        </div>
+      </.sidebar_panel>
+    <% end %>
+    """
+  end
+
+  attr :nodes, :list, required: true
+  attr :ctx, :map, required: true
+  attr :nested?, :boolean, default: false
+
+  def descendants_list(assigns) do
+    ~H"""
+    <ul class={[
+      "list-disc list-inside space-y-1 text-xs",
+      @nested? && "ml-4"
+    ]}>
+      <li :for={node <- @nodes}>
+        <.link
+          navigate={page_url(@ctx.current_group, node.page || %{slug: node.slug})}
+          class="opacity-70 hover:opacity-100 transition"
+        >
+          {node.title}
+        </.link>
+
+        <.descendants_list
+          :if={node.children != []}
+          nodes={node.children}
+          ctx={@ctx}
+          nested?={true}
+        />
+      </li>
+    </ul>
+    """
+  end
+
+  attr :class, :string, default: ""
+  attr :title, :string, default: nil
+  attr :icon, :string, default: nil
+  slot :inner_block, required: true
+
+  def sidebar_panel(assigns) do
+    ~H"""
+    <div class={["p-4 border-b border-base-100", "[&_.menu]:p-0", @class]}>
+      <h6 :if={assigns[:title]} class="flex items-center gap-2 mb-2">
+        <.icon :if={assigns[:icon]} name={@icon} />
+        <span class="uppercase tracking-wide text-xs">
+          {@title}
+        </span>
+      </h6>
+
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  defp build_descendant_tree(page, pages_map) do
+    current_slug = page.slug || ""
+    prefix = current_slug <> "/"
+
+    descendants =
+      pages_map
+      |> Map.values()
+      |> Enum.filter(fn descendant ->
+        slug = descendant.slug
+        is_binary(slug) and slug != "" and String.starts_with?(slug, prefix)
+      end)
+
+    descendants
+    |> Enum.reduce(%{}, fn descendant, acc ->
+      segments = descendant_segments(current_slug, descendant.slug)
+      insert_descendant_node(acc, segments, current_slug, pages_map)
+    end)
+    |> nodes_from_map()
+  end
+
+  defp descendant_segments(current_slug, slug) do
+    slug
+    |> String.replace_prefix(current_slug <> "/", "")
+    |> String.split("/", trim: true)
+  end
+
+  defp insert_descendant_node(nodes, [segment | rest], current_slug, pages_map, path \\ []) do
+    full_path = path ++ [segment]
+    full_slug = current_slug <> "/" <> Enum.join(full_path, "/")
+    page = Map.get(pages_map, full_slug)
+    title = descendant_title(page, segment)
+
+    node =
+      Map.get(nodes, full_slug, %{
+        slug: full_slug,
+        title: title,
+        page: page,
+        children: %{}
+      })
+
+    children =
+      if rest == [] do
+        node.children
+      else
+        insert_descendant_node(node.children, rest, current_slug, pages_map, full_path)
+      end
+
+    Map.put(nodes, full_slug, %{node | children: children})
+  end
+
+  defp descendant_title(%{title: title}, _fallback) when is_binary(title) and title != "",
+    do: title
+
+  defp descendant_title(_page, fallback), do: fallback
+
+  defp nodes_from_map(map) do
+    map
+    |> Map.values()
+    |> Enum.map(fn node ->
+      %{node | children: nodes_from_map(node.children)}
+    end)
+    |> Enum.sort_by(fn node -> String.downcase(node.title || "") end)
+  end
+
+  def modal_unsaved_exit(assigns) do
+    ~H"""
+    <.live_component
+      module={WikWeb.Components.Generic.Modal}
+      id="unsaved-exit-modal"
+      open?={@show_unsaved_modal}
+      mandatory?={false}
+      padding_class="p-4 space-y-4"
+      phx-click-close="cancel_exit_modal"
+    >
+      <div class="space-y-4">
+        <div class="text-lg font-semibold">Unsaved changes</div>
+        <p class="text-sm opacity-80">
+          You have edits that haven&apos;t been saved. What do you want to do?
+        </p>
+
+        <div class="flex flex-col gap-2">
+          <button
+            type="button"
+            class="btn btn-sm btn-primary w-full"
+            phx-click="save_version_and_continue"
+          >
+            Save version and continue
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-sm btn-error w-full"
+            phx-click="discard_and_continue"
+          >
+            Forget changes and continue
+          </button>
+        </div>
+      </div>
+    </.live_component>
+    """
   end
 
   @impl true

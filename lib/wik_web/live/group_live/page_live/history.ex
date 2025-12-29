@@ -3,23 +3,41 @@ defmodule WikWeb.GroupLive.PageLive.History do
   use WikWeb.Presence.Handlers
   require Ash.Query
 
+  def page_url(group, page, version) do
+    "/#{group.slug}/v/#{version}/wiki/#{page.slug}"
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
+      <%= if(@not_found?) do %>
+        <WikWeb.Components.dialog_page_not_found ctx={@ctx} />
+      <% else %>
+        <Layouts.page_container>
+          <%= if @version.data["text"] do %>
+            <div
+              id={"milkdown-editor-#{@v}"}
+              phx-hook="MilkdownEditor"
+              phx-update="ignore"
+              data-markdown={@version.data["text"]}
+              data-mode="static"
+            />
+          <% else %>
+            <div class="opacity-50">(Empty)</div>
+          <% end %>
+        </Layouts.page_container>
+      <% end %>
+
       <:sticky_toolbar>
-        <div class="toolbar-editor-controls">
+        <div :if={not @not_found?} class="toolbar-editor-controls">
           <div class="space-y-1">
             <div class="flex gap-2 items-start">
               <div>
                 <div class="toolbar-actions items-center text-xs">
                   <.link
                     class={["action", @v == 1 and "action-disabled"]}
-                    patch={
-                      if @v == 1,
-                        do: "#",
-                        else: ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/1"
-                    }
+                    patch={if @v == 1, do: "#", else: page_url(@ctx.current_group, @page, 1)}
                     aria-disabled={@v == 1}
                     tabindex={@v == 1 && "-1"}
                   >
@@ -27,11 +45,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
                   </.link>
                   <.link
                     class={["action", @v == 1 and "action-disabled"]}
-                    patch={
-                      if @v > 1,
-                        do: ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v - 1}",
-                        else: "#"
-                    }
+                    patch={if @v > 1, do: page_url(@ctx.current_group, @page, @v - 1), else: "#"}
                     aria-disabled={@v == 1}
                     tabindex={@v == 1 && "-1"}
                   >
@@ -45,7 +59,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
                   <.link
                     patch={
                       if @v < @page.versions_count,
-                        do: ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@v + 1}",
+                        do: page_url(@ctx.current_group, @page, @v + 1),
                         else: "#"
                     }
                     class={["action", @v == @page.versions_count and "action-disabled"]}
@@ -55,9 +69,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
                     <.icon name="hero-chevron-right-mini" />
                   </.link>
                   <.link
-                    patch={
-                      ~p"/#{@ctx.current_group.slug}/wiki/#{@page.slug}/v/#{@page.versions_count}"
-                    }
+                    patch={page_url(@ctx.current_group, @page, @page.versions_count)}
                     class={["action", @v == @page.versions_count and "action-disabled"]}
                     aria-disabled={@v == @page.versions_count}
                     tabindex={@v == @page.versions_count && "-1"}
@@ -94,19 +106,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
           </div>
         </div>
       </:sticky_toolbar>
-
-      <%= if @version.data["text"] do %>
-        <div
-          id={"milkdown-editor-#{@v}"}
-          phx-hook="MilkdownEditor"
-          phx-update="ignore"
-          data-markdown={@version.data["text"]}
-          data-mode="static"
-        />
-      <% else %>
-        <div class="opacity-50">(Empty)</div>
-      <% end %>
-    </Layouts.app>
+    </Layouts.drawer>
     """
   end
 
@@ -122,36 +122,53 @@ defmodule WikWeb.GroupLive.PageLive.History do
   end
 
   @impl true
-  def mount(%{"page_slug" => page_slug}, _session, socket) do
-    page =
-      Wik.Wiki.Page
-      |> Ash.get!(
-        %{group_id: socket.assigns.ctx.current_group.id, slug: page_slug},
-        actor: socket.assigns.current_user,
-        load: [:versions_count]
-      )
+  def mount(%{"page_slug_segments" => page_slug_segments}, _session, socket) do
+    page_slug = page_slug_segments |> Enum.join("/")
 
-    socket = socket |> assign(:page, page)
-    {:ok, socket}
+    case Wik.Wiki.Page
+         |> Ash.get(
+           %{group_id: socket.assigns.ctx.current_group.id, slug: page_slug},
+           actor: socket.assigns.current_user,
+           load: [:versions_count]
+         ) do
+      {:ok, page} ->
+        {:ok, socket |> assign(:page, page) |> assign(:not_found?, false)}
+
+      {:error, _} ->
+        {:ok,
+         socket
+         |> assign(:not_found?, true)
+         |> assign(:page, nil)
+         |> assign(:page_title, "Page not found")}
+    end
   end
 
   @impl true
   def handle_params(%{"version" => v}, url, socket) do
-    socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
-    WikWeb.Presence.track_in_liveview(socket, url)
+    if(socket.assigns.not_found?) do
+      {:noreply, socket}
+    else
+      socket = Utils.Ctx.add(socket, :current_path, URI.parse(url).path)
+      WikWeb.Presence.track_in_liveview(socket, url)
 
-    v = v |> String.to_integer()
+      v = v |> String.to_integer()
 
-    {:ok, version} = get_page_version(socket.assigns.page.id, v, socket.assigns.current_user)
-    author_id = version.user_id
-    author = Wik.Accounts.User |> Ash.get!(author_id, actor: socket.assigns.current_user)
+      case get_page_version(socket.assigns.page.id, v, socket.assigns.current_user) do
+        {:ok, version} when not is_nil(version) ->
+          author_id = version.user_id
+          author = Wik.Accounts.User |> Ash.get(author_id, actor: socket.assigns.current_user)
 
-    socket =
-      socket
-      |> assign(:version, version)
-      |> assign(:v, v)
-      |> assign(:author, author)
+          socket =
+            socket
+            |> assign(:version, version)
+            |> assign(:v, v)
+            |> assign(:author, elem(author, 1) || "Unknown")
 
-    {:noreply, socket}
+          {:noreply, socket}
+
+        _ ->
+          {:noreply, assign(socket, :not_found?, true)}
+      end
+    end
   end
 end

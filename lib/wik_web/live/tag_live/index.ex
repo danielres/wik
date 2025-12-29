@@ -14,33 +14,32 @@ defmodule WikWeb.TagLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        Tags
-        <:actions></:actions>
-      </.header>
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
+      <Layouts.page_container>
+        <:title>Tags</:title>
 
-      <ul :if={Enum.any?(@tags)} id="tags" class="grid gap-3 sm:grid-cols-2">
-        <li :for={tag <- @tags} id={"tag-#{tag.id}"} class="contents">
-          <WikWeb.Components.Tag.badge tag={tag} ctx={@ctx} />
+        <ul :if={Enum.any?(@tags)} id="tags" class="space-y-4">
+          <li :for={tag <- @tags} id={"tag-#{tag.id}"} class="grid grid-cols-2">
+            <WikWeb.Components.Tag.badge tag={tag} ctx={@ctx} />
 
-          <span class="flex items-center gap-1 text-xs opacity-80">
-            <i class="hero-document-micro size-4 opacity-80">
-              page{(tag.pages_count != 1 && "s") || ""}
-            </i>
-            {tag.pages_count || 0}
-          </span>
-        </li>
-      </ul>
+            <span class="flex items-center gap-1 text-xs opacity-80">
+              <i class="hero-document-micro size-4 opacity-80">
+                page{(tag.pages_count != 1 && "s") || ""}
+              </i>
+              {tag.pages_count || 0}
+            </span>
+          </li>
+        </ul>
 
-      <div
-        :if={Enum.empty?(@tags)}
-        class="text-base-content/70 card bg-base-200 p-4 text-center my-8"
-      >
-        <p>No tags found yet.</p>
-        <p>Add hashtags to headings in wiki pages to create tags.</p>
-      </div>
-    </Layouts.app>
+        <div
+          :if={Enum.empty?(@tags)}
+          class="text-base-content/70 card bg-base-200 p-4 text-center my-8"
+        >
+          <p>No tags found yet.</p>
+          <p>Add hashtags to headings in wiki pages to use this feature.</p>
+        </div>
+      </Layouts.page_container>
+    </Layouts.drawer>
     """
   end
 

@@ -6,19 +6,18 @@ defmodule WikWeb.GroupLive.MemberLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        Members
-        <:actions></:actions>
-      </.header>
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
+      <Layouts.page_container>
+        <:title>Members</:title>
 
-      <.table id="members" rows={@rels}>
-        <:col :let={rel} label="Username">{rel.user |> to_string()}</:col>
-        <:col :let={rel} label="Since">
-          <WikWeb.Components.Time.pretty datetime={rel.inserted_at} />
-        </:col>
-      </.table>
-    </Layouts.app>
+        <.table id="members" rows={@rels}>
+          <:col :let={rel} label="Username">{rel.user |> to_string()}</:col>
+          <:col :let={rel} label="Since">
+            <WikWeb.Components.Time.pretty datetime={rel.inserted_at} />
+          </:col>
+        </.table>
+      </Layouts.page_container>
+    </Layouts.drawer>
     """
   end
 

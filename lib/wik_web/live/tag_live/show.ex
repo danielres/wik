@@ -15,105 +15,105 @@ defmodule WikWeb.TagLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} ctx={@ctx}>
-      <.header>
-        <div class="flex items-center gap-1">
-          <.link
-            navigate={~p"/#{@ctx.current_group.slug}/tags"}
-            class="opacity-75 hover:opacity-100 transition"
-          >
-            Tags
-          </.link>
+    <Layouts.drawer flash={@flash} ctx={@ctx}>
+      <Layouts.page_container>
+        <:title>
+          <div class="flex items-center gap-1">
+            <.link
+              navigate={~p"/#{@ctx.current_group.slug}/tags"}
+              class="opacity-75 hover:opacity-100 transition"
+            >
+              Tags
+            </.link>
 
-          <i class="hero-chevron-right-micro size-6 opacity-20" />
+            <.icon name="hero-chevron-right-micro" class="size-6 opacity-30" />
 
-          <WikWeb.Components.Tag.badge tag={@tag} size="xl" />
-        </div>
-        <:actions></:actions>
-      </.header>
+            <WikWeb.Components.Tag.badge tag={@tag} size="xl" />
+          </div>
+        </:title>
+        <div>
+          <div :if={Enum.empty?(@tagged_blocks)} class="text-sm text-base-content/70 space-y-12">
+            <p class="alert alert-info">
+              No content found for this tag.
+            </p>
 
-      <div class="">
-        <div :if={Enum.empty?(@tagged_blocks)} class="text-sm text-base-content/70 space-y-12">
-          <p class="alert alert-info">
-            No content found for this tag.
-          </p>
+            <section class="space-y-4">
+              <h2 class="text-xl flex items-center gap-2">
+                <i class="hero-question-mark-circle-mini opacity-80" /> How to
+              </h2>
 
-          <section class="space-y-4">
-            <h2 class="text-xl flex items-center gap-2">
-              <i class="hero-question-mark-circle-mini opacity-80" /> How to
-            </h2>
+              <ul class="list-disc space-y-2 pl-4">
+                <li>
+                  <div class="flex items-baseline gap-2">
+                    Add <span class="tag-badge">#{@tag.name}</span> to headers on various pages.
+                  </div>
+                </li>
+                <li>
+                  Content under those headers will show up here.
+                </li>
+              </ul>
+            </section>
 
-            <ul class="list-disc space-y-2 pl-4">
-              <li>
-                <div class="flex items-baseline gap-2">
-                  Add <span class="tag-badge">#{@tag.name}</span> to headers on various pages.
-                </div>
-              </li>
-              <li>
-                Content under those headers will show up here.
-              </li>
-            </ul>
-          </section>
+            <section class="space-y-4">
+              <h2 class="text-xl flex items-center gap-2">
+                <i class="hero-arrow-right-mini opacity-80" /> Example usage
+              </h2>
 
-          <section class="space-y-4">
-            <h2 class="text-xl flex items-center gap-2">
-              <i class="hero-arrow-right-mini opacity-80" /> Example usage
-            </h2>
+              <div
+                id={"milkdown-editor-#{@tag.name}"}
+                phx-hook="MilkdownEditor"
+                class="card p-4 bg-base-200"
+                phx-update="ignore"
+                data-markdown={@markdown}
+                data-mode="static"
+              />
+            </section>
+          </div>
 
-            <div
-              id={"milkdown-editor-#{@tag.name}"}
-              phx-hook="MilkdownEditor"
-              class="card p-4 bg-base-200"
-              phx-update="ignore"
-              data-markdown={@markdown}
-              data-mode="static"
-            />
-          </section>
-        </div>
+          <div class="space-y-4 mt-8">
+            <section
+              :for={{block_id, block} <- @tagged_blocks}
+              id={"tag-block-#{block_id}"}
+              class="bg-base-100 rounded shadow-lg border border-base-300"
+            >
+              <h1 class="mb-4 bg-base-200 px-4 py-1 rounded-t flex items-center gap-2">
+                <%= for {segment, idx} <- Enum.with_index(block.header_titles_stack) do %>
+                  <%= if idx > 0 do %>
+                    <.icon name="hero-chevron-right-micro" class="opacity-40" />
+                  <% end %>
 
-        <div class="space-y-4 mt-8">
-          <section
-            :for={{block_id, block} <- @tagged_blocks}
-            id={"tag-block-#{block_id}"}
-            class="bg-base-100 rounded shadow-lg border border-base-300"
-          >
-            <h1 class="mb-4 bg-base-200 px-4 py-1 rounded-t flex items-center gap-2">
-              <%= for {segment, idx} <- Enum.with_index(block.header_titles_stack) do %>
-                <%= if idx > 0 do %>
-                  <i class="hero-chevron-right-micro size-4 opacity-50">/</i>
+                  <.link
+                    navigate={
+                      if idx == 0 do
+                        WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, block.page)
+                      else
+                        "/#{@ctx.current_group.slug}/wiki/#{block.page.slug}##{Enum.at(block.slug_stack, idx)}"
+                      end
+                    }
+                    class={[
+                      "opacity-75 hover:opacity-100 transition text-sm",
+                      idx == 0 && "font-semibold opacity-85"
+                    ]}
+                  >
+                    {segment}
+                  </.link>
                 <% end %>
+              </h1>
 
-                <.link
-                  navigate={
-                    if idx == 0 do
-                      WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, block.page)
-                    else
-                      "/#{@ctx.current_group.slug}/wiki/#{block.page.slug}##{Enum.at(block.slug_stack, idx)}"
-                    end
-                  }
-                  class={[
-                    "opacity-75 hover:opacity-100 transition text-sm",
-                    idx == 0 && "font-semibold opacity-85"
-                  ]}
-                >
-                  {segment}
-                </.link>
-              <% end %>
-            </h1>
-
-            <div
-              id={"md-block-#{block_id}"}
-              phx-hook="MilkdownEditor"
-              class="[&_h1]:hidden px-4"
-              phx-update="ignore"
-              data-markdown={block.markdown}
-              data-mode="static"
-              data-root-path={"/#{@ctx.current_group.slug}/wiki"}
-            />
-          </section>
+              <div
+                id={"md-block-#{block_id}"}
+                phx-hook="MilkdownEditor"
+                class="[&_h1]:hidden px-4"
+                phx-update="ignore"
+                data-markdown={block.markdown}
+                data-mode="static"
+                data-root-path={"/#{@ctx.current_group.slug}/wiki"}
+              />
+            </section>
+          </div>
         </div>
-      </div>
-    </Layouts.app>
+      </Layouts.page_container>
+    </Layouts.drawer>
     """
   end
 

@@ -138,6 +138,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
         {:ok,
          socket
          |> assign(:not_found?, true)
+         |> assign(:page, nil)
          |> assign(:page_title, "Page not found")}
     end
   end
@@ -152,17 +153,22 @@ defmodule WikWeb.GroupLive.PageLive.History do
 
       v = v |> String.to_integer()
 
-      {:ok, version} = get_page_version(socket.assigns.page.id, v, socket.assigns.current_user)
-      author_id = version.user_id
-      author = Wik.Accounts.User |> Ash.get!(author_id, actor: socket.assigns.current_user)
+      case get_page_version(socket.assigns.page.id, v, socket.assigns.current_user) do
+        {:ok, version} when not is_nil(version) ->
+          author_id = version.user_id
+          author = Wik.Accounts.User |> Ash.get(author_id, actor: socket.assigns.current_user)
 
-      socket =
-        socket
-        |> assign(:version, version)
-        |> assign(:v, v)
-        |> assign(:author, author)
+          socket =
+            socket
+            |> assign(:version, version)
+            |> assign(:v, v)
+            |> assign(:author, elem(author, 1) || "Unknown")
 
-      {:noreply, socket}
+          {:noreply, socket}
+
+        _ ->
+          {:noreply, assign(socket, :not_found?, true)}
+      end
     end
   end
 end

@@ -26,7 +26,7 @@ defmodule WikWeb.TagLive.Show do
               Tags
             </.link>
 
-            <i class="hero-chevron-right-micro size-6 opacity-20" />
+            <.icon name="hero-chevron-right-micro" class="size-6 opacity-30" />
 
             <WikWeb.Components.Tag.badge tag={@tag} size="xl" />
           </div>
@@ -79,7 +79,7 @@ defmodule WikWeb.TagLive.Show do
               <h1 class="mb-4 bg-base-200 px-4 py-1 rounded-t flex items-center gap-2">
                 <%= for {segment, idx} <- Enum.with_index(block.header_titles_stack) do %>
                   <%= if idx > 0 do %>
-                    <i class="hero-chevron-right-micro size-4 opacity-50">/</i>
+                    <.icon name="hero-chevron-right-micro" class="opacity-40" />
                   <% end %>
 
                   <.link

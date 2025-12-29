@@ -236,7 +236,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     <%= if @env == :dev do %>
       <.sidebar_panel title="Debug" icon="hero-bug-ant" class="opacity-0 hover:opacity-100 transition">
         <div class="font-mono text-xs opacity-70">
-          <dd>page title: {@ctx.page.title}</dd>
+          <dd>page title: {@page.title}</dd>
           <div>editing?: {@editing?}</div>
           <div>synced?: {@editor_state.synced?}</div>
           <div>has_undo?: {@editor_state.has_undo?}</div>

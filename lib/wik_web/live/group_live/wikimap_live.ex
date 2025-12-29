@@ -93,12 +93,22 @@ defmodule WikWeb.GroupLive.WikimapLive do
       end)
 
     # Keep only edges to existing targets
-    edges =
+    backlink_edges =
       backlinks
       |> Enum.filter(&(not is_nil(&1.target_page_id)))
       |> Enum.map(fn bl ->
         %{source: bl.source_page_id, target: bl.target_page_id}
       end)
+
+    parent_edges = build_parent_edges(pages)
+
+    edges =
+      backlink_edges
+      |> Enum.concat(parent_edges)
+      |> Enum.reduce(MapSet.new(), fn %{source: source, target: target}, acc ->
+        MapSet.put(acc, {source, target})
+      end)
+      |> Enum.map(fn {source, target} -> %{source: source, target: target} end)
 
     # Collect slugs for missing-target backlinks (orphans)
     missing_target_slugs =
@@ -121,5 +131,37 @@ defmodule WikWeb.GroupLive.WikimapLive do
 
     {%{group_slug: group.slug, nodes: graph_nodes, edges: edges},
      orphan_slugs ++ missing_target_slugs}
+  end
+
+  defp build_parent_edges(pages) do
+    slug_to_id =
+      Enum.reduce(pages, %{}, fn page, acc ->
+        case page.slug do
+          slug when is_binary(slug) and slug != "" -> Map.put(acc, slug, page.id)
+          _ -> acc
+        end
+      end)
+
+    pages
+    |> Enum.reduce([], fn page, acc ->
+      case page.slug do
+        slug when is_binary(slug) and slug != "" ->
+          segments = String.split(slug, "/", trim: true)
+
+          if length(segments) > 1 do
+            parent_slug = segments |> Enum.drop(-1) |> Enum.join("/")
+
+            case Map.get(slug_to_id, parent_slug) do
+              nil -> acc
+              parent_id -> [%{source: parent_id, target: page.id} | acc]
+            end
+          else
+            acc
+          end
+
+        _ ->
+          acc
+      end
+    end)
   end
 end

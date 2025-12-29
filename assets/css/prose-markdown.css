@@ -16,7 +16,7 @@
 	@apply wrap-anywhere;
 
 	> * {
-		@apply mb-6 text-base-content/70;
+		@apply mb-4 text-base-content/70;
 		@apply hyphens-auto;
 	}
 
@@ -35,23 +35,33 @@
 	}
 
 	h2 {
+		@apply mt-12;
 		@apply text-xl;
-		@apply text-base-content;
+		@apply text-base-content/95;
 	}
 
 	h3 {
-		@apply text-xl;
-		@apply text-base-content/90;
+		@apply mt-9;
+		@apply text-lg;
+		@apply text-base-content/87;
 	}
 
 	h4 {
-		@apply text-lg;
-		@apply text-base-content/80;
+		@apply mt-8;
+		@apply text-base;
+		@apply text-base-content/81;
 	}
 
 	h5 {
+		@apply mt-8;
 		@apply text-sm font-bold;
-		@apply text-base-content/80;
+		@apply text-base-content/55;
+	}
+
+	h6 {
+		@apply mt-7;
+		@apply text-sm font-semibold;
+		@apply text-base-content/40;
 	}
 
 	ul {
@@ -87,7 +97,7 @@
 	}
 
 	a[href^="http"] {
-		@apply inline-flex items-center gap-1;
+		@apply inline-flex items-center gap-1 link hover:text-white transition;
 
 		&::after {
 			content: "";

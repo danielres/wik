@@ -158,7 +158,14 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   def sidebar_panels(assigns) do
     descendants = build_descendant_tree(assigns.page, assigns.ctx.pages_map)
-    assigns = assign(assigns, :descendants, descendants)
+    tree_include_siblings? = true
+    tree_nodes = build_tree(assigns.page, assigns.ctx.pages_map, tree_include_siblings?)
+
+    assigns =
+      assigns
+      |> assign(:descendants, descendants)
+      |> assign(:tree_nodes, tree_nodes)
+      |> assign(:tree_visible?, tree_visible?(assigns.page, assigns.ctx.pages_map))
 
     ~H"""
     <.sidebar_panel>
@@ -214,8 +221,12 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       </ul>
     </.sidebar_panel>
 
-    <.sidebar_panel :if={@descendants != []} title="Subtree" icon="hero-folder-open">
-      <.descendants_list nodes={@descendants} ctx={@ctx} />
+    {# <.sidebar_panel :if={@descendants != []} title="Subtree" icon="hero-folder-open"> }
+    {#   <.descendants_list nodes={@descendants} ctx={@ctx} /> }
+    {# </.sidebar_panel> }
+
+    <.sidebar_panel :if={@tree_visible?} title="Subtree" icon="hero-folder-open">
+      <.tree_list nodes={@tree_nodes} ctx={@ctx} current_slug={@page.slug} />
     </.sidebar_panel>
 
     <.sidebar_panel :if={@toc != []} title="TOC" icon="hero-book-open">
@@ -274,6 +285,40 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           :if={node.children != []}
           nodes={node.children}
           ctx={@ctx}
+          nested?={true}
+        />
+      </li>
+    </ul>
+    """
+  end
+
+  attr :nodes, :list, required: true
+  attr :ctx, :map, required: true
+  attr :current_slug, :string, required: true
+  attr :nested?, :boolean, default: false
+
+  def tree_list(assigns) do
+    ~H"""
+    <ul class={[
+      "list-disc list-inside space-y-1 text-xs",
+      @nested? && "ml-3"
+    ]}>
+      <li :for={node <- @nodes}>
+        <.link
+          navigate={page_url(@ctx.current_group, node.page || %{slug: node.slug})}
+          class={[
+            "opacity-70 hover:opacity-100 transition",
+            node.slug == @current_slug && "active font-bold pointer-events-none"
+          ]}
+        >
+          {node.title}
+        </.link>
+
+        <.tree_list
+          :if={node.children != []}
+          nodes={node.children}
+          ctx={@ctx}
+          current_slug={@current_slug}
           nested?={true}
         />
       </li>
@@ -363,6 +408,84 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       %{node | children: nodes_from_map(node.children)}
     end)
     |> Enum.sort_by(fn node -> String.downcase(node.title || "") end)
+  end
+
+  defp build_tree(page, pages_map, include_siblings?) do
+    current_slug = page.slug || ""
+    root_slug = root_slug(current_slug)
+
+    slugs =
+      if include_siblings? do
+        Map.keys(pages_map)
+        |> Enum.filter(fn slug ->
+          slug == root_slug or String.starts_with?(slug, root_slug <> "/")
+        end)
+      else
+        descendant_slugs =
+          Map.keys(pages_map)
+          |> Enum.filter(fn slug ->
+            slug == current_slug or String.starts_with?(slug, current_slug <> "/")
+          end)
+
+        (ancestor_slugs(current_slug) ++ descendant_slugs)
+        |> Enum.uniq()
+      end
+
+    children =
+      slugs
+      |> Enum.reject(&(&1 == root_slug))
+      |> Enum.reduce(%{}, fn slug, acc ->
+        segments = descendant_segments(root_slug, slug)
+        insert_descendant_node(acc, segments, root_slug, pages_map)
+      end)
+
+    root_page = Map.get(pages_map, root_slug)
+    root_title = descendant_title(root_page, root_fallback_title(root_slug))
+
+    [
+      %{
+        slug: root_slug,
+        title: root_title,
+        page: root_page,
+        children: nodes_from_map(children)
+      }
+    ]
+  end
+
+  defp tree_visible?(page, pages_map) do
+    slug = page.slug || ""
+    has_parent? = String.contains?(slug, "/")
+
+    has_descendants? =
+      pages_map
+      |> Map.keys()
+      |> Enum.any?(fn candidate ->
+        String.starts_with?(candidate, slug <> "/")
+      end)
+
+    has_parent? or has_descendants?
+  end
+
+  defp root_slug(slug) do
+    case String.split(slug || "", "/", trim: true) do
+      [root | _] -> root
+      _ -> slug || ""
+    end
+  end
+
+  defp ancestor_slugs(slug) do
+    segments = String.split(slug || "", "/", trim: true)
+
+    1..length(segments)
+    |> Enum.map(fn count ->
+      segments |> Enum.take(count) |> Enum.join("/")
+    end)
+  end
+
+  defp root_fallback_title(slug) do
+    slug
+    |> String.split("/", trim: true)
+    |> List.last()
   end
 
   def modal_unsaved_exit(assigns) do

@@ -23,7 +23,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         <WikWeb.Components.dialog_page_not_found ctx={@ctx} />
       <% else %>
         <div
-          class="px-4 mx-auto mt-8"
+          class="pl-8 mx-auto mt-8"
           style="width: min(75ch, 100%)"
         >
           <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />

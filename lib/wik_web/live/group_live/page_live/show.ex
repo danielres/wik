@@ -194,7 +194,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       </ul>
     </.sidebar_panel>
 
-    <.sidebar_panel title="Backlinks" icon="hero-link-mini">
+    <.sidebar_panel :if={not Enum.empty?(@backlinks)} title="Backlinks" icon="hero-link-mini">
       <ul class="list-disc list-inside">
         <%= if Enum.empty?(@backlinks) do %>
           <li class="text-sm opacity-70">No backlinks yet.</li>

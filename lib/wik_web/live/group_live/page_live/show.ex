@@ -51,7 +51,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         <div :if={not @not_found?} class="grid grid-cols-[auto_1fr] w-full">
           <.sidebar_actions {assigns} drawer_id={drawer_id} />
 
-          <div inert={@editing?} class="bg-base-300/60 backdrop-blur">
+          <div
+            inert={@editing?}
+            class={["bg-base-300/60 backdrop-blur transition", @editing? and "opacity-50"]}
+          >
             <.sidebar_panels {assigns} />
           </div>
         </div>

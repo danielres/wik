@@ -5,6 +5,10 @@ import {
 import { tableBlock } from "@milkdown/components/table-block";
 import type { Ctx } from "@milkdown/ctx";
 import {
+	splitEditing,
+	splitEditingOptionsCtx,
+} from "@milkdown-lab/plugin-split-editing";
+import {
 	listItemBlockComponent,
 	listItemBlockConfig,
 } from "@milkdown/kit/component/list-item-block";
@@ -145,6 +149,7 @@ export async function createMilkdownEditor({
 			.use(cursorPlugin)
 			.use(clipboard)
 			.use(inputRuleWikilink)
+			.use(splitEditing)
 			// Ensure the sanitizer is appended after all other ProseMirror plugins.
 			.config((ctx) => {
 				ctx.update(prosePluginsCtx, (plugins) =>

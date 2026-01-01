@@ -17,6 +17,9 @@
 			&.cm-activeLine {
 				@apply bg-base-300;
 			}
+			.cm-wik-url span {
+				@apply text-blue-400;
+			}
 		}
 	}
 }

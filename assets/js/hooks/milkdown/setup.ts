@@ -52,6 +52,7 @@ import {
 import { createTagBadgePlugin } from "./tag-badge-plugin";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
 import { configurePasteHandlers } from "./utils/paste-handlers";
+import { urlHighlightPlugin } from "./split-editor/url-highlight";
 
 const slash = slashFactory("Commands");
 
@@ -119,6 +120,10 @@ export async function createMilkdownEditor({
 							return label;
 						}
 					},
+				});
+
+				ctx.set(splitEditingOptionsCtx.key, {
+					extensions: [urlHighlightPlugin],
 				});
 
 				configurePasteHandlers(ctx, rootPath);

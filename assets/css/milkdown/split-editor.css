@@ -1,0 +1,22 @@
+.milkdown {
+	.split-editor {
+		@apply grid grid-cols-[1fr_1fr];
+
+		&:has(.milkdown-split-editor.hidden) {
+			@apply grid grid-cols-[1fr_0] border-4 border-red-400;
+		}
+
+		.cm-gutters {
+			@apply bg-base-300 text-base-content/50;
+			.cm-activeLineGutter {
+				@apply bg-black/30 text-base-content;
+			}
+		}
+
+		.cm-line {
+			&.cm-activeLine {
+				@apply bg-base-300;
+			}
+		}
+	}
+}

@@ -337,7 +337,8 @@ const MilkdownEditor = {
 		const mode = this.el.dataset.mode || "view";
 		const editable = mode === "edit";
 		this.mode = mode;
-		if (this.splitEditorEditableRef) this.splitEditorEditableRef.value = editable;
+		if (this.splitEditorEditableRef)
+			this.splitEditorEditableRef.value = editable;
 		this.setEditable(editable);
 		// Re-attach status targets in case LiveView patched them
 		if (this.status) this.status.refresh();
@@ -392,6 +393,7 @@ const MilkdownEditor = {
 		this.redoHandler = null;
 		this.userMeta = null;
 		this.awareness = null;
+		this.splitEditorEditableRef = null;
 		if (this.statePushTimer) window.clearTimeout(this.statePushTimer);
 		this.statePushTimer = null;
 		this.statePending = null;

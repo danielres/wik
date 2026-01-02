@@ -32,6 +32,7 @@ import { collab, collabServiceCtx } from "@milkdown/plugin-collab";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
 import { getMarkdown } from "@milkdown/utils";
 import { setupBlockHandle } from "./block-handle";
+import { embedSchema, remarkEmbedDirective, remarkEmbedPlugin } from "./embed-node";
 import { inputRuleWikilink } from "./input-rule-wikilink";
 import { overrideHeadingSchema } from "./override-heading-schema";
 import {
@@ -146,10 +147,13 @@ export async function createMilkdownEditor({
 			.config(configureLinkTooltip)
 			.use(wikilinkConfig)
 			.use(remarkWikilinkPlugin)
+			.use(remarkEmbedDirective)
+			.use(remarkEmbedPlugin)
 			.use(commonmark)
 			.use(linkTooltipPlugin)
 			.use(gfm)
 			.use(wikilinkSchema)
+			.use(embedSchema)
 			.use(wikilinkView)
 			.use(overrideHeadingSchema)
 			.use(overrideTableSchema)

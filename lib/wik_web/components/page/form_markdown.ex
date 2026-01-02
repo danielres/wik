@@ -30,7 +30,6 @@ defmodule WikWeb.Components.Page.FormMarkdown do
             data-page-title={@page.title || ""}
             data-page-id={@page.id}
             data-input-id={"page_text_#{@id}"}
-            data-editable={@editable && "true"}
             data-mode={if(@editable, do: "edit", else: "view")}
             data-undo-id={@undo_button_id}
             data-redo-id={@redo_button_id}

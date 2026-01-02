@@ -45,17 +45,14 @@ const MilkdownEditor = {
 	mounted() {
 		const {
 			markdown = "",
-			editable: _editable,
 			inputId,
 			rootPath = "",
 			mode = "view",
 		} = this.el.dataset;
 
 		const pagesJson = this.el.dataset.pagesJson;
-		const editable = _editable === "true";
 		const isStatic = mode === "static";
-		const isEdit = mode === "edit";
-		const allowEdit = isEdit && editable;
+		const allowEdit = mode === "edit";
 		this.mode = mode;
 
 		let pages: SlashMenuWikilinksPage[] = [];
@@ -180,7 +177,6 @@ const MilkdownEditor = {
 				this.setEditable(false);
 				this.status.setReady();
 			} else {
-				const allowEdit = isEdit && editable;
 				this.splitEditorEditableRef.value = allowEdit;
 				this.collabHandles = initCollab({
 					pageId,
@@ -205,7 +201,7 @@ const MilkdownEditor = {
 
 			this.setupFormSync();
 
-			if (isEdit) {
+			if (allowEdit) {
 				this.attachDocUpdates();
 			}
 
@@ -235,14 +231,15 @@ const MilkdownEditor = {
 					});
 			});
 
-			this.handleEvent("set_editable", ({ editable }) => {
-				this.el.dataset.editable = editable ? "true" : "";
-				this.mode = editable ? "edit" : "view";
-				this.el.dataset.mode = this.mode;
+			this.handleEvent("set_mode", ({ mode }) => {
+				const nextMode = mode === "edit" ? "edit" : "view";
+				this.mode = nextMode;
+				this.el.dataset.mode = nextMode;
+				const editable = nextMode === "edit";
 				if (this.splitEditorEditableRef)
-					this.splitEditorEditableRef.value = !!editable;
+					this.splitEditorEditableRef.value = editable;
 				if (this.editorInstance) {
-					this.setEditable(!!editable);
+					this.setEditable(editable);
 					if (this.mode === "edit") {
 						ensureMarkdownValidator();
 						this.attachDocUpdates();
@@ -337,7 +334,9 @@ const MilkdownEditor = {
 
 	updated() {
 		if (!this.editorInstance) return;
-		const editable = this.el.dataset.editable === "true";
+		const mode = this.el.dataset.mode || "view";
+		const editable = mode === "edit";
+		this.mode = mode;
 		this.setEditable(editable);
 		if (this.splitEditorEditableRef) this.splitEditorEditableRef.value = editable;
 		// Re-attach status targets in case LiveView patched them
@@ -439,7 +438,7 @@ const MilkdownEditor = {
 
 	attachUndoRedo() {
 		const view = this.editorInstance?.ctx.get(editorViewCtx);
-		const editable = this.el.dataset.editable === "true";
+		const editable = (this.el.dataset.mode || "view") === "edit";
 
 		// Always detach existing handlers first (mode toggles / LV patches).
 		if (this.undoBtn && this.undoHandler)

@@ -783,7 +783,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       |> Utils.Ctx.add(:editing?, value)
 
     if connected?(socket) do
-      push_event(socket, "set_editable", %{editable: value})
+      push_event(socket, "set_mode", %{mode: if(value, do: "edit", else: "view")})
     else
       socket
     end

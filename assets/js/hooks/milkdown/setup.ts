@@ -52,7 +52,10 @@ import {
 import { createTagBadgePlugin } from "./tag-badge-plugin";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
 import { configurePasteHandlers } from "./utils/paste-handlers";
-import { splitEditorHighlighting } from "./split-editor/custom-highlighting";
+import {
+	createSplitEditorEditableExtension,
+	splitEditorHighlighting,
+} from "./split-editor/custom-highlighting";
 
 const slash = slashFactory("Commands");
 
@@ -62,6 +65,7 @@ type SetupOpts = {
 	pages: SlashMenuWikilinksPage[];
 	rootPath: string;
 	isStatic: boolean;
+	splitEditorEditableRef?: { value: boolean };
 	wikilinks?: {
 		getPageById: (
 			id: string,
@@ -78,6 +82,7 @@ export async function createMilkdownEditor({
 	pages,
 	rootPath,
 	isStatic,
+	splitEditorEditableRef,
 	wikilinks,
 }: SetupOpts) {
 	return (
@@ -123,7 +128,12 @@ export async function createMilkdownEditor({
 				});
 
 				ctx.set(splitEditingOptionsCtx.key, {
-					extensions: [splitEditorHighlighting],
+					extensions: [
+						splitEditorHighlighting,
+						...(splitEditorEditableRef
+							? [createSplitEditorEditableExtension(splitEditorEditableRef)]
+							: []),
+					],
 				});
 
 				configurePasteHandlers(ctx, rootPath);

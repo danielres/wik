@@ -55,6 +55,7 @@ const MilkdownEditor = {
 		const editable = _editable === "true";
 		const isStatic = mode === "static";
 		const isEdit = mode === "edit";
+		const allowEdit = isEdit && editable;
 		this.mode = mode;
 
 		let pages: SlashMenuWikilinksPage[] = [];
@@ -109,6 +110,7 @@ const MilkdownEditor = {
 		this.stateLastSent = null;
 		this.docUpdatesAttached = false;
 		this.markdownValidator = null;
+		this.splitEditorEditableRef = { value: allowEdit };
 
 		this.el.dataset.pageTitle = normalize(this.el.dataset.pageTitle) || "";
 
@@ -133,6 +135,7 @@ const MilkdownEditor = {
 			pages,
 			rootPath,
 			isStatic,
+			splitEditorEditableRef: this.splitEditorEditableRef,
 			wikilinks: {
 				getPageById: (id: string) => this.pagesById.get(id) ?? null,
 				resolveRef: async (title: string) => {
@@ -178,6 +181,7 @@ const MilkdownEditor = {
 				this.status.setReady();
 			} else {
 				const allowEdit = isEdit && editable;
+				this.splitEditorEditableRef.value = allowEdit;
 				this.collabHandles = initCollab({
 					pageId,
 					seedMarkdown: markdown,
@@ -235,6 +239,8 @@ const MilkdownEditor = {
 				this.el.dataset.editable = editable ? "true" : "";
 				this.mode = editable ? "edit" : "view";
 				this.el.dataset.mode = this.mode;
+				if (this.splitEditorEditableRef)
+					this.splitEditorEditableRef.value = !!editable;
 				if (this.editorInstance) {
 					this.setEditable(!!editable);
 					if (this.mode === "edit") {
@@ -288,11 +294,21 @@ const MilkdownEditor = {
 		);
 	},
 
-	setEditable(editable: any) {
+	setEditable(editable: boolean) {
 		const view = this.editorInstance.ctx.get(editorViewCtx);
 		view.setProps({
 			editable: () => editable,
 		});
+		this.setSplitEditorDomEditable(editable);
+	},
+
+	setSplitEditorDomEditable(editable: boolean) {
+		const content = this.el.querySelector(
+			".milkdown-split-editor .cm-content",
+		) as HTMLElement | null;
+		if (!content) return;
+		content.setAttribute("contenteditable", editable ? "true" : "false");
+		content.setAttribute("aria-readonly", editable ? "false" : "true");
 	},
 
 	setupFormSync() {
@@ -321,7 +337,9 @@ const MilkdownEditor = {
 
 	updated() {
 		if (!this.editorInstance) return;
-		this.setEditable(this.el.dataset.editable === "true");
+		const editable = this.el.dataset.editable === "true";
+		this.setEditable(editable);
+		if (this.splitEditorEditableRef) this.splitEditorEditableRef.value = editable;
 		// Re-attach status targets in case LiveView patched them
 		if (this.status) this.status.refresh();
 

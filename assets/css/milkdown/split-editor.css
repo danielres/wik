@@ -1,0 +1,48 @@
+/* layout */
+.source-visible-false {
+	.milkdown {
+		.milkdown-split-editor {
+			@apply hidden;
+		}
+	}
+}
+.source-visible-true {
+	.milkdown {
+		.editor {
+			@apply hidden;
+		}
+	}
+}
+
+.milkdown {
+	.split-editor {
+		.cm-gutters {
+			@apply hidden;
+		}
+	}
+}
+
+/* styling  */
+.milkdown {
+	.split-editor {
+		@apply text-sm;
+		.cm-cursor {
+			@apply border-l-2 border-base-content;
+		}
+
+		.cm-line {
+			&.cm-activeLine {
+				@apply bg-base-300/50;
+			}
+
+			.cm-wik-url {
+				@apply text-blue-300;
+			}
+
+			.cm-wik-hr,
+			.cm-wik-mark {
+				@apply text-base-content/60;
+			}
+		}
+	}
+}

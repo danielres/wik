@@ -89,17 +89,39 @@
 		@apply px-1 rounded bg-base-100 hover:text-white transition text-info-content text-sm py-1 px-2;
 	}
 
-	a[href^="http"] {
-		@apply inline-flex items-center gap-1 link hover:text-white transition;
+	a {
+		@apply inline-flex items-center gap-1 hover:text-white transition;
 
+		&::before,
 		&::after {
-			content: "";
 			@apply opacity-50 transition;
-			@apply hero-arrow-top-right-on-square-micro size-4;
+		}
+		&:hover {
+			&::before,
+			&::after {
+				@apply opacity-100;
+			}
 		}
 
-		&:hover::after {
-			@apply opacity-100;
+		&[href^="/"] {
+			&::before {
+				content: "";
+				@apply hero-document-text-micro;
+			}
+
+			&.tag-badge {
+				&::before {
+					content: "";
+					@apply hero-tag-micro;
+				}
+			}
+		}
+
+		&[href^="http"] {
+			&::after {
+				content: "";
+				@apply hero-arrow-top-right-on-square-micro;
+			}
 		}
 	}
 }

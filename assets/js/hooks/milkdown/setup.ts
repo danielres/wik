@@ -5,6 +5,10 @@ import {
 import { tableBlock } from "@milkdown/components/table-block";
 import type { Ctx } from "@milkdown/ctx";
 import {
+	splitEditing,
+	splitEditingOptionsCtx,
+} from "@milkdown-lab/plugin-split-editing";
+import {
 	listItemBlockComponent,
 	listItemBlockConfig,
 } from "@milkdown/kit/component/list-item-block";
@@ -48,6 +52,10 @@ import {
 import { createTagBadgePlugin } from "./tag-badge-plugin";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
 import { configurePasteHandlers } from "./utils/paste-handlers";
+import {
+	createSplitEditorEditableExtension,
+	splitEditorHighlighting,
+} from "./split-editor/custom-highlighting";
 
 const slash = slashFactory("Commands");
 
@@ -57,6 +65,7 @@ type SetupOpts = {
 	pages: SlashMenuWikilinksPage[];
 	rootPath: string;
 	isStatic: boolean;
+	splitEditorEditableRef?: { value: boolean };
 	wikilinks?: {
 		getPageById: (
 			id: string,
@@ -73,6 +82,7 @@ export async function createMilkdownEditor({
 	pages,
 	rootPath,
 	isStatic,
+	splitEditorEditableRef,
 	wikilinks,
 }: SetupOpts) {
 	return (
@@ -117,6 +127,15 @@ export async function createMilkdownEditor({
 					},
 				});
 
+				ctx.set(splitEditingOptionsCtx.key, {
+					extensions: [
+						splitEditorHighlighting,
+						...(splitEditorEditableRef
+							? [createSplitEditorEditableExtension(splitEditorEditableRef)]
+							: []),
+					],
+				});
+
 				configurePasteHandlers(ctx, rootPath);
 
 				ctx.update(dropIndicatorConfig.key, () => ({
@@ -145,6 +164,7 @@ export async function createMilkdownEditor({
 			.use(cursorPlugin)
 			.use(clipboard)
 			.use(inputRuleWikilink)
+			.use(splitEditing)
 			// Ensure the sanitizer is appended after all other ProseMirror plugins.
 			.config((ctx) => {
 				ctx.update(prosePluginsCtx, (plugins) =>

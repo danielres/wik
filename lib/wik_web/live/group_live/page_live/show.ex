@@ -150,7 +150,16 @@ defmodule WikWeb.GroupLive.PageLive.Show do
               </button>
             </li>
           <% end %>
-        <% end %>
+          <% end %>
+        <li>
+          <button
+            type="button"
+            phx-click={JS.toggle_class("visible", to: ".milkdown-split-editor")}
+            class={btn_class}
+            >
+            <.icon name="hero-code-bracket-micro" class="" />
+          </button>
+        </li>
       </ul>
     </menu>
     """

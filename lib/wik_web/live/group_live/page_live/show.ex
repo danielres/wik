@@ -105,7 +105,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             <% else %>
               <button
                 type="button"
-                class={[btn_class]}
+                class={[btn_class, "text-base-content/50"]}
                 phx-click="toggle_editing"
                 data-tip="Edit page"
               >
@@ -152,12 +152,14 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             </li>
           <% end %>
         <% end %>
+      </ul>
 
+      <ul class={["menu w-full p-0"]}>
         <li>
           <button
             type="button"
             phx-click="toggle_source"
-            class={btn_class}
+            class={[btn_class, if(@source?, do: "bg-base-content/10", else: "text-base-content/50")]}
           >
             <.icon name="hero-hashtag-micro" />
           </button>

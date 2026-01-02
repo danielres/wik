@@ -18,7 +18,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    {@source?}
     <Layouts.drawer flash={@flash} ctx={@ctx} sidebar?>
       <%= if @not_found? do %>
         <WikWeb.Components.dialog_page_not_found ctx={@ctx} />

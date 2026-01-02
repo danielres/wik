@@ -30,12 +30,13 @@
 				@apply bg-base-300/50;
 			}
 
-			.cm-wik-url span {
+			.cm-wik-url {
 				@apply text-blue-300;
 			}
 
-			.cm-wik-mark span {
-				@apply text-base-content;
+			.cm-wik-hr,
+			.cm-wik-mark {
+				@apply text-base-content/60;
 			}
 		}
 	}

@@ -18,13 +18,14 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
+    {@source?}
     <Layouts.drawer flash={@flash} ctx={@ctx} sidebar?>
       <%= if @not_found? do %>
         <WikWeb.Components.dialog_page_not_found ctx={@ctx} />
       <% else %>
         <div
-          class="pl-8 mx-auto mt-8"
-          style="width: min(75ch, 100%)"
+          class={["pl-8 mx-auto mt-8", "source-visible-#{@source?}"]}
+          style={if(@source?, do: "", else: "width: min(75ch, 100%)")}
         >
           <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />
 
@@ -150,14 +151,15 @@ defmodule WikWeb.GroupLive.PageLive.Show do
               </button>
             </li>
           <% end %>
-          <% end %>
+        <% end %>
+
         <li>
           <button
             type="button"
-            phx-click={JS.toggle_class("visible", to: ".milkdown-split-editor")}
+            phx-click="toggle_source"
             class={btn_class}
-            >
-            <.icon name="hero-code-bracket-micro" class="" />
+          >
+            <.icon name="hero-hashtag-micro" />
           </button>
         </li>
       </ul>
@@ -562,6 +564,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
          |> assign(:not_found?, false)
          |> assign(:page_title, page.title)
          |> set_editing(false)
+         |> assign(:source?, false)
          |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
          |> assign(:show_unsaved_modal, false)
          |> assign(:exit_after_save?, false)
@@ -579,6 +582,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
          |> assign(:not_found?, true)
          |> assign(:page_title, "Page not found")
          |> set_editing(false)
+         |> assign(:source?, false)
          |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
          |> assign(:show_unsaved_modal, false)
          |> assign(:exit_after_save?, false)
@@ -590,6 +594,11 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @impl true
   def handle_event("toggle_editing", _params, socket) do
     {:noreply, set_editing(socket, not socket.assigns.editing?)}
+  end
+
+  @impl true
+  def handle_event("toggle_source", _params, socket) do
+    {:noreply, socket |> assign(:source?, not socket.assigns.source?)}
   end
 
   @impl true

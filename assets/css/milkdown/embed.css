@@ -3,6 +3,17 @@
 		@apply relative my-6 w-full overflow-hidden;
 		@apply rounded-xl bg-base-300;
 
+		.milkdown-embed-input {
+			@apply m-4 grid grid-cols-[1fr_auto] gap-2 items-center;
+
+			input {
+				@apply px-2 py-1;
+			}
+
+			button {
+				@apply hero-check-mini size-6 bg-base-content opacity-50 hover:opacity-100 transition cursor-pointer;
+			}
+		}
 		.milkdown-embed-frame {
 			@apply block w-full border-0 bg-transparent;
 		}

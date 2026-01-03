@@ -11,7 +11,7 @@
 			}
 
 			button {
-				@apply btn btn-square hover:btn-accent;
+				@apply btn btn-square hover:btn-accent focus:btn-accent/50;
 
 				&.milkdown-embed-input-submit span {
 					@apply hero-check-micro;

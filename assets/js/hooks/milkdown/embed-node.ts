@@ -93,7 +93,7 @@ function normalizeSoundCloudUrl(url: URL): EmbedAttrs | null {
 	return { provider: "soundcloud", src };
 }
 
-function normalizeEmbedSource(
+export function normalizeEmbedSource(
 	raw: string | null | undefined,
 ): EmbedAttrs | null {
 	const value = String(raw || "").trim();

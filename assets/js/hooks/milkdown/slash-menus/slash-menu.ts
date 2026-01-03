@@ -2,6 +2,7 @@
 import type { Ctx } from "@milkdown/ctx";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { callCommand } from "@milkdown/kit/utils";
+import { NodeSelection, type Transaction } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import {
 	createSlashMenuView,
@@ -11,7 +12,7 @@ import { isSelectionInHeading } from "../utils/selection";
 
 type EditorAction = (fn: (ctx: Ctx) => void) => void;
 
-type CommandItem = SlashMenuItem & { commandId: string; matchText: string };
+type CommandItem = SlashMenuItem & { commandId?: string; matchText: string };
 
 const COMMAND_ITEMS: CommandItem[] = [
 	{
@@ -25,6 +26,11 @@ const COMMAND_ITEMS: CommandItem[] = [
 		label: "Table",
 		commandId: "InsertTable",
 		matchText: "table",
+	},
+	{
+		id: "embed",
+		label: "Embed",
+		matchText: "embed video youtube soundcloud",
 	},
 ];
 
@@ -66,8 +72,57 @@ export const createSlashMenu = (
 				const { from } = state.selection;
 				const deleteLen = query.length + 1; // "/" + query
 				const start = Math.max(0, from - deleteLen);
-				dispatch(state.tr.deleteRange(start, from));
-				callCommand(item.commandId)(ctx);
+				const tr = state.tr.deleteRange(start, from);
+
+				if (item.id === "embed") {
+					insertEmbedPlaceholder(view, tr, from);
+					return;
+				}
+
+				dispatch(tr);
+				if (item.commandId) {
+					callCommand(item.commandId)(ctx);
+				}
 			});
 		},
 	});
+
+function insertEmbedPlaceholder(
+	view: EditorView,
+	tr: Transaction,
+	from: number,
+) {
+	const embedType = view.state.schema.nodes["embed"];
+	if (!embedType) {
+		console.error("Embed node not found in schema");
+		return;
+	}
+
+	const embedNode = embedType.create({ src: "", provider: "" });
+	const mappedFrom = Math.min(tr.doc.content.size, tr.mapping.map(from));
+	const $pos = tr.doc.resolve(mappedFrom);
+
+	let insertPos = mappedFrom;
+
+	if ($pos.parent.isTextblock && $pos.depth > 0) {
+		const parentStart = $pos.before();
+		const parentEnd = $pos.after();
+		const parentText = $pos.parent.textContent.trim();
+
+		if (parentText === "") {
+			tr.replaceWith(parentStart, parentEnd, embedNode);
+			insertPos = parentStart;
+		} else {
+			insertPos = parentEnd;
+			tr.insert(insertPos, embedNode);
+		}
+	} else {
+		tr.insert(insertPos, embedNode);
+	}
+
+	if (tr.doc.nodeAt(insertPos)) {
+		tr.setSelection(NodeSelection.create(tr.doc, insertPos));
+	}
+	tr.setStoredMarks([]);
+	view.dispatch(tr.scrollIntoView());
+}

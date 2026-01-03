@@ -132,6 +132,6 @@
 	}
 
 	hr {
-		@apply opacity-20 my-8;
+		@apply opacity-40 my-12 border-t-2;
 	}
 }

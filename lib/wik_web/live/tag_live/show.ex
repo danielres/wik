@@ -103,7 +103,7 @@ defmodule WikWeb.TagLive.Show do
               <div
                 id={"md-block-#{block_id}"}
                 phx-hook="MilkdownEditor"
-                class="[&_h1]:hidden px-4"
+                class="[&_h1]:hidden px-4 [&_.milkdown-split-editor]:hidden"
                 phx-update="ignore"
                 data-markdown={block.markdown}
                 data-mode="static"

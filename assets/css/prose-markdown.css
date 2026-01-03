@@ -86,7 +86,9 @@
 	}
 
 	a.wikilink-node {
-		@apply px-1 rounded bg-base-100 hover:text-white transition text-info-content text-sm py-1 px-2;
+		@apply text-sm;
+		@apply py-0 px-1 rounded;
+		@apply bg-base-100 text-info-content hover:text-base-content transition;
 	}
 
 	a {
@@ -123,5 +125,13 @@
 				@apply hero-arrow-top-right-on-square-micro;
 			}
 		}
+	}
+
+	blockquote {
+		@apply pl-4 border-l-4 border-base-content/20;
+	}
+
+	hr {
+		@apply opacity-40 my-12 border-t-2;
 	}
 }

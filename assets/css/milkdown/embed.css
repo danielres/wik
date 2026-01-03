@@ -1,0 +1,48 @@
+.milkdown {
+	.milkdown-embed {
+		@apply relative my-6 w-full overflow-hidden;
+		@apply rounded-md bg-base-300;
+
+		.milkdown-embed-input {
+			[data-mode="view"] &,
+			[data-mode="static"] & {
+				display: none;
+			}
+
+			@apply mx-2 my-1 grid grid-cols-[1fr_auto_auto] gap-2 items-center;
+
+			input {
+				@apply px-2 py-1;
+			}
+
+			button {
+				@apply btn btn-sm btn-square hover:btn-accent focus:btn-accent;
+
+				&.milkdown-embed-input-submit span {
+					@apply hero-check-micro;
+				}
+
+				&.milkdown-embed-input-cancel span {
+					@apply hero-x-mark-micro;
+				}
+			}
+		}
+		.milkdown-embed-frame {
+			@apply w-full border-2 rounded-md border-base-300;
+		}
+
+		&[data-embed-provider="youtube"] {
+			@apply aspect-video;
+
+			.milkdown-embed-frame {
+				@apply h-full;
+			}
+		}
+
+		&[data-embed-provider="soundcloud"] {
+			.milkdown-embed-frame {
+				@apply h-[166px];
+			}
+		}
+	}
+}

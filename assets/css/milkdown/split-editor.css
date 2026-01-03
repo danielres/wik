@@ -26,6 +26,11 @@
 .milkdown {
 	.split-editor {
 		@apply text-sm;
+
+		.cm-selectionBackground {
+			@apply !bg-base-content/30;
+		}
+
 		.cm-cursor {
 			@apply border-l-2 border-base-content;
 		}
@@ -33,6 +38,11 @@
 		.cm-line {
 			&.cm-activeLine {
 				@apply bg-base-300/50;
+
+				[data-mode="view"] &,
+				[data-mode="static"] & {
+					@apply bg-transparent;
+				}
 			}
 
 			.cm-wik-url {

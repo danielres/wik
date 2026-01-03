@@ -96,13 +96,6 @@ export const embedView = $view(
 					event.preventDefault();
 					event.stopPropagation();
 					submit();
-					return;
-				}
-
-				if (event.key === "Escape") {
-					event.preventDefault();
-					event.stopPropagation();
-					removePlaceholder();
 				}
 			});
 

@@ -2,27 +2,17 @@ import type { Node as ProseNode } from "@milkdown/prose/model";
 import type { NodeViewConstructor } from "@milkdown/prose/view";
 import { $view } from "@milkdown/utils";
 
-import { embedSchema, normalizeEmbedSource } from "./embed-node";
-
-type EmbedProvider = "youtube" | "soundcloud";
-
-type EmbedAttrs = {
-	src: string;
-	provider: EmbedProvider;
-};
+import {
+	embedAllow,
+	embedSchema,
+	embedTitle,
+	normalizeEmbedSource,
+	type EmbedAttrs,
+	type EmbedProvider,
+} from "./embed-node";
 
 function resolveProvider(value: string): EmbedProvider {
 	return value === "soundcloud" ? "soundcloud" : "youtube";
-}
-
-function embedTitle(provider: EmbedProvider): string {
-	if (provider === "soundcloud") return "SoundCloud embed";
-	return "YouTube embed";
-}
-
-function embedAllow(provider: EmbedProvider): string {
-	if (provider === "soundcloud") return "autoplay";
-	return "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
 }
 
 export const embedView = $view(

@@ -4,9 +4,9 @@ import { $nodeSchema, $remark } from "@milkdown/utils";
 import directive from "remark-directive";
 import { visit } from "unist-util-visit";
 
-type EmbedProvider = "youtube" | "soundcloud";
+export type EmbedProvider = "youtube" | "soundcloud";
 
-type EmbedAttrs = {
+export type EmbedAttrs = {
 	src: string;
 	provider: EmbedProvider;
 };
@@ -146,12 +146,12 @@ function toFallbackParagraph(rawSrc: string | null | undefined) {
 	};
 }
 
-function embedTitle(provider: EmbedProvider): string {
+export function embedTitle(provider: EmbedProvider): string {
 	if (provider === "soundcloud") return "SoundCloud embed";
 	return "YouTube embed";
 }
 
-function embedAllow(provider: EmbedProvider): string {
+export function embedAllow(provider: EmbedProvider): string {
 	if (provider === "soundcloud") return "autoplay";
 	return "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
 }

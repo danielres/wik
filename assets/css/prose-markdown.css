@@ -124,4 +124,12 @@
 			}
 		}
 	}
+
+	blockquote {
+		@apply pl-4 border-l-4 border-base-content/20;
+	}
+
+	hr {
+		@apply opacity-20 my-8;
+	}
 }

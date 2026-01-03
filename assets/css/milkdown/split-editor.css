@@ -28,7 +28,7 @@
 		@apply text-sm;
 
 		.cm-selectionBackground {
-			@apply !bg-base-content/10;
+			@apply !bg-base-content/30;
 		}
 
 		.cm-cursor {
@@ -38,6 +38,11 @@
 		.cm-line {
 			&.cm-activeLine {
 				@apply bg-base-300/50;
+
+				[data-mode="view"] &,
+				[data-mode="static"] & {
+					@apply bg-transparent;
+				}
 			}
 
 			.cm-wik-url {

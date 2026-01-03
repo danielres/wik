@@ -26,6 +26,11 @@
 .milkdown {
 	.split-editor {
 		@apply text-sm;
+
+		.cm-selectionBackground {
+			@apply !bg-base-content/10;
+		}
+
 		.cm-cursor {
 			@apply border-l-2 border-base-content;
 		}

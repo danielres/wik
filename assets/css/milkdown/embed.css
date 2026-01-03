@@ -1,17 +1,22 @@
 .milkdown {
 	.milkdown-embed {
 		@apply relative my-6 w-full overflow-hidden;
-		@apply rounded-xl bg-base-300;
+		@apply rounded-md bg-base-300;
 
 		.milkdown-embed-input {
-			@apply m-2 grid grid-cols-[1fr_auto_auto] gap-2 items-center;
+			[data-mode="view"] &,
+			[data-mode="static"] & {
+				display: none;
+			}
+
+			@apply mx-2 my-1 grid grid-cols-[1fr_auto_auto] gap-2 items-center;
 
 			input {
 				@apply px-2 py-1;
 			}
 
 			button {
-				@apply btn btn-square hover:btn-accent focus:btn-accent/50;
+				@apply btn btn-sm btn-square hover:btn-accent focus:btn-accent;
 
 				&.milkdown-embed-input-submit span {
 					@apply hero-check-micro;
@@ -23,7 +28,7 @@
 			}
 		}
 		.milkdown-embed-frame {
-			@apply block w-full border-0 bg-transparent;
+			@apply w-full border-2 rounded-md border-base-300;
 		}
 
 		&[data-embed-provider="youtube"] {

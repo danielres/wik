@@ -37,7 +37,7 @@ export const embedView = $view(
 
 			const input = document.createElement("input");
 			input.type = "url";
-			input.placeholder = "paste link";
+			input.placeholder = "Paste link (YouTube, SoundCloud)";
 			input.autocomplete = "off";
 			input.spellcheck = false;
 			input.className = "milkdown-embed-input-field";
@@ -45,12 +45,21 @@ export const embedView = $view(
 
 			const button = document.createElement("button");
 			button.type = "button";
-			button.textContent = "Insert";
+			const buttonLabel = document.createElement("span");
+			buttonLabel.textContent = "Insert";
+			button.append(buttonLabel);
 			button.className = "milkdown-embed-input-submit";
+
+			const cancel = document.createElement("button");
+			cancel.type = "button";
+			const cancelLabel = document.createElement("span");
+			cancelLabel.textContent = "Cancel";
+			cancel.append(cancelLabel);
+			cancel.className = "milkdown-embed-input-cancel";
 
 			const form = document.createElement("div");
 			form.className = "milkdown-embed-input";
-			form.append(input, button);
+			form.append(input, button, cancel);
 
 			const iframe = document.createElement("iframe");
 			iframe.className = "milkdown-embed-frame";
@@ -101,6 +110,12 @@ export const embedView = $view(
 				event.preventDefault();
 				event.stopPropagation();
 				submit();
+			});
+
+			cancel.addEventListener("click", (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				removePlaceholder();
 			});
 
 			const renderPlaceholder = (src: string) => {

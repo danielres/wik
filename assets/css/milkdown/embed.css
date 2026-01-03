@@ -4,14 +4,22 @@
 		@apply rounded-xl bg-base-300;
 
 		.milkdown-embed-input {
-			@apply m-4 grid grid-cols-[1fr_auto] gap-2 items-center;
+			@apply m-2 grid grid-cols-[1fr_auto_auto] gap-2 items-center;
 
 			input {
 				@apply px-2 py-1;
 			}
 
 			button {
-				@apply hero-check-mini size-6 bg-base-content opacity-50 hover:opacity-100 transition cursor-pointer;
+				@apply btn btn-square hover:btn-accent;
+
+				&.milkdown-embed-input-submit span {
+					@apply hero-check-micro;
+				}
+
+				&.milkdown-embed-input-cancel span {
+					@apply hero-x-mark-micro;
+				}
 			}
 		}
 		.milkdown-embed-frame {

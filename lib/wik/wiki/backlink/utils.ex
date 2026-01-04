@@ -6,6 +6,9 @@ defmodule Wik.Wiki.Backlink.Utils do
   require Ash.Query
   alias Wik.Wiki.Backlink
   alias Wik.Wiki.Page
+  alias Wik.Wiki.PageTree
+  alias Wik.Wiki.PageTree.Utils, as: PageTreeUtils
+  alias Wik.Accounts.User
 
   @doc """
   Parse markdown for backlink target ids.
@@ -39,69 +42,61 @@ defmodule Wik.Wiki.Backlink.Utils do
   Rebuild backlinks for a page when its text changes. Runs inside the page action transaction.
   """
   @spec rebuild_for_page(Page.t(), Ash.Changeset.t()) :: :ok | {:error, term()}
-  def rebuild_for_page(%Page{} = page, _changeset) do
+  def rebuild_for_page(%Page{} = page, changeset) do
     ids = parse_wikilink_ids(page.text)
+    actor = Map.get(changeset || %{}, :actor)
 
-    if MapSet.size(ids) == 0 do
-      do_rebuild(page, MapSet.new())
-    else
-      do_rebuild(page, ids)
-    end
+    targets =
+      if MapSet.size(ids) == 0 do
+        []
+      else
+        resolve_tree_targets(ids, page, actor)
+      end
+
+    do_rebuild(page, targets)
   end
 
-  defp do_rebuild(page, ids) do
+  defp do_rebuild(page, targets) do
     {:ok, existing} =
       Backlink
       |> Ash.Query.filter(source_page_id == ^page.id and group_id == ^page.group_id)
       |> Ash.read(authorize?: false)
 
-    existing_ids =
-      existing
-      |> Enum.map(& &1.target_page_id)
+    resolved_ids =
+      targets
+      |> Enum.map(& &1.page_id)
       |> Enum.reject(&is_nil/1)
       |> MapSet.new()
 
     to_delete =
       Enum.filter(existing, fn bl ->
-        is_nil(bl.target_page_id) or bl.target_page_id not in ids
+        is_nil(bl.target_page_id) or bl.target_page_id not in resolved_ids
       end)
 
-    to_create = MapSet.difference(ids, existing_ids)
+    to_create = MapSet.difference(resolved_ids, existing_ids(existing))
 
     Enum.each(to_delete, fn backlink -> Ash.destroy!(backlink, authorize?: false) end)
 
-    target_pages =
-      if MapSet.size(to_create) > 0 do
-        Page
-        |> Ash.Query.filter(group_id == ^page.group_id and id in ^MapSet.to_list(to_create))
-        |> Ash.read!(authorize?: false)
-        |> Map.new(fn p -> {p.id, p} end)
-      else
-        %{}
-      end
+    target_lookup = Map.new(targets, &{&1.page_id, &1.path})
 
     Enum.each(to_create, fn id ->
-      target_page = target_pages[id]
-      target_page_id = target_page && target_page.id
-      target_slug = target_page && target_page.slug
+      target_slug = Map.get(target_lookup, id, "")
 
-      if target_page_id do
-        Backlink
-        |> Ash.Changeset.for_create(
-          :create,
-          %{
-            group_id: page.group_id,
-            source_page_id: page.id,
-            target_slug: target_slug,
-            target_page_id: target_page_id
-          },
-          authorize?: false
-        )
-        |> Ash.create!(authorize?: false)
-      end
+      Backlink
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          group_id: page.group_id,
+          source_page_id: page.id,
+          target_slug: target_slug,
+          target_page_id: id
+        },
+        authorize?: false
+      )
+      |> Ash.create!(authorize?: false)
     end)
 
-    broadcast_updates(page.group_id, ids)
+    broadcast_updates(page.group_id, resolved_ids)
     :ok
   end
 
@@ -167,4 +162,38 @@ defmodule Wik.Wiki.Backlink.Utils do
       )
     end)
   end
+
+  defp existing_ids(existing) do
+    existing
+    |> Enum.map(& &1.target_page_id)
+    |> Enum.reject(&is_nil/1)
+    |> MapSet.new()
+  end
+
+  defp resolve_tree_targets(tree_ids, page, actor) do
+    stub_actor = actor || fallback_actor(page)
+
+    tree_ids
+    |> Enum.reduce([], fn tree_id, acc ->
+      case PageTree |> Ash.get(tree_id, authorize?: false) do
+        {:ok, tree} ->
+          case PageTreeUtils.ensure_page_for_tree(tree, stub_actor) do
+            {:ok, updated_tree} when is_binary(updated_tree.page_id) ->
+              [%{page_id: updated_tree.page_id, path: updated_tree.path} | acc]
+
+            _ ->
+              acc
+          end
+
+        _ ->
+          acc
+      end
+    end)
+  end
+
+  defp fallback_actor(%Page{author_id: author_id}) when is_binary(author_id) do
+    %User{id: author_id}
+  end
+
+  defp fallback_actor(_page), do: nil
 end

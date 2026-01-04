@@ -46,7 +46,29 @@ defmodule WikWeb.CtxAdditions do
       socket
       # pages_map is keyed by slug for fast lookup in views/components.
       |> Utils.Ctx.add(:pages_map, pages_by_slug)
+      |> Utils.Ctx.add(:pages_tree_map, load_pages_tree(current_group, current_user))
 
     {:cont, socket}
+  end
+
+  defp load_pages_tree(current_group, current_user) do
+    Wik.Wiki.PageTree
+    |> Ash.Query.filter(group_id == ^current_group.id)
+    |> Ash.Query.select([:id, :path, :title, :page_id, :updated_at])
+    |> Ash.read(actor: current_user)
+    |> case do
+      {:ok, trees} ->
+        Map.new(trees, fn tree -> {tree.path, tree} end)
+
+      {:error, error} ->
+        Logger.error("""
+        🔴 Failed to read page tree for:
+        Group: #{current_group} | id: #{current_group.id}
+        User: #{current_user} | id: #{current_user.id}
+        Error: #{Exception.format(:error, error)}
+        """)
+
+        %{}
+    end
   end
 end

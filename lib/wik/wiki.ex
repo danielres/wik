@@ -7,6 +7,7 @@ defmodule Wik.Wiki do
 
   resources do
     resource Wik.Wiki.Page
+    resource Wik.Wiki.PageTree
     resource Wik.Wiki.Backlink
   end
 end

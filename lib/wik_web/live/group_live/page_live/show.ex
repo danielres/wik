@@ -41,6 +41,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             editable={@editing?}
             return_to={page_url(@ctx.current_group, @page)}
             pages_map={@ctx.pages_map}
+            pages_tree_map={@ctx.pages_tree_map}
           />
         </div>
 

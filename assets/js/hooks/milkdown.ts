@@ -57,26 +57,22 @@ const MilkdownEditor = {
 
 		let pages: SlashMenuWikilinksPage[] = [];
 
-		this.pagesById = new Map();
-
 		if (pagesJson) {
 			try {
 				const parsed = JSON.parse(pagesJson) as Record<
 					string,
-					{ id: string; slug: string; title?: string; updated_at?: string }
+					{ id: string; path: string; title?: string; updated_at?: string }
 				>;
 
 				pages = Object.values(parsed).map((p, i) => {
 					const id = String(p.id ?? i);
-					const slug = String(p.slug ?? "");
 					const title = String(p.title ?? "");
-
-					this.pagesById.set(id, { id, slug, title });
+					const path = String(p.path ?? "");
 
 					return {
 						id,
-						label: title || slug || "",
-						slug,
+						label: path || title || "",
+						path,
 						updatedAtMs: p.updated_at ? Date.parse(p.updated_at) : null,
 					};
 				});
@@ -133,23 +129,6 @@ const MilkdownEditor = {
 			rootPath,
 			isStatic,
 			splitEditorEditableRef: this.splitEditorEditableRef,
-			wikilinks: {
-				getPageById: (id: string) => this.pagesById.get(id) ?? null,
-				resolveRef: async (title: string) => {
-					const reply = await this.resolveOrCreatePageByTitle(title);
-					if (!reply?.ok || !reply.page) return null;
-					this.pagesById.set(String(reply.page.id), {
-						id: String(reply.page.id),
-						slug: String(reply.page.slug),
-						title: String(reply.page.title ?? ""),
-					});
-					return {
-						id: String(reply.page.id),
-						slug: String(reply.page.slug),
-						title: String(reply.page.title ?? ""),
-					};
-				},
-			},
 		}).then(({ editor, collabService }) => {
 			this.editorInstance = editor;
 			this.collabService = collabService;
@@ -257,18 +236,6 @@ const MilkdownEditor = {
 				ensureMarkdownValidator();
 				this.markdownValidator?.refresh({ immediate: true });
 			}
-		});
-	},
-
-	resolveOrCreatePageByTitle(title: string): Promise<{
-		ok: boolean;
-		page?: { id: string; slug: string; title: string };
-		error?: string;
-	}> {
-		return new Promise((resolve) => {
-			this.pushEvent("wikilink_create", { title }, (reply: any) => {
-				resolve(reply);
-			});
 		});
 	},
 

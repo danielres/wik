@@ -6,34 +6,22 @@ import type { NodeViewConstructor } from "@milkdown/prose/view";
 import { $ctx, $nodeSchema, $remark, $view } from "@milkdown/utils";
 import { visit } from "unist-util-visit";
 
-type PageInfo = { id: string; slug: string; title: string };
-
 export type WikilinkConfig = {
 	rootPath: string;
-	getPageById: (id: string) => PageInfo | null;
 };
 
-const WIKIID_PREFIX = "wikid:";
+const WIKILINK_REGEX = /\[\[([^\]]+)\]\]/g;
 
-function encodeSlugPath(slug: string) {
-	return slug
+function encodePath(path: string) {
+	return path
 		.split("/")
 		.map((seg) => encodeURIComponent(seg))
 		.join("/");
 }
 
-function getLabelFromMarkdown(node: MarkdownNode): string {
-	const parts: string[] = [];
-	visit(node, "text", (child: any) => {
-		if (typeof child.value === "string") parts.push(child.value);
-	});
-	return parts.join("");
-}
-
 export const wikilinkConfig = $ctx<WikilinkConfig>(
 	{
 		rootPath: "",
-		getPageById: () => null,
 	},
 	"wikilinkConfig",
 );
@@ -41,70 +29,82 @@ export const wikilinkConfig = $ctx<WikilinkConfig>(
 export const remarkWikilinkPlugin = $remark(
 	"remark-wikilink",
 	() => () => (tree: MarkdownNode) => {
-		visit(tree, "link", (node: any, index: number, parent: any) => {
+		visit(tree, "text", (node: any, index: number, parent: any) => {
 			if (!parent || typeof index !== "number") return;
-			const url = typeof node.url === "string" ? node.url : "";
-			if (!url.startsWith(WIKIID_PREFIX)) return;
+			if (parent.type === "link" || parent.type === "inlineCode") return;
+			if (parent.type === "code" || parent.type === "html") return;
 
-			const id = url.slice(WIKIID_PREFIX.length);
-			if (!id) return;
+			const value = typeof node.value === "string" ? node.value : "";
+			if (!value.includes("[[")) return;
 
-			const label = getLabelFromMarkdown(node);
+			const parts: any[] = [];
+			let lastIndex = 0;
+			let match: RegExpExecArray | null;
 
-			const wikilink = {
-				type: "wikilink",
-				id,
-				label,
-			};
+			WIKILINK_REGEX.lastIndex = 0;
+			while ((match = WIKILINK_REGEX.exec(value))) {
+				const raw = match[1] || "";
+				const path = raw.trim();
+				const start = match.index;
+				const end = start + match[0].length;
 
-			parent.children.splice(index, 1, wikilink);
+				const before = value.slice(lastIndex, start);
+				if (before) parts.push({ type: "text", value: before });
+
+				if (path) {
+					parts.push({ type: "wikilink", path });
+				} else {
+					parts.push({ type: "text", value: match[0] });
+				}
+
+				lastIndex = end;
+			}
+
+			if (parts.length === 0) return;
+
+			const after = value.slice(lastIndex);
+			if (after) parts.push({ type: "text", value: after });
+
+			parent.children.splice(index, 1, ...parts);
+			return [visit.SKIP, index + parts.length];
 		});
 	},
 );
 
-export const wikilinkSchema = $nodeSchema("wikilink", (ctx: Ctx) => ({
+export const wikilinkSchema = $nodeSchema("wikilink", (_ctx: Ctx) => ({
 	inline: true,
 	group: "inline",
 	atom: true,
 	selectable: true,
 	marks: "",
 	attrs: {
-		id: { default: "" },
-		label: { default: "" },
+		path: { default: "" },
 	},
 	parseMarkdown: {
 		match: (node) => node.type === "wikilink",
 		runner: (state, node, type) => {
-			const id = String((node as any).id ?? "");
-			const label = String((node as any).label ?? "");
-			state.addNode(type, { id, label });
+			const path = String((node as any).path ?? "");
+			if (!path) return;
+			state.addNode(type, { path });
 		},
 	},
 	toMarkdown: {
 		match: (node) => node.type.name === "wikilink",
 		runner: (state, node) => {
-			const id = String(node.attrs.id ?? "");
-			const label = String(node.attrs.label ?? "");
-			const url = `${WIKIID_PREFIX}${id}`;
-
-			state.addNode("link", [{ type: "text", value: label }], undefined, {
-				url,
-				title: null,
-			});
+			const path = String(node.attrs.path ?? "");
+			if (!path) return;
+			state.addNode("text", undefined, `[[${path}]]`);
 		},
 	},
 	parseDOM: [
 		{
-			tag: "a[data-wikilink-id]",
+			tag: "a[data-wikilink-path]",
 			priority: 100,
 			getAttrs: (dom) => {
 				if (!(dom instanceof HTMLElement)) return false;
-				const id = dom.getAttribute("data-wikilink-id") || "";
-				if (!id) return false;
-				return {
-					id,
-					label: dom.textContent || "",
-				};
+				const path = dom.getAttribute("data-wikilink-path") || "";
+				if (!path) return false;
+				return { path };
 			},
 		},
 	],
@@ -112,17 +112,17 @@ export const wikilinkSchema = $nodeSchema("wikilink", (ctx: Ctx) => ({
 		"a",
 		{
 			class: "wikilink-node",
-			"data-wikilink-id": node.attrs.id || "",
+			"data-wikilink-path": node.attrs.path || "",
 			href: "#",
 		},
-		node.attrs.label || "",
+		node.attrs.path || "",
 	],
 }));
 
 export const wikilinkView = $view(
 	wikilinkSchema.node,
 	(ctx): NodeViewConstructor =>
-		(initialNode, view) => {
+		(initialNode, _view) => {
 			let currentNode: ProseNode = initialNode;
 
 			const config = ctx.get(wikilinkConfig.key);
@@ -133,22 +133,13 @@ export const wikilinkView = $view(
 			dom.setAttribute("href", "#");
 
 			const updateDisplay = (node: ProseNode) => {
-				const id = String(node.attrs?.id ?? "");
-				const storedLabel = String(node.attrs?.label ?? "");
-				const page = config.getPageById(id);
-				const displayLabel = resolveDisplayLabel(
-					storedLabel,
-					page?.title ?? "",
-					id,
-				);
-				const href = page?.slug
-					? `${config.rootPath}/${encodeSlugPath(page.slug)}`
-					: "#";
+				const path = String(node.attrs?.path ?? "");
+				const href = path ? `${config.rootPath}/${encodePath(path)}` : "#";
 
-				dom.textContent = displayLabel;
-				dom.setAttribute("data-wikilink-id", id);
+				dom.textContent = path;
+				dom.setAttribute("data-wikilink-path", path);
 				dom.setAttribute("href", href);
-				dom.title = displayLabel;
+				dom.title = path;
 			};
 
 			updateDisplay(currentNode);
@@ -175,41 +166,3 @@ export const wikilinkView = $view(
 			};
 		},
 );
-
-function resolveDisplayLabel(
-	storedLabel: string,
-	pageTitle: string,
-	id: string,
-): string {
-	const label = storedLabel.trim();
-	const title = pageTitle.trim();
-
-	if (label !== "" && title !== "") {
-		const segments = normalizeLabelSegments(label);
-		if (segments.length === 0) return title;
-		segments[segments.length - 1] = title;
-		return segments.join("/");
-	}
-
-	if (label !== "") {
-		const normalized = normalizeLabelSegments(label).join("/");
-		return normalized === "" ? label : normalized;
-	}
-	if (title !== "") return title;
-	if (id) return id;
-	return "Untitled";
-}
-
-function normalizeLabelSegments(label: string): string[] {
-	return label
-		.split("/")
-		.map((segment) => segment.trim())
-		.filter((segment) => segment !== "")
-		.map((segment) => titleizeSegment(segment));
-}
-
-function titleizeSegment(segment: string): string {
-	const chars = Array.from(segment);
-	if (chars.length === 0) return "";
-	return chars[0].toUpperCase() + chars.slice(1).join("");
-}

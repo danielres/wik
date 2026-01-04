@@ -12,13 +12,13 @@ import { isSelectionInHeading } from "../utils/selection";
 export type SlashMenuWikilinksPage = {
 	id: string;
 	label: string;
-	slug: string;
+	path: string;
 	updatedAtMs: number | null;
 };
 
 export const slashMenuWikilinks = slashFactory("SLASH_MENU_WIKILINKS");
 
-type PageItem = SlashMenuItem & { slug: string };
+type PageItem = SlashMenuItem & { path: string };
 
 export function slashMenuWikilinksRegister(
 	ctx: Ctx,
@@ -45,14 +45,13 @@ export function slashMenuWikilinksRegister(
 				return filtered.map((p) => ({
 					id: p.id,
 					label: p.label,
-					slug: p.slug,
+					path: p.path,
 				}));
 			},
 			onSelect: (item, { view, query }) => {
 				insertWikilink(view, {
 					query,
-					label: item.label,
-					id: item.id,
+					path: item.path,
 				});
 			},
 		}),
@@ -97,7 +96,7 @@ function filterPages(
 	return pages
 		.map((p) => ({
 			page: p,
-			score: fuzzyScore(p.label, q) || fuzzyScore(p.slug, q),
+			score: fuzzyScore(p.label, q) || fuzzyScore(p.path, q),
 		}))
 		.filter((x) => x.score > 0)
 		.sort((a, b) => b.score - a.score)
@@ -109,7 +108,7 @@ function filterPages(
 
 function insertWikilink(
 	view: EditorView,
-	opts: { query: string; label: string; id: string },
+	opts: { query: string; path: string },
 ) {
 	const { state } = view;
 	const { from } = state.selection;
@@ -124,7 +123,7 @@ function insertWikilink(
 		return;
 	}
 
-	const linkNode = wikilinkType.create({ id: opts.id, label: opts.label });
+	const linkNode = wikilinkType.create({ path: opts.path });
 
 	const tr = state.tr.replaceWith(start, from, linkNode);
 	const posAfter = start + linkNode.nodeSize;

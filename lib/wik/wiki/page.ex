@@ -282,6 +282,17 @@ defmodule Wik.Wiki.Page do
   end
 
   def set_slug(changeset, context) do
+    raw_slug? = get_in(context.source_context, [:shared, :raw_slug]) == true
+    current_slug = Ash.Changeset.get_attribute(changeset, :slug)
+
+    if raw_slug? and is_binary(current_slug) and current_slug != "" do
+      changeset
+    else
+      do_set_slug(changeset, context)
+    end
+  end
+
+  defp do_set_slug(changeset, context) do
     group_id =
       get_in(context.source_context, [:shared, :current_group_id]) ||
         Ash.Changeset.get_attribute(changeset, :group_id)
@@ -358,4 +369,5 @@ defmodule Wik.Wiki.Page do
 
       {:ok, page}
   end
+
 end

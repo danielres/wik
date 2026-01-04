@@ -44,7 +44,6 @@ import {
 import { createSlashMenu } from "./slash-menus/slash-menu";
 import { overrideTableSchema, sanitizeDocPlugin } from "./sanitize-doc";
 import { ensureTitleHeadingPlugin } from "./ensure-title-heading";
-import { wikilinkPlugin } from "./wikilink-plugin";
 import {
 	remarkWikilinkPlugin,
 	wikilinkConfig,
@@ -68,14 +67,6 @@ type SetupOpts = {
 	rootPath: string;
 	isStatic: boolean;
 	splitEditorEditableRef?: { value: boolean };
-	wikilinks?: {
-		getPageById: (
-			id: string,
-		) => { id: string; slug: string; title: string } | null;
-		resolveRef: (
-			title: string,
-		) => Promise<{ id: string; slug: string; title: string } | null>;
-	};
 };
 
 export async function createMilkdownEditor({
@@ -85,7 +76,6 @@ export async function createMilkdownEditor({
 	rootPath,
 	isStatic,
 	splitEditorEditableRef,
-	wikilinks,
 }: SetupOpts) {
 	return (
 		Editor.make()
@@ -93,7 +83,6 @@ export async function createMilkdownEditor({
 				ctx.set(rootCtx, root);
 				ctx.set(wikilinkConfig.key, {
 					rootPath,
-					getPageById: wikilinks?.getPageById ?? (() => null),
 				});
 
 				if (isStatic) {
@@ -177,11 +166,6 @@ export async function createMilkdownEditor({
 					plugins.concat(
 						sanitizeDocPlugin,
 						ensureTitleHeadingPlugin({ rootEl: root }),
-						wikilinks
-							? wikilinkPlugin({
-									resolveRef: wikilinks.resolveRef,
-								})
-							: [],
 					),
 				);
 			})

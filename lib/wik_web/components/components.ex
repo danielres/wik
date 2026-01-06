@@ -69,7 +69,7 @@ defmodule WikWeb.Components do
       <div class="drawer drawer-open drawer-end pointer-events-none">
         <input id={@drawer_id} type="checkbox" class="drawer-toggle" />
 
-        <div :if={@sidebar?} class="drawer-side">
+        <div :if={@sidebar?} class="drawer-side overflow-visible">
           <div class={[
             "flex h-full",
             "is-drawer-close:w-12 md:is-drawer-close:w-64 is-drawer-open:w-64"

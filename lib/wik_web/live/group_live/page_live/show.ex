@@ -75,7 +75,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     <menu>
       <ul class="menu w-full p-0">
         <li class={[@editing? and "hidden", "md:hidden"]}>
-          <label for={@drawer_id} class={btn_class}>
+          <label for={@drawer_id} class={btn_class} data-tip="sidebar">
             <.icon name="hero-chevron-left-micro" class="is-drawer-open:hidden" />
             <.icon name="hero-chevron-right-micro" class="is-drawer-close:hidden" />
           </label>
@@ -160,6 +160,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             type="button"
             phx-click="toggle_source"
             class={[btn_class, if(@source?, do: "bg-base-content/10", else: "text-base-content/50")]}
+            data-tip="source markdown"
           >
             <.icon name="hero-hashtag-micro" />
           </button>

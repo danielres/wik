@@ -3,6 +3,7 @@ import type { Node as MarkdownNode } from "@milkdown/transformer";
 import type { Node as ProseNode } from "@milkdown/prose/model";
 import type { NodeViewConstructor } from "@milkdown/prose/view";
 
+import { remarkStringifyOptionsCtx } from "@milkdown/core";
 import { $ctx, $nodeSchema, $remark, $view } from "@milkdown/utils";
 import { visit } from "unist-util-visit";
 
@@ -71,6 +72,24 @@ export const remarkWikilinkPlugin = $remark(
 	},
 );
 
+export function configureWikilinkMarkdown(ctx: Ctx) {
+	ctx.update(remarkStringifyOptionsCtx, (options) => {
+		const handlers = {
+			...options.handlers,
+			wikilink: (node: any) => {
+				const path = String(node?.path ?? "");
+				if (!path) return "";
+				return `[[${path}]]`;
+			},
+		};
+
+		return {
+			...options,
+			handlers,
+		};
+	});
+}
+
 export const wikilinkSchema = $nodeSchema("wikilink", (_ctx: Ctx) => ({
 	inline: true,
 	group: "inline",
@@ -93,7 +112,7 @@ export const wikilinkSchema = $nodeSchema("wikilink", (_ctx: Ctx) => ({
 		runner: (state, node) => {
 			const path = String(node.attrs.path ?? "");
 			if (!path) return;
-			state.addNode("text", undefined, `[[${path}]]`);
+			state.addNode("wikilink", undefined, undefined, { path });
 		},
 	},
 	parseDOM: [

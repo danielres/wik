@@ -98,6 +98,7 @@ defmodule WikWeb.Router do
         live "/", GroupLive.Show, :show
         live "/members", GroupLive.MemberLive.Index, :index
         live "/map", GroupLive.WikimapLive, :show
+        live "/tree", GroupLive.WikitreeLive, :show
         live "/wiki", GroupLive.PageLive.Index, :index
         live "/v/:version/wiki/*page_slug_segments", GroupLive.PageLive.History
         live "/wiki/*page_slug_segments", GroupLive.PageLive.Show, :show

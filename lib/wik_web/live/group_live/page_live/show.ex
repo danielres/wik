@@ -10,10 +10,17 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   use WikWeb.Presence.Handlers
   alias WikWeb.Components.RealtimeToast
   require Logger
+  require Ash.Query
 
-  def page_url(group, page) do
-    "/#{group.slug}/wiki/#{page.slug}"
+  def page_url(group, %Wik.Wiki.PageTree{path: path}), do: page_url(group, path)
+  def page_url(group, %{path: path}) when is_binary(path), do: page_url(group, path)
+
+  def page_url(group, path) when is_binary(path) do
+    encoded = encode_path(path)
+    "/#{group.slug}/wiki/#{encoded}"
   end
+
+  def page_url(_group, _page), do: "#"
 
   @impl true
   def render(assigns) do
@@ -26,7 +33,63 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           class={["pl-8 mx-auto mt-8", "source-visible-#{@source?}"]}
           style={if(@source?, do: "", else: "width: min(75ch, 100%)")}
         >
-          <WikWeb.Components.Page.Breadcrumbs.render page={@page} ctx={@ctx} disabled?={@editing?} />
+          <WikWeb.Components.Page.Breadcrumbs.render
+            page_id={@page.id}
+            page_tree_path={@page_tree_path}
+            ctx={@ctx}
+            disabled?={@editing?}
+          />
+
+          <h1
+            class="pagehead-h1 text-3xl mb-8"
+            phx-click={JS.toggle() |> JS.toggle(to: ".pagehead-form")}
+          >
+            {@page_title_input}
+          </h1>
+          <div
+            style="display:none"
+            class="pagehead-form"
+          >
+            <.form
+              :if={Ash.can?({@page, :update}, @current_user)}
+              class="grid grid-cols-[1fr_auto] gap-2"
+              for={:page_tree_title}
+              phx-change="page_title_change"
+              phx-submit="page_title_apply"
+            >
+              <input
+                type="text"
+                name="title"
+                autocomplete="off"
+                value={Phoenix.HTML.Form.normalize_value("text", @page_title_input)}
+                class="text-3xl w-full mb-8 bg-base-300/50 px-1"
+              />
+
+              <div class="">
+                <button
+                  type="submit"
+                  class="btn btn-square hover:btn-accent"
+                  phx-click={
+                    JS.toggle(to: ".pagehead-form")
+                    |> JS.toggle(to: ".pagehead-h1")
+                  }
+                >
+                  <.icon name="hero-check" />
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-square hover:btn-accent"
+                  phx-click={
+                    JS.push("page_title_cancel")
+                    |> JS.toggle(to: ".pagehead-form")
+                    |> JS.toggle(to: ".pagehead-h1")
+                  }
+                >
+                  <.icon name="hero-x-mark" />
+                </button>
+              </div>
+            </.form>
+          </div>
 
           <.live_component
             module={WikWeb.Components.Page.FormMarkdown}
@@ -36,11 +99,11 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             redo_button_id={"editor-redo-#{@page.id}"}
             exit_after_save?={@exit_after_save?}
             page={@page}
+            page_tree_path={@page_tree_path}
             actor={@current_user}
             group={@ctx.current_group}
             editable={@editing?}
-            return_to={page_url(@ctx.current_group, @page)}
-            pages_map={@ctx.pages_map}
+            return_to={page_url(@ctx.current_group, @page_tree_path)}
             pages_tree_map={@ctx.pages_tree_map}
           />
         </div>
@@ -171,15 +234,17 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   def sidebar_panels(assigns) do
-    descendants = build_descendant_tree(assigns.page, assigns.ctx.pages_map)
+    descendants = build_descendant_tree(assigns.page_tree_path, assigns.ctx.pages_tree_map)
     tree_include_siblings? = true
-    tree_nodes = build_tree(assigns.page, assigns.ctx.pages_map, tree_include_siblings?)
+
+    tree_nodes =
+      build_tree(assigns.page_tree_path, assigns.ctx.pages_tree_map, tree_include_siblings?)
 
     assigns =
       assigns
       |> assign(:descendants, descendants)
       |> assign(:tree_nodes, tree_nodes)
-      |> assign(:tree_visible?, tree_visible?(assigns.page, assigns.ctx.pages_map))
+      |> assign(:tree_visible?, tree_visible?(assigns.page_tree_path, assigns.ctx.pages_tree_map))
 
     ~H"""
     <.sidebar_panel>
@@ -189,7 +254,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             navigate={
               WikWeb.GroupLive.PageLive.History.page_url(
                 @ctx.current_group,
-                @page,
+                @page_tree_path,
                 @page.versions_count
               )
             }
@@ -224,11 +289,12 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           <li class="text-sm opacity-70">No backlinks yet.</li>
         <% else %>
           <li :for={backlink <- @backlinks} class="text-sm">
+            <% source_path = page_tree_path_for(@ctx, backlink.source_page_id) %>
             <.link
-              navigate={page_url(@ctx.current_group, backlink.source_page)}
+              navigate={page_url(@ctx.current_group, source_path)}
               class="opacity-70 hover:opacity-100 transition"
             >
-              {backlink.source_page.title || backlink.target_slug}
+              {backlink_label(@ctx, backlink)}
             </.link>
           </li>
         <% end %>
@@ -240,7 +306,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     {# </.sidebar_panel> }
 
     <.sidebar_panel :if={@tree_visible?} title="Subtree" icon="hero-folder-open">
-      <.tree_list nodes={@tree_nodes} ctx={@ctx} current_slug={@page.slug} />
+      <.tree_list nodes={@tree_nodes} ctx={@ctx} current_path={@page_tree_path} />
     </.sidebar_panel>
 
     <.sidebar_panel :if={@toc != []} title="TOC" icon="hero-book-open">
@@ -264,7 +330,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     <%= if @env == :dev do %>
       <.sidebar_panel title="Debug" icon="hero-bug-ant" class="opacity-0 hover:opacity-100 transition">
         <div class="font-mono text-xs opacity-70">
-          <dd>page title: {@page.title}</dd>
+          <dd>page path: {@page_tree_path}</dd>
           <div>editing?: {@editing?}</div>
           <div>synced?: {@editor_state.synced?}</div>
           <div>has_undo?: {@editor_state.has_undo?}</div>
@@ -289,7 +355,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     ]}>
       <li :for={node <- @nodes}>
         <.link
-          navigate={page_url(@ctx.current_group, node.page || %{slug: node.slug})}
+          navigate={page_url(@ctx.current_group, node.path)}
           class="opacity-70 hover:opacity-100 transition"
         >
           {node.title}
@@ -308,7 +374,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   attr :nodes, :list, required: true
   attr :ctx, :map, required: true
-  attr :current_slug, :string, required: true
+  attr :current_path, :string, required: true
   attr :nested?, :boolean, default: false
 
   def tree_list(assigns) do
@@ -319,10 +385,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     ]}>
       <li :for={node <- @nodes}>
         <.link
-          navigate={page_url(@ctx.current_group, node.page || %{slug: node.slug})}
+          navigate={page_url(@ctx.current_group, node.path)}
           class={[
             "opacity-70 hover:opacity-100 transition",
-            node.slug == @current_slug && "active font-bold pointer-events-none"
+            node.path == @current_path && "active font-bold pointer-events-none"
           ]}
         >
           {node.title}
@@ -332,7 +398,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
           :if={node.children != []}
           nodes={node.children}
           ctx={@ctx}
-          current_slug={@current_slug}
+          current_path={@current_path}
           nested?={true}
         />
       </li>
@@ -360,43 +426,41 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     """
   end
 
-  defp build_descendant_tree(page, pages_map) do
-    current_slug = page.slug || ""
-    prefix = current_slug <> "/"
+  defp build_descendant_tree(current_path, pages_tree_map) do
+    current_path = current_path || ""
+    prefix = current_path <> "/"
 
     descendants =
-      pages_map
-      |> Map.values()
-      |> Enum.filter(fn descendant ->
-        slug = descendant.slug
-        is_binary(slug) and slug != "" and String.starts_with?(slug, prefix)
+      pages_tree_map
+      |> Map.keys()
+      |> Enum.filter(fn path ->
+        is_binary(path) and path != "" and String.starts_with?(path, prefix)
       end)
 
     descendants
-    |> Enum.reduce(%{}, fn descendant, acc ->
-      segments = descendant_segments(current_slug, descendant.slug)
-      insert_descendant_node(acc, segments, current_slug, pages_map)
+    |> Enum.reduce(%{}, fn path, acc ->
+      segments = descendant_segments(current_path, path)
+      insert_descendant_node(acc, segments, current_path, pages_tree_map)
     end)
     |> nodes_from_map()
   end
 
-  defp descendant_segments(current_slug, slug) do
-    slug
-    |> String.replace_prefix(current_slug <> "/", "")
+  defp descendant_segments(current_path, path) do
+    path
+    |> String.replace_prefix(current_path <> "/", "")
     |> String.split("/", trim: true)
   end
 
-  defp insert_descendant_node(nodes, [segment | rest], current_slug, pages_map, path \\ []) do
+  defp insert_descendant_node(nodes, [segment | rest], current_path, pages_tree_map, path \\ []) do
     full_path = path ++ [segment]
-    full_slug = current_slug <> "/" <> Enum.join(full_path, "/")
-    page = Map.get(pages_map, full_slug)
-    title = descendant_title(page, segment)
+    path_value = current_path <> "/" <> Enum.join(full_path, "/")
+    tree = Map.get(pages_tree_map, path_value)
 
     node =
-      Map.get(nodes, full_slug, %{
-        slug: full_slug,
-        title: title,
-        page: page,
+      Map.get(nodes, path_value, %{
+        path: path_value,
+        title: segment,
+        tree: tree,
         children: %{}
       })
 
@@ -404,16 +468,11 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       if rest == [] do
         node.children
       else
-        insert_descendant_node(node.children, rest, current_slug, pages_map, full_path)
+        insert_descendant_node(node.children, rest, current_path, pages_tree_map, full_path)
       end
 
-    Map.put(nodes, full_slug, %{node | children: children})
+    Map.put(nodes, path_value, %{node | children: children})
   end
-
-  defp descendant_title(%{title: title}, _fallback) when is_binary(title) and title != "",
-    do: title
-
-  defp descendant_title(_page, fallback), do: fallback
 
   defp nodes_from_map(map) do
     map
@@ -424,82 +483,76 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     |> Enum.sort_by(fn node -> String.downcase(node.title || "") end)
   end
 
-  defp build_tree(page, pages_map, include_siblings?) do
-    current_slug = page.slug || ""
-    root_slug = root_slug(current_slug)
+  defp build_tree(current_path, pages_tree_map, include_siblings?) do
+    current_path = current_path || ""
+    root_path = root_path(current_path)
 
-    slugs =
+    paths =
       if include_siblings? do
-        Map.keys(pages_map)
-        |> Enum.filter(fn slug ->
-          slug == root_slug or String.starts_with?(slug, root_slug <> "/")
+        Map.keys(pages_tree_map)
+        |> Enum.filter(fn path ->
+          path == root_path or String.starts_with?(path, root_path <> "/")
         end)
       else
-        descendant_slugs =
-          Map.keys(pages_map)
-          |> Enum.filter(fn slug ->
-            slug == current_slug or String.starts_with?(slug, current_slug <> "/")
+        descendant_paths =
+          Map.keys(pages_tree_map)
+          |> Enum.filter(fn path ->
+            path == current_path or String.starts_with?(path, current_path <> "/")
           end)
 
-        (ancestor_slugs(current_slug) ++ descendant_slugs)
+        (ancestor_paths(current_path) ++ descendant_paths)
         |> Enum.uniq()
       end
 
     children =
-      slugs
-      |> Enum.reject(&(&1 == root_slug))
-      |> Enum.reduce(%{}, fn slug, acc ->
-        segments = descendant_segments(root_slug, slug)
-        insert_descendant_node(acc, segments, root_slug, pages_map)
+      paths
+      |> Enum.reject(&(&1 == root_path))
+      |> Enum.reduce(%{}, fn path, acc ->
+        segments = descendant_segments(root_path, path)
+        insert_descendant_node(acc, segments, root_path, pages_tree_map)
       end)
 
-    root_page = Map.get(pages_map, root_slug)
-    root_title = descendant_title(root_page, root_fallback_title(root_slug))
+    root_tree = Map.get(pages_tree_map, root_path)
+    root_title = Wik.Wiki.PageTree.Utils.title_from_path(root_path)
 
     [
       %{
-        slug: root_slug,
+        path: root_path,
         title: root_title,
-        page: root_page,
+        tree: root_tree,
         children: nodes_from_map(children)
       }
     ]
   end
 
-  defp tree_visible?(page, pages_map) do
-    slug = page.slug || ""
-    has_parent? = String.contains?(slug, "/")
+  defp tree_visible?(path, pages_tree_map) do
+    path = path || ""
+    has_parent? = String.contains?(path, "/")
 
     has_descendants? =
-      pages_map
+      pages_tree_map
       |> Map.keys()
       |> Enum.any?(fn candidate ->
-        String.starts_with?(candidate, slug <> "/")
+        String.starts_with?(candidate, path <> "/")
       end)
 
     has_parent? or has_descendants?
   end
 
-  defp root_slug(slug) do
-    case String.split(slug || "", "/", trim: true) do
+  defp root_path(path) do
+    case String.split(path || "", "/", trim: true) do
       [root | _] -> root
-      _ -> slug || ""
+      _ -> path || ""
     end
   end
 
-  defp ancestor_slugs(slug) do
-    segments = String.split(slug || "", "/", trim: true)
+  defp ancestor_paths(path) do
+    segments = String.split(path || "", "/", trim: true)
 
     1..length(segments)
     |> Enum.map(fn count ->
       segments |> Enum.take(count) |> Enum.join("/")
     end)
-  end
-
-  defp root_fallback_title(slug) do
-    slug
-    |> String.split("/", trim: true)
-    |> List.last()
   end
 
   def modal_unsaved_exit(assigns) do
@@ -542,48 +595,73 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   @impl true
   def mount(%{"page_slug_segments" => page_slug_segments}, _session, socket) do
-    page_slug = page_slug_segments |> Enum.join("/")
+    page_path = page_slug_segments |> Enum.join("/")
     current_group = socket.assigns.ctx.current_group
     current_user = socket.assigns.current_user
+    pages_tree_map = socket.assigns.ctx.pages_tree_map || %{}
 
-    case Wik.Wiki.Page
-         |> Ash.get(
-           %{group_id: current_group.id, slug: page_slug},
-           actor: current_user,
-           load: [:versions_count]
-         ) do
-      {:ok, page} ->
-        if connected?(socket) do
-          Phoenix.PubSub.subscribe(Wik.PubSub, "page:updated:#{page.id}")
-          Phoenix.PubSub.subscribe(Wik.PubSub, "page:destroyed:#{page.id}")
-        end
+    with {:ok, tree, updated_map} <-
+           Wik.Wiki.PageTree.Utils.resolve_tree_by_path(
+             page_path,
+             current_group.id,
+             current_user,
+             pages_tree_map
+           ),
+         {:ok, ensured_tree} <- Wik.Wiki.PageTree.Utils.ensure_page_for_tree(tree, current_user),
+         {:ok, page} <-
+           Wik.Wiki.Page
+           |> Ash.get(
+             ensured_tree.page_id,
+             actor: current_user,
+             load: [:versions_count]
+           ) do
+      if connected?(socket) do
+        Phoenix.PubSub.subscribe(Wik.PubSub, "page:updated:#{page.id}")
+        Phoenix.PubSub.subscribe(Wik.PubSub, "page:destroyed:#{page.id}")
 
-        socket = socket |> Utils.Ctx.add(:page, page)
+        Phoenix.PubSub.subscribe(
+          Wik.PubSub,
+          Wik.Wiki.PageTree.Utils.pages_tree_topic(current_group.id)
+        )
+      end
 
-        {:ok,
-         socket
-         |> assign(:env, @env)
-         |> assign(:debug?, false)
-         |> assign(:not_found?, false)
-         |> assign(:page_title, page.title)
-         |> set_editing(false)
-         |> assign(:source?, false)
-         |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
-         |> assign(:show_unsaved_modal, false)
-         |> assign(:exit_after_save?, false)
-         |> assign(:page, page)
-         |> assign(:updated_fields, [])
-         |> assign(:backlinks, load_backlinks(page))
-         |> assign(:toc, Utils.Markdown.extract_toc(page.text))
-         |> maybe_subscribe_backlinks(page)}
+      updated_map = Map.put(updated_map, ensured_tree.path, ensured_tree)
 
-      {:error, _error} ->
+      socket =
+        socket
+        |> put_pages_tree_maps(updated_map)
+        |> Utils.Ctx.add(:page, page)
+        |> Utils.Ctx.add(:page_tree, ensured_tree)
+
+      {:ok,
+       socket
+       |> assign(:env, @env)
+       |> assign(:debug?, false)
+       |> assign(:not_found?, false)
+       |> assign(:page, page)
+       |> assign(:page_title, Wik.Wiki.PageTree.Utils.title_from_path(ensured_tree.path))
+       |> assign(:page_tree_path, ensured_tree.path)
+       |> assign(:page_title_input, Wik.Wiki.PageTree.Utils.title_from_path(ensured_tree.path))
+       |> set_editing(false)
+       |> assign(:source?, false)
+       |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
+       |> assign(:show_unsaved_modal, false)
+       |> assign(:exit_after_save?, false)
+       |> assign(:updated_fields, [])
+       |> assign(:backlinks, load_backlinks(page))
+       |> assign(:toc, Utils.Markdown.extract_toc(page.text))
+       |> maybe_subscribe_backlinks(page)}
+    else
+      _ ->
         {:ok,
          socket
          |> assign(:env, @env)
          |> assign(:debug?, false)
          |> assign(:not_found?, true)
+         |> assign(:page, nil)
          |> assign(:page_title, "Page not found")
+         |> assign(:page_tree_path, page_path)
+         |> assign(:page_title_input, "")
          |> set_editing(false)
          |> assign(:source?, false)
          |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
@@ -652,25 +730,30 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     current_group = socket.assigns.ctx.current_group
     current_user = socket.assigns.current_user
 
-    raw_title = title || ""
-    normalized_path = normalize_wikilink_title(raw_title)
+    raw_path = title || ""
+    pages_tree_map = socket.assigns.ctx.pages_tree_map || %{}
 
-    case build_wikilink_segments(normalized_path) do
-      {:error, :title_required} ->
-        {:reply, %{ok: false, error: "title_required"}, socket}
+    case Wik.Wiki.PageTree.Utils.resolve_tree_by_path(
+           raw_path,
+           current_group.id,
+           current_user,
+           pages_tree_map
+         ) do
+      {:ok, tree, updated_map} ->
+        case Wik.Wiki.PageTree.Utils.ensure_page_for_tree(tree, current_user) do
+          {:ok, ensured_tree} ->
+            updated_map = Map.put(updated_map, ensured_tree.path, ensured_tree)
+            socket = put_pages_tree_maps(socket, updated_map)
 
-      {:ok, segments} ->
-        case ensure_wikilink_pages(current_group, current_user, segments) do
-          {:ok, page} ->
-            {:reply, %{ok: true, page: %{id: page.id, slug: page.slug, title: page.title}},
+            {:reply, %{ok: true, page: %{id: ensured_tree.page_id, path: ensured_tree.path}},
              socket}
-
-          {:error, :lookup_failed} ->
-            {:reply, %{ok: false, error: "lookup_failed"}, socket}
 
           {:error, _} ->
             {:reply, %{ok: false, error: "create_failed"}, socket}
         end
+
+      {:error, _} ->
+        {:reply, %{ok: false, error: "title_required"}, socket}
     end
   end
 
@@ -697,6 +780,41 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   end
 
   @impl true
+  def handle_event("page_title_change", %{"title" => title}, socket) do
+    sanitized = Wik.Wiki.PageTree.Utils.sanitize_segment(title)
+    {:noreply, assign(socket, :page_title_input, sanitized)}
+  end
+
+  @impl true
+  def handle_event("page_title_cancel", _params, socket) do
+    title = Wik.Wiki.PageTree.Utils.title_from_path(socket.assigns.page_tree_path)
+    {:noreply, assign(socket, :page_title_input, title)}
+  end
+
+  @impl true
+  def handle_event("page_title_apply", %{"title" => title}, socket) do
+    if socket.assigns[:page] do
+      sanitized = Wik.Wiki.PageTree.Utils.sanitize_segment(title)
+      old_path = socket.assigns.page_tree_path || ""
+
+      case rename_page_tree_path(socket, old_path, sanitized) do
+        {:ok, socket, new_path} ->
+          {:noreply,
+           socket
+           |> assign(:page_title_input, Wik.Wiki.PageTree.Utils.title_from_path(new_path))
+           |> maybe_reseed_after_rename()
+           |> push_patch(to: page_url(socket.assigns.ctx.current_group, new_path))}
+
+        {:error, _reason} ->
+          title = Wik.Wiki.PageTree.Utils.title_from_path(old_path)
+          {:noreply, assign(socket, :page_title_input, title)}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_params(_params, url, socket) do
     current_path = URI.parse(url).path
     socket = Utils.Ctx.add(socket, :current_path, current_path)
@@ -707,8 +825,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "update", payload: payload}, socket) do
-    old_slug = socket.assigns.page.slug
-    updated_page = reload_page!(payload.data.slug, socket)
+    updated_page = reload_page!(payload.data.id, socket)
     updated_fields = Map.keys(payload.changeset.attributes)
 
     if updated_fields == [] do
@@ -720,7 +837,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         socket
         |> assign(
           page: updated_page,
-          page_title: updated_page.title,
+          page_title: Wik.Wiki.PageTree.Utils.title_from_path(socket.assigns.page_tree_path),
           updated_fields: updated_fields,
           backlinks: load_backlinks(updated_page)
         )
@@ -729,14 +846,21 @@ defmodule WikWeb.GroupLive.PageLive.Show do
         |> RealtimeToast.put_update_toast(payload)
         |> maybe_push_saved_version(updated_fields, updated_page)
 
-      socket =
-        if updated_page.slug != old_slug do
-          push_patch(socket, to: page_url(socket.assigns.ctx.current_group, updated_page))
-        else
-          socket
-        end
-
       {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info({:pages_tree_updated, group_id}, socket) do
+    cond do
+      group_id != socket.assigns.ctx.current_group.id ->
+        {:noreply, socket}
+
+      socket.assigns[:page] ->
+        {:noreply, refresh_pages_tree(socket)}
+
+      true ->
+        {:noreply, socket}
     end
   end
 
@@ -768,10 +892,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
      |> set_editing(false)}
   end
 
-  defp reload_page!(page_slug, socket) do
+  defp reload_page!(page_id, socket) do
     Wik.Wiki.Page
     |> Ash.get!(
-      %{group_id: socket.assigns.ctx.current_group.id, slug: page_slug},
+      page_id,
       actor: socket.assigns.current_user,
       load: [:versions_count]
     )
@@ -783,8 +907,19 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       |> assign(:editing?, value)
       |> Utils.Ctx.add(:editing?, value)
 
-    if connected?(socket) do
-      push_event(socket, "set_mode", %{mode: if(value, do: "edit", else: "view")})
+    if connected?(socket) and socket.assigns[:page] do
+      if value do
+        push_event(socket, "set_mode", %{mode: "edit"})
+      else
+        socket = refresh_pages_tree(socket)
+        markdown = editor_markdown(socket)
+
+        push_event(socket, "set_mode", %{
+          mode: "view",
+          markdown: markdown,
+          reseed: true
+        })
+      end
     else
       socket
     end
@@ -797,85 +932,207 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   defp parse_bool(nil, default), do: default
   defp parse_bool(_, default), do: default
 
-  defp normalize_wikilink_title(title) do
-    title
-    |> String.split("/", trim: false)
-    |> Enum.map(&String.trim/1)
-    |> Enum.reject(&(&1 == ""))
-    |> Enum.map(&Utils.String.titleize/1)
+  defp encode_path(path) do
+    path
+    |> String.split("/", trim: true)
+    |> Enum.map(&URI.encode/1)
     |> Enum.join("/")
-  end
-
-  defp build_wikilink_segments(normalized_path) do
-    segments = normalized_path |> String.split("/", trim: true)
-
-    if segments == [] do
-      {:error, :title_required}
-    else
-      pairs =
-        Enum.map(segments, fn segment ->
-          {segment, Utils.Slugify.generate(segment)}
-        end)
-
-      if Enum.any?(pairs, fn {_title, slug} -> slug == "" end) do
-        {:error, :title_required}
-      else
-        {:ok, pairs}
-      end
-    end
-  end
-
-  defp ensure_wikilink_pages(current_group, current_user, segments) do
-    result =
-      Wik.Repo.transaction(fn ->
-        Enum.reduce(segments, {nil, ""}, fn {title, slug_segment}, {_page, prefix} ->
-          slug = if prefix == "", do: slug_segment, else: prefix <> "/" <> slug_segment
-
-          case get_or_create_page_by_slug(current_group, current_user, slug, title) do
-            {:ok, page} -> {page, slug}
-            {:error, reason} -> Wik.Repo.rollback(reason)
-          end
-        end)
-      end)
-
-    case result do
-      {:ok, {page, _}} -> {:ok, page}
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
-  defp get_or_create_page_by_slug(current_group, current_user, slug, title) do
-    case Wik.Wiki.Page
-         |> Ash.get(
-           %{group_id: current_group.id, slug: slug},
-           actor: current_user
-         ) do
-      {:ok, page} ->
-        {:ok, page}
-
-      {:error, %Ash.Error.Invalid{errors: errors}} when is_list(errors) ->
-        if Enum.any?(errors, &match?(%Ash.Error.Query.NotFound{}, &1)) do
-          Wik.Wiki.Page
-          |> Ash.Changeset.for_create(
-            :create,
-            %{title: title, text: ""},
-            actor: current_user,
-            context: %{shared: %{current_group_id: current_group.id}}
-          )
-          |> Ash.Changeset.change_attribute(:slug, slug)
-          |> Ash.create()
-        else
-          {:error, :lookup_failed}
-        end
-
-      {:error, reason} ->
-        Logger.error("🔴 Failed to lookup: #{inspect(reason)}")
-        {:error, :lookup_failed}
-    end
   end
 
   defp load_backlinks(page) do
     Wik.Wiki.Backlink.Utils.list_for_page(page)
+  end
+
+  defp page_tree_path_for(ctx, page_id) do
+    case Map.get(ctx.pages_tree_by_page_id || %{}, page_id) do
+      %{path: path} when is_binary(path) and path != "" -> path
+      _ -> nil
+    end
+  end
+
+  defp backlink_label(ctx, backlink) do
+    path = page_tree_path_for(ctx, backlink.source_page_id)
+
+    cond do
+      is_binary(path) and path != "" ->
+        path
+
+      is_binary(backlink.target_slug) and backlink.target_slug != "" ->
+        backlink.target_slug
+
+      true ->
+        "Unknown"
+    end
+  end
+
+  defp editor_markdown(socket) do
+    text = socket.assigns.page.text || ""
+    tree_by_id = socket.assigns.ctx.pages_tree_by_id || %{}
+    Wik.Wiki.PageTree.Markdown.to_editor(text, tree_by_id)
+  end
+
+  defp refresh_pages_tree(socket) do
+    group_id = socket.assigns.ctx.current_group.id
+    actor = socket.assigns.current_user
+
+    pages_tree_map =
+      Wik.Wiki.PageTree
+      |> Ash.Query.filter(group_id == ^group_id)
+      |> Ash.Query.select([:id, :path, :title, :page_id, :updated_at])
+      |> Ash.read(actor: actor)
+      |> case do
+        {:ok, trees} -> Map.new(trees, fn tree -> {tree.path, tree} end)
+        _ -> socket.assigns.ctx.pages_tree_map || %{}
+      end
+
+    socket = put_pages_tree_maps(socket, pages_tree_map)
+
+    case page_tree_path_for(socket.assigns.ctx, socket.assigns.page.id) do
+      path when is_binary(path) and path != "" ->
+        socket
+        |> assign(:page_tree_path, path)
+        |> assign(:page_title, Wik.Wiki.PageTree.Utils.title_from_path(path))
+        |> assign(:page_title_input, Wik.Wiki.PageTree.Utils.title_from_path(path))
+
+      _ ->
+        socket
+    end
+  end
+
+  defp rename_page_tree_path(socket, old_path, new_title) do
+    new_title = Wik.Wiki.PageTree.Utils.sanitize_segment(new_title)
+
+    if new_title == "" do
+      {:error, :invalid_title}
+    else
+      new_path = build_renamed_path(old_path, new_title)
+
+      if new_path == old_path do
+        {:ok, socket, new_path}
+      else
+        group_id = socket.assigns.ctx.current_group.id
+        actor = socket.assigns.current_user
+
+        case move_subtree(group_id, actor, old_path, new_path) do
+          :ok ->
+            socket = refresh_pages_tree(socket)
+            {:ok, socket, new_path}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+      end
+    end
+  end
+
+  defp build_renamed_path(old_path, new_title) do
+    segments = String.split(old_path || "", "/", trim: true)
+
+    case Enum.drop(segments, -1) do
+      [] -> new_title
+      parent_segments -> Enum.join(parent_segments ++ [new_title], "/")
+    end
+  end
+
+  defp move_subtree(group_id, actor, old_path, new_path) do
+    trees =
+      Wik.Wiki.PageTree
+      |> Ash.Query.filter(group_id == ^group_id)
+      |> Ash.Query.select([:id, :path, :group_id])
+      |> Ash.read(actor: actor)
+
+    case trees do
+      {:ok, items} ->
+        {moving, rest} =
+          Enum.split_with(items, fn tree ->
+            tree.path == old_path or String.starts_with?(tree.path, old_path <> "/")
+          end)
+
+        if moving == [] do
+          {:error, :not_found}
+        else
+          updates =
+            Enum.map(moving, fn tree ->
+              suffix = String.replace_prefix(tree.path, old_path, "")
+              {tree, new_path <> suffix}
+            end)
+
+          new_paths = MapSet.new(Enum.map(updates, fn {_tree, path} -> path end))
+          rest_paths = MapSet.new(Enum.map(rest, & &1.path))
+
+          if MapSet.disjoint?(new_paths, rest_paths) do
+            case Wik.Repo.transaction(fn ->
+                   Enum.reduce_while(updates, [], fn {tree, path}, notifications ->
+                     changeset =
+                       Ash.Changeset.for_update(tree, :update, %{path: path}, actor: actor)
+
+                     case Ash.update(changeset,
+                            authorize?: false,
+                            return_notifications?: true
+                          ) do
+                       {:ok, _tree, new_notifications} ->
+                         {:cont, notifications ++ new_notifications}
+
+                       {:error, reason} ->
+                         Wik.Repo.rollback(reason)
+                     end
+                   end)
+                 end) do
+              {:ok, notifications} ->
+                if notifications != [] do
+                  Ash.Notifier.notify(notifications)
+                end
+
+                :ok
+
+              {:error, _} ->
+                {:error, :update_failed}
+            end
+          else
+            {:error, :conflict}
+          end
+        end
+
+      {:error, _} ->
+        {:error, :load_failed}
+    end
+  end
+
+  defp maybe_reseed_after_rename(socket) do
+    if connected?(socket) and not socket.assigns.editing? do
+      markdown = editor_markdown(socket)
+
+      push_event(socket, "set_mode", %{
+        mode: "view",
+        markdown: markdown,
+        reseed: true
+      })
+    else
+      socket
+    end
+  end
+
+  defp put_pages_tree_maps(socket, pages_tree_map) do
+    pages_tree_by_page_id =
+      Enum.reduce(pages_tree_map, %{}, fn {_path, tree}, acc ->
+        case tree.page_id do
+          page_id when is_binary(page_id) and page_id != "" ->
+            Map.put(acc, page_id, tree)
+
+          _ ->
+            acc
+        end
+      end)
+
+    pages_tree_by_id =
+      Enum.reduce(pages_tree_map, %{}, fn {_path, tree}, acc ->
+        Map.put(acc, tree.id, tree)
+      end)
+
+    socket
+    |> Utils.Ctx.add(:pages_tree_map, pages_tree_map)
+    |> Utils.Ctx.add(:pages_tree_by_page_id, pages_tree_by_page_id)
+    |> Utils.Ctx.add(:pages_tree_by_id, pages_tree_by_id)
   end
 
   defp maybe_subscribe_backlinks(socket, page) do
@@ -916,7 +1173,9 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       end)
 
     if text_changed? do
-      push_event(socket, "collab_saved_version", %{markdown: updated_page.text || ""})
+      tree_by_id = socket.assigns.ctx.pages_tree_by_id || %{}
+      markdown = Wik.Wiki.PageTree.Markdown.to_editor(updated_page.text || "", tree_by_id)
+      push_event(socket, "collab_saved_version", %{markdown: markdown})
     else
       socket
     end

@@ -1,7 +1,7 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import type { EditorView } from "prosemirror-view";
 
-type PageInfo = { id: string; slug: string; title: string };
+type PageInfo = { id: string; path: string };
 
 type Options = {
 	resolveRef: (title: string) => Promise<PageInfo | null>;

@@ -118,11 +118,6 @@ defmodule Wik.Wiki.Page do
              end,
              on: [:create]
 
-      change fn cs, _ctx ->
-               cs |> update_title_from_header()
-             end,
-             on: [:update]
-
       change fn cs, ctx ->
                cs |> set_slug(ctx)
              end,
@@ -333,18 +328,6 @@ defmodule Wik.Wiki.Page do
         scope: [group_id: group_id],
         allow_slash: true
       )
-    end
-  end
-
-  def update_title_from_header(changeset) do
-    text = Ash.Changeset.get_attribute(changeset, :text)
-
-    case Utils.Markdown.extract_page_title(text) do
-      title when is_binary(title) and title != "" ->
-        Ash.Changeset.change_attribute(changeset, :title, title)
-
-      _ ->
-        changeset
     end
   end
 

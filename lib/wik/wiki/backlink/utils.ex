@@ -101,32 +101,44 @@ defmodule Wik.Wiki.Backlink.Utils do
   end
 
   @doc """
-  When a new page is created, reconcile any backlinks that pointed at its slug.
+  When a new page is created, reconcile any backlinks that pointed at its path.
   """
   @spec reconcile_new_target(Page.t()) :: :ok
   def reconcile_new_target(%Page{} = page) do
-    {:ok, backlinks} =
-      Backlink
-      |> Ash.Query.filter(
-        group_id == ^page.group_id and target_slug == ^page.slug and is_nil(target_page_id)
-      )
-      |> Ash.read(authorize?: false)
+    tree =
+      PageTree
+      |> Ash.Query.filter(group_id == ^page.group_id and page_id == ^page.id)
+      |> Ash.Query.select([:path])
+      |> Ash.read_one(authorize?: false)
 
-    Enum.each(backlinks, fn backlink ->
-      backlink
-      |> Ash.Changeset.for_update(:update, %{target_page_id: page.id}, authorize?: false)
-      |> Ash.update!(authorize?: false)
-    end)
+    case tree do
+      {:ok, %PageTree{path: path}} ->
+        {:ok, backlinks} =
+          Backlink
+          |> Ash.Query.filter(
+            group_id == ^page.group_id and target_slug == ^path and is_nil(target_page_id)
+          )
+          |> Ash.read(authorize?: false)
 
-    if backlinks != [] do
-      broadcast_updates(page.group_id, [page.id])
+        Enum.each(backlinks, fn backlink ->
+          backlink
+          |> Ash.Changeset.for_update(:update, %{target_page_id: page.id}, authorize?: false)
+          |> Ash.update!(authorize?: false)
+        end)
+
+        if backlinks != [] do
+          broadcast_updates(page.group_id, [page.id])
+        end
+
+        :ok
+
+      _ ->
+        :ok
     end
-
-    :ok
   end
 
   @doc """
-  List backlinks pointing to a page (by id or slug), scoped to group.
+  List backlinks pointing to a page (by id), scoped to group.
   """
   @spec list_for_page(Page.t()) :: [Backlink.t()]
   def list_for_page(%Page{} = page) do

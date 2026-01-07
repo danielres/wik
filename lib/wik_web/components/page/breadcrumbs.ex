@@ -4,24 +4,25 @@ defmodule WikWeb.Components.Page.Breadcrumbs do
   use WikWeb, :html
   use Phoenix.Component
 
-  attr :page, :any, required: true
+  attr :page_id, :string, required: true
+  attr :page_tree_path, :string, required: true
   attr :ctx, :any, required: true
   attr :disabled?, :boolean, default: false
 
   def render(assigns) do
     assigns =
       assigns
-      |> assign(:breadcrumbs, build_breadcrumbs(assigns.page, assigns.ctx.pages_map))
+      |> assign(:breadcrumbs, build_breadcrumbs(assigns.page_tree_path, assigns.ctx.pages_tree_map))
 
     ~H"""
     <div
-      id={"page-breadcrumbs-#{@page.id}"}
+      id={"page-breadcrumbs-#{@page_id}"}
       class="breadcrumbs text-sm flex items-center gap-2"
     >
       <%= for {crumb, _idx} <- Enum.with_index(@breadcrumbs) do %>
         <%= if crumb.link? do %>
           <.link
-            navigate={page_url_from_slug(@ctx.current_group, crumb.slug)}
+            navigate={page_url_from_path(@ctx.current_group, crumb.path)}
             class={[
               "font-semibold opacity-30 hover:opacity-100 transition",
               @disabled? and "pointer-events-none"
@@ -40,37 +41,26 @@ defmodule WikWeb.Components.Page.Breadcrumbs do
     """
   end
 
-  defp page_url_from_slug(group, slug) do
-    WikWeb.GroupLive.PageLive.Show.page_url(group, %{slug: slug})
+  defp page_url_from_path(group, path) do
+    WikWeb.GroupLive.PageLive.Show.page_url(group, path)
   end
 
-  defp build_breadcrumbs(page, pages_map) do
-    slug = page.slug || ""
-    segments = slug |> String.split("/", trim: true)
+  defp build_breadcrumbs(path, pages_tree_map) do
+    segments = path |> String.split("/", trim: true)
 
     segments
     |> Enum.drop(-1)
     |> Enum.reduce({[], ""}, fn segment, {acc, prefix} ->
-      slug_segment = if prefix == "", do: segment, else: prefix <> "/" <> segment
+      path_segment = if prefix == "", do: segment, else: prefix <> "/" <> segment
 
-      page_for_slug = Map.get(pages_map || %{}, slug_segment)
+      page_for_path = Map.get(pages_tree_map || %{}, path_segment)
 
-      label =
-        case page_for_slug do
-          %{title: title} when is_binary(title) and title != "" -> title
-          _ -> humanize_slug_segment(segment)
-        end
+      label = segment
 
-      crumb = %{slug: slug_segment, label: label, link?: not is_nil(page_for_slug)}
-      {[crumb | acc], slug_segment}
+      crumb = %{path: path_segment, label: label, link?: not is_nil(page_for_path)}
+      {[crumb | acc], path_segment}
     end)
     |> elem(0)
     |> Enum.reverse()
-  end
-
-  defp humanize_slug_segment(segment) do
-    segment
-    |> String.replace("-", " ")
-    |> Utils.String.titleize()
   end
 end

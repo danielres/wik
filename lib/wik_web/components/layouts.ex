@@ -160,6 +160,11 @@ defmodule WikWeb.Layouts do
                   </li>
 
                   <li>
+                    <.link navigate={~p"/#{@ctx.current_group.slug}/tree"}>
+                      <.icon name="hero-folder-mini" /> Tree
+                    </.link>
+                  </li>
+                  <li>
                     <.link navigate={~p"/#{@ctx.current_group.slug}/wiki"}>
                       <.icon name="hero-book-open-mini" /> All pages
                     </.link>

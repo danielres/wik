@@ -17,6 +17,8 @@
 @import "./milkdown/split-editor.css";
 @import "./prose-markdown.css";
 @import "./toolbar-editor-controls.css";
+/* @import "../node_modules/tui-tree/dist/tui-tree.css"; */
+@import "./tui-tree.css";
 
 @source "../../deps/ash_authentication_phoenix";
 @source "../css";

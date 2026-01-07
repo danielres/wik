@@ -176,6 +176,10 @@ end
 
 defmodule Wik.Calculations.LastUpdatedPages do
   use Ash.Resource.Calculation
+  require Ash.Query
+
+  alias Wik.Wiki.PageTree
+  alias Wik.Wiki.PageTree.Utils, as: PageTreeUtils
 
   @impl true
   def init(opts) do
@@ -185,12 +189,13 @@ defmodule Wik.Calculations.LastUpdatedPages do
 
   @impl true
   def load(_query, _opts, _context) do
-    [pages: [:title, :updated_at, :slug, author: [:email]]]
+    [pages: [:updated_at, author: [:email]]]
   end
 
   @impl true
   def calculate(groups, _opts, context) do
     limit = Map.get(context.arguments, :limit, 5)
+    actor = Map.get(context, :actor)
 
     Enum.map(groups, fn group ->
       case group.pages do
@@ -198,14 +203,22 @@ defmodule Wik.Calculations.LastUpdatedPages do
           []
 
         pages ->
+          tree_by_page_id = load_tree_by_page_id(group.id, actor)
+
           pages
           |> Enum.sort_by(& &1.updated_at, {:desc, DateTime})
           |> Enum.take(limit)
           |> Enum.map(fn page ->
+            path =
+              case Map.get(tree_by_page_id, page.id) do
+                %{path: path} when is_binary(path) and path != "" -> path
+                _ -> nil
+              end
+
             %{
-              title: page.title,
+              title: PageTreeUtils.title_from_path(path),
+              path: path,
               author: page.author,
-              slug: page.slug,
               updated_at: page.updated_at
             }
           end)
@@ -214,4 +227,26 @@ defmodule Wik.Calculations.LastUpdatedPages do
   end
 
   def type(_opts), do: {:array, :map}
+
+  defp load_tree_by_page_id(group_id, actor) do
+    PageTree
+    |> Ash.Query.filter(group_id == ^group_id)
+    |> Ash.Query.select([:path, :page_id])
+    |> Ash.read(actor: actor)
+    |> case do
+      {:ok, trees} ->
+        Enum.reduce(trees, %{}, fn tree, acc ->
+          case tree.page_id do
+            page_id when is_binary(page_id) and page_id != "" ->
+              Map.put(acc, page_id, tree)
+
+            _ ->
+              acc
+          end
+        end)
+
+      _ ->
+        %{}
+    end
+  end
 end

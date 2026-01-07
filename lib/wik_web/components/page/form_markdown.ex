@@ -5,6 +5,7 @@ defmodule WikWeb.Components.Page.FormMarkdown do
   attr :redo_button_id, :string, default: nil
   attr :exit_after_save?, :boolean, default: false
   attr :pages_tree_map, :map, default: %{}
+  attr :page_tree_path, :string, required: true
 
   @impl true
   def render(assigns) do
@@ -29,13 +30,15 @@ defmodule WikWeb.Components.Page.FormMarkdown do
 
         <textarea id={"page_text_#{@id}"} name={@form[:text].name} hidden>{text_value}</textarea>
 
+        <% page_title = Wik.Wiki.PageTree.Utils.title_from_path(@page_tree_path) %>
+
         <div class={"milkdown-editor-container editable-#{@editable}"}>
           <div
             id={"milkdown-editor-#{@id}"}
             phx-hook="MilkdownEditor"
             phx-update="ignore"
             data-markdown={text_value}
-            data-page-title={@page.title || ""}
+            data-page-title={page_title}
             data-page-id={@page.id}
             data-input-id={"page_text_#{@id}"}
             data-mode={if(@editable, do: "edit", else: "view")}
@@ -52,7 +55,6 @@ defmodule WikWeb.Components.Page.FormMarkdown do
                  %{
                    id: page.id,
                    path: page.path,
-                   title: page.title,
                    updated_at: page.updated_at
                  }}
               end)
@@ -81,17 +83,11 @@ defmodule WikWeb.Components.Page.FormMarkdown do
   def handle_event("save", %{"page" => page_params}, socket) do
     path_map =
       ensure_page_tree_stubs(
-      Map.get(page_params, "text"),
-      socket.assigns.group.id,
-      socket.assigns.actor,
-      socket.assigns.pages_tree_map || %{}
+        Map.get(page_params, "text"),
+        socket.assigns.group.id,
+        socket.assigns.actor,
+        socket.assigns.pages_tree_map || %{}
       )
-
-    page_params =
-      case Utils.Markdown.extract_page_title(Map.get(page_params, "text")) do
-        title when is_binary(title) and title != "" -> Map.put(page_params, "title", title)
-        _ -> page_params
-      end
 
     page_params =
       Map.update(page_params, "text", "", fn text ->
@@ -134,13 +130,10 @@ defmodule WikWeb.Components.Page.FormMarkdown do
     assign(socket, form: to_form(form))
   end
 
-  @wikilink_regex ~r/\\*\[\\*\[([^\]]+?)\\*\]\\*\]/u
-
   defp ensure_page_tree_stubs(text, group_id, actor, path_map) do
     paths =
-      @wikilink_regex
-      |> Regex.scan(text || "", capture: :all_but_first)
-      |> List.flatten()
+      Wik.Wiki.PageTree.Markdown.extract_wikilinks(text)
+      |> Enum.map(& &1.target)
 
     Enum.reduce(paths, path_map, fn raw_path, map ->
       case Wik.Wiki.PageTree.Utils.resolve_tree_by_path(raw_path, group_id, actor, map) do
@@ -155,17 +148,6 @@ defmodule WikWeb.Components.Page.FormMarkdown do
   end
 
   defp rewrite_wikilinks_with_map(text, path_map) do
-    Regex.replace(@wikilink_regex, text || "", fn full, raw_path ->
-      case Wik.Wiki.PageTree.Utils.normalize_path(raw_path) do
-        {:ok, normalized, _title} ->
-          case Map.get(path_map, normalized) do
-            %{id: id} when is_binary(id) and id != "" -> "[#{normalized}](wikid:#{id})"
-            _ -> full
-          end
-
-        _ ->
-          full
-      end
-    end)
+    Wik.Wiki.PageTree.Markdown.rewrite_wikilinks(text, path_map)
   end
 end

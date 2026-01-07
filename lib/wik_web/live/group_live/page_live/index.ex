@@ -17,12 +17,13 @@ defmodule WikWeb.GroupLive.PageLive.Index do
             id={id}
             class="card rounded bg-base-200/50 space-y-0 px-4 py-2 has-[a.title:hover]:bg-base-300/60 transition"
           >
+            <% page_path = page_tree_path_for(@ctx, page.id) %>
             <div class="grid grid-cols-[4fr_2fr_1fr_1fr_1fr_auto] gap-x-8 items-baseline">
               <.link
-                navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, page)}
+                navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, page_path)}
                 class="title hover:text-white text-sm text-balance break-all"
               >
-                {page.title}
+                {page_path || "Unknown"}
               </.link>
 
               <div class="justify-self-end">
@@ -31,7 +32,7 @@ defmodule WikWeb.GroupLive.PageLive.Index do
                   patch={
                     WikWeb.GroupLive.PageLive.History.page_url(
                       @ctx.current_group,
-                      page,
+                      page_path,
                       page.versions_count
                     )
                   }
@@ -99,7 +100,7 @@ defmodule WikWeb.GroupLive.PageLive.Index do
     current_group_id = socket.assigns.ctx.current_group.id
 
     Wik.Wiki.Page
-    |> Ash.Query.select([:id, :slug, :title, :updated_at])
+    |> Ash.Query.select([:id, :updated_at])
     |> Ash.Query.filter(group_id == ^current_group_id)
     |> Ash.Query.sort(updated_at: :desc)
     |> Ash.read!(actor: socket.assigns[:current_user], load: [:versions_count, :backlinks_count])
@@ -108,6 +109,13 @@ defmodule WikWeb.GroupLive.PageLive.Index do
   defp reload_page!(socket, id) do
     Wik.Wiki.Page
     |> Ash.get!(id, actor: socket.assigns.current_user, load: [:versions_count, :backlinks_count])
+  end
+
+  defp page_tree_path_for(ctx, page_id) do
+    case Map.get(ctx.pages_tree_by_page_id || %{}, page_id) do
+      %{path: path} when is_binary(path) and path != "" -> path
+      _ -> nil
+    end
   end
 
   @impl true

@@ -15,7 +15,7 @@ defmodule WikWeb.Components do
       <h1 class="text-2xl">Ooopsie...</h1>
       <p class="mt-3 text-sm opacity-70">This page does not exist.</p>
       <.link
-        navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, %{slug: "home"})}
+        navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, "home")}
         class="btn mt-3"
       >
         <.icon name="hero-arrow-left-mini" /> <span>Back to wiki</span>

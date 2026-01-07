@@ -30,9 +30,14 @@ import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { collab, collabServiceCtx } from "@milkdown/plugin-collab";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
+import { trailing } from "@milkdown/kit/plugin/trailing";
 import { getMarkdown } from "@milkdown/utils";
 import { setupBlockHandle } from "./block-handle";
-import { embedSchema, remarkEmbedDirective, remarkEmbedPlugin } from "./embed-node";
+import {
+	embedSchema,
+	remarkEmbedDirective,
+	remarkEmbedPlugin,
+} from "./embed-node";
 import { embedView } from "./embed-view";
 import { inputRuleWikilink } from "./input-rule-wikilink";
 import { overrideHeadingSchema } from "./override-heading-schema";
@@ -43,12 +48,12 @@ import {
 } from "./slash-menus/slash-menu-wikilinks";
 import { createSlashMenu } from "./slash-menus/slash-menu";
 import { overrideTableSchema, sanitizeDocPlugin } from "./sanitize-doc";
-import { ensureTitleHeadingPlugin } from "./ensure-title-heading";
 import {
 	remarkWikilinkPlugin,
 	wikilinkConfig,
 	wikilinkSchema,
 	wikilinkView,
+	configureWikilinkMarkdown,
 } from "./wikilink-node";
 import { createTagBadgePlugin } from "./tag-badge-plugin";
 import { setupToolbar, toolbarTooltip } from "./toolbar";
@@ -84,6 +89,7 @@ export async function createMilkdownEditor({
 				ctx.set(wikilinkConfig.key, {
 					rootPath,
 				});
+				configureWikilinkMarkdown(ctx);
 
 				if (isStatic) {
 					ctx.set(defaultValueCtx, markdown);
@@ -159,15 +165,12 @@ export async function createMilkdownEditor({
 			.use(cursorPlugin)
 			.use(clipboard)
 			.use(inputRuleWikilink)
+			.use(trailing)
 			.use(splitEditing)
 			// Ensure the sanitizer is appended after all other ProseMirror plugins.
 			.config((ctx) => {
 				ctx.update(prosePluginsCtx, (plugins) =>
-					plugins.concat(
-						sanitizeDocPlugin,
-						ensureTitleHeadingPlugin({ rootEl: root }),
-					),
-				);
+					plugins.concat(sanitizeDocPlugin));
 			})
 			.create()
 			.then((editor) => {

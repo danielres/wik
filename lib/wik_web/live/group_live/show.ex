@@ -107,9 +107,9 @@ defmodule WikWeb.GroupLive.Show do
               <.link
                 :for={p <- @group.last_updated_pages}
                 class={[content_class, "grid grid-cols-3 hover:opacity-100"]}
-                navigate={WikWeb.GroupLive.PageLive.Show.page_url(@group, p)}
+                navigate={WikWeb.GroupLive.PageLive.Show.page_url(@group, p.path)}
               >
-                <div>{p.title}</div>
+                <div>{p.path || p.title || "Unknown"}</div>
                 <div>
                   <WikWeb.Components.Time.pretty datetime={p.updated_at} />
                 </div>

@@ -31,6 +31,33 @@ defmodule Wik.Wiki.PageTree.Utils do
     end
   end
 
+  @spec pages_tree_topic(String.t() | nil) :: String.t() | nil
+  def pages_tree_topic(nil), do: nil
+
+  def pages_tree_topic(group_id) when is_binary(group_id) do
+    "pages_tree:#{group_id}"
+  end
+
+
+  @spec sanitize_segment(String.t() | nil) :: String.t()
+  def sanitize_segment(nil), do: ""
+
+  def sanitize_segment(segment) when is_binary(segment) do
+    segment
+    |> String.replace(@invalid_title_regex, "")
+    |> String.trim()
+  end
+
+  @spec title_from_path(String.t() | nil) :: String.t()
+  def title_from_path(nil), do: ""
+
+  def title_from_path(path) when is_binary(path) do
+    case normalize_path(path) do
+      {:ok, _normalized, title} -> title
+      _ -> ""
+    end
+  end
+
   @spec resolve_tree_by_path(String.t(), String.t(), any, map()) ::
           {:ok, PageTree.t(), map()} | {:error, String.t()}
   def resolve_tree_by_path(path, group_id, actor, path_map \\ %{}) do

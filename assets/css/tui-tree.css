@@ -1,0 +1,131 @@
+.tui-tree {
+}
+
+.tui-tree-subtree {
+	@apply ml-6;
+}
+
+.tui-tree-content-wrapper {
+	@apply flex gap-1;
+}
+
+.tui-tree-opened {
+	.tui-tree-toggle-btn {
+		@apply hero-chevron-down-mini;
+	}
+}
+
+.tui-tree-closed {
+	.tui-tree-toggle-btn {
+		@apply hero-chevron-right-mini;
+	}
+}
+
+.tui-ico-folder {
+	@apply size-4;
+	@apply hidden;
+}
+
+.tui-tree-content-wrapper {
+  @apply w-fit;
+	&:hover {
+		@apply bg-info/30;
+	}
+	.tui-tree-text {
+		@apply cursor-grab;
+		@apply w-64 overflow-hidden text-ellipsis text-ellipsis text-nowrap;
+	}
+}
+
+.tui-tree-node.tui-tree-drag {
+	@apply cursor-grabbing;
+
+	.tui-tree-content-wrapper,
+	.tui-tree-text {
+		@apply cursor-grabbing;
+	}
+}
+
+#wikitree:has(.tui-tree-drag) {
+	@apply cursor-grabbing;
+}
+
+#wikitree:has(.tui-tree-drag) * {
+	@apply cursor-grabbing;
+}
+
+.tui-tree-line {
+	@apply m-0 p-0 w-[300px] h-px text-[0px] bg-[#4b96e6];
+}
+
+.tui-tree-drop {
+	@apply py-[5px] pr-[22px] pl-[10px] h-[12px] font-normal bg-white border border-[#4b96e6] text-[#4b96e6];
+	@apply cursor-grabbing;
+}
+.tui-tree-selector {
+	@apply absolute w-full h-[24px] top-0 left-0 right-0 bg-white;
+}
+
+.tui-tree-selected > .tui-tree-content-wrapper {
+	@apply bg-[rgba(75,150,230,0.1)];
+	background: #e7eff7;
+}
+
+.tui-tree-selected > .tui-tree-content-wrapper .tui-tree-text {
+	@apply font-bold text-[#4b96e6];
+}
+
+.tui-tree-selected > .tui-tree-content-wrapper .tui-ico-folder,
+.tui-tree-drop .tui-ico-folder {
+	background-position: -32px -12px;
+}
+/**/
+.tui-tree-selected.tui-tree-opened > .tui-tree-content-wrapper .tui-ico-folder {
+	background-position: -32px -24px;
+}
+
+/* .tui-tree-selected > .tui-tree-content-wrapper .tui-ico-file, */
+/* .tui-tree-drop .tui-ico-file { */
+/* 	background-position: -11px -32px; */
+/* } */
+/**/
+/* .tui-tree-hover > .tui-tree-content-wrapper { */
+/* 	@apply bg-[rgba(75,150,230,0.1)]; */
+/* 	background: #e7eff7; */
+/* } */
+/**/
+/* .tui-tree-subtree .tui-tree-content-wrapper { */
+/* 	@apply pl-[46px]; */
+/* } */
+/**/
+/* .tui-tree-subtree .tui-tree-subtree .tui-tree-content-wrapper { */
+/* 	@apply pl-[69px]; */
+/* } */
+/**/
+/* .tui-tree-subtree .tui-tree-subtree .tui-tree-subtree .tui-tree-content-wrapper { */
+/* 	@apply pl-[93px]; */
+/* } */
+/**/
+/* .tui-tree-wrap-checkbox { */
+/* 	.tui-tree-toggle-btn { */
+/* 		@apply mr-[4px]; */
+/* 	} */
+/* } */
+/**/
+/* .tui-ico-check { */
+/* 	@apply w-[14px] h-[14px]; */
+/* 	background-position: 0px 0px; */
+/**/
+/* 	input { */
+/* 		@apply absolute left-[-9999px]; */
+/* 	} */
+/* } */
+/**/
+/* .tui-checkbox { */
+/* 	@apply relative overflow-hidden inline-block mr-[8px] h-[14px] text-[0px] cursor-pointer align-top; */
+/* } */
+/**/
+/* .tui-checkbox.tui-is-checked .tui-ico-check { */
+/* 	background-position: -16px 0; */
+/* } */
+/**/

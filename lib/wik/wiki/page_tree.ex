@@ -10,7 +10,8 @@ defmodule Wik.Wiki.PageTree do
     otp_app: :wik,
     domain: Wik.Wiki,
     authorizers: [Ash.Policy.Authorizer],
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    notifiers: [Wik.Notifiers.PageTreeMutation]
 
   require Ash.Query
 

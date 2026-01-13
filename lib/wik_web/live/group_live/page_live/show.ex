@@ -40,7 +40,19 @@ defmodule WikWeb.GroupLive.PageLive.Show do
             <Show.PageHead.render page={@page} current_user={@current_user} input={@page_title_input} />
           </div>
         </div>
-        <Show.FormMarkdown.render {assigns} />
+
+        <.live_component
+          module={Show.FormMarkdown}
+          id={"page-form-#{@page.id}"}
+          form_id={"page-form-#{@page.id}"}
+          page={@page}
+          group={@ctx.current_group}
+          actor={@current_user}
+          editable={@editing?}
+          pages_tree_map={@ctx.pages_tree_map}
+          page_tree_path={@page_tree_path}
+          exit_after_save?={@exit_after_save?}
+        />
       </div>
 
       <Show.ModalUnsavedExit.render {assigns} />

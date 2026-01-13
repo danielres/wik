@@ -4,13 +4,15 @@ defmodule Wik.Wiki.Backlink.CascadeTest do
 
   alias Wik.Wiki.Backlink
   alias Wik.Wiki.Page
+  alias Wik.Wiki.PageTree
 
   test "deleting group cascades backlinks" do
     user = generate(user(authorize?: false))
     group = generate(group(actor: user, authorize?: false))
 
     target = create_page(group, user, "Target")
-    _source = create_page(group, user, "Source", "See [Target](wikid:#{target.id})")
+    target_wikid = wikid_for_page(group, user, target)
+    _source = create_page(group, user, "Source", "See [Target](wikid:#{target_wikid})")
 
     assert backlink_count() == 1
 
@@ -24,7 +26,8 @@ defmodule Wik.Wiki.Backlink.CascadeTest do
     group = generate(group(actor: user, authorize?: false))
 
     target = create_page(group, user, "Target")
-    source = create_page(group, user, "Source", "See [Target](wikid:#{target.id})")
+    target_wikid = wikid_for_page(group, user, target)
+    source = create_page(group, user, "Source", "See [Target](wikid:#{target_wikid})")
 
     assert backlink_count() == 1
 
@@ -39,7 +42,8 @@ defmodule Wik.Wiki.Backlink.CascadeTest do
     group = generate(group(actor: user, authorize?: false))
 
     target = create_page(group, user, "Target")
-    _source = create_page(group, user, "Source", "See [Target](wikid:#{target.id})")
+    target_wikid = wikid_for_page(group, user, target)
+    _source = create_page(group, user, "Source", "See [Target](wikid:#{target_wikid})")
 
     assert backlink_count() == 1
 
@@ -61,5 +65,11 @@ defmodule Wik.Wiki.Backlink.CascadeTest do
 
   defp backlink_count do
     Backlink |> Ash.read!(authorize?: false) |> Enum.count()
+  end
+
+  defp wikid_for_page(group, actor, %Page{slug: slug}) do
+    {:ok, tree, _map} = PageTree.Utils.resolve_tree_by_path(slug, group.id, actor, %{})
+    {:ok, ensured_tree} = PageTree.Utils.ensure_page_for_tree(tree, actor)
+    ensured_tree.id
   end
 end

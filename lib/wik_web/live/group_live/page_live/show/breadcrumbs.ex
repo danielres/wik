@@ -1,4 +1,4 @@
-defmodule WikWeb.Components.Page.Breadcrumbs do
+defmodule WikWeb.GroupLive.PageLive.Show.Breadcrumbs do
   @moduledoc false
 
   use WikWeb, :html

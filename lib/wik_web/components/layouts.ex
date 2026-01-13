@@ -5,8 +5,6 @@ defmodule WikWeb.Layouts do
   """
   use WikWeb, :html
 
-  alias WikWeb.GroupLive.PageLive.Show.ActionButton
-
   # Embed all files in layouts/* within this module.
   # The default root.html.heex file contains the HTML
   # skeleton of your application, namely HTML headers

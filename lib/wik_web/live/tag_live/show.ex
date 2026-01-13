@@ -15,7 +15,7 @@ defmodule WikWeb.TagLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx}>
+    <Layouts.drawer2 flash={@flash} ctx={@ctx}>
       <Layouts.page_container>
         <:title>
           <div class="flex items-center gap-1">
@@ -70,7 +70,7 @@ defmodule WikWeb.TagLive.Show do
             </section>
           </div>
 
-          <div class="space-y-4 mt-8">
+          <div class="space-y-6">
             <section
               :for={{block_id, block} <- @tagged_blocks}
               id={"tag-block-#{block_id}"}
@@ -115,7 +115,7 @@ defmodule WikWeb.TagLive.Show do
           </div>
         </div>
       </Layouts.page_container>
-    </Layouts.drawer>
+    </Layouts.drawer2>
     """
   end
 

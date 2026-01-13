@@ -24,7 +24,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer2 flash={@flash} ctx={@ctx} open?={@open?}>
+    <Layouts.drawer2 flash={@flash} ctx={@ctx} open?={@open?} panels?>
       <div
         class={["mx-auto mt-8", "source-visible-#{@source?}"]}
         style={if(@source?, do: "", else: "width: min(75ch, 100%)")}

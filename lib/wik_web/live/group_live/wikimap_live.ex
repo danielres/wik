@@ -6,7 +6,7 @@ defmodule WikWeb.GroupLive.WikimapLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx} backdrop?>
+    <Layouts.drawer2 flash={@flash} ctx={@ctx} backdrop?>
       <:backdrop>
         <div
           id="wikimap-canvas"
@@ -41,7 +41,7 @@ defmodule WikWeb.GroupLive.WikimapLive do
           </ul>
         </div>
       </Layouts.page_container>
-    </Layouts.drawer>
+    </Layouts.drawer2>
     """
   end
 

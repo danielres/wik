@@ -18,7 +18,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx}>
+    <Layouts.drawer2 flash={@flash} ctx={@ctx} panels?>
       <%= if(@not_found?) do %>
         <WikWeb.Components.dialog_page_not_found ctx={@ctx} />
       <% else %>
@@ -120,7 +120,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
           </div>
         </div>
       </:sticky_toolbar>
-    </Layouts.drawer>
+    </Layouts.drawer2>
     """
   end
 

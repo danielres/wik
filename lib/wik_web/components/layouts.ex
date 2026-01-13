@@ -50,6 +50,7 @@ defmodule WikWeb.Layouts do
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :backdrop?, :boolean, default: false
   attr :open?, :boolean, default: true
+  attr :panels?, :boolean, default: false
   slot :inner_block, required: true
   slot :backdrop, required: false
   slot :panels, required: false
@@ -58,15 +59,13 @@ defmodule WikWeb.Layouts do
   def drawer2(assigns) do
     ~H"""
     <div class="stacked items-start overflow-clip">
-      <div :if={@backdrop?}>{render_slot(@backdrop)}</div>
-
       <div class="grid grid-rows-[auto_1fr] min-h-svh">
         <.layout_header ctx={@ctx} class="px-4 sm:px-6 lg:px-8" />
 
         <div class={["drawer2", @open? and "drawer2-open"]}>
           <div class="drawer2-content stacked">
             <div class="stacked">
-              <div class="grid md:mr-64 ">
+              <div class={["grid pb-6", if(@panels?, do: "md:mr-64")]}>
                 <main class="px-4 sm:px-6 lg:px-8">
                   {render_slot(@inner_block)}
                 </main>
@@ -92,10 +91,13 @@ defmodule WikWeb.Layouts do
               </div>
 
               {# = PANELS ==================================================== }
-              <div class={[
-                "bg-base-300/70 w-0 md:w-64 backdrop-blur transition-all ",
-                @open? and "w-64"
-              ]}>
+              <div
+                :if={@panels?}
+                class={[
+                  "bg-base-300/70 w-0 md:w-64 backdrop-blur transition-all ",
+                  @open? and "w-64"
+                ]}
+              >
                 <div class="sticky top-0 w-64">
                   {render_slot(@panels)}
                 </div>
@@ -104,42 +106,10 @@ defmodule WikWeb.Layouts do
           </div>
         </div>
       </div>
-    </div>
 
-    <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
-    """
-  end
-
-  attr :ctx, :any, required: true
-  attr :flash, :map, required: true, doc: "the map of flash messages"
-  attr :sidebar?, :boolean, default: false
-  attr :backdrop?, :boolean, default: false
-  slot :sticky_toolbar, required: false
-  slot :inner_block, required: true
-  slot :sidebar, required: false
-  slot :backdrop, required: false
-
-  def drawer(assigns) do
-    ~H"""
-    <div class={@backdrop? and "stacked min-h-svh"}>
-      <div :if={@backdrop?}>
+      <%= if @backdrop? do %>
         {render_slot(@backdrop)}
-      </div>
-
-      <div class={@backdrop? and "pointer-events-none [&>*>*>*]:pointer-events-auto"}>
-        <WikWeb.Components.drawer sidebar?={@sidebar?}>
-          {render_slot(@sticky_toolbar)}
-
-          <:header>
-            <.layout_header ctx={@ctx} />
-          </:header>
-
-          {render_slot(@inner_block)}
-          {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
-
-          <:sidebar :let={drawer_id}>{render_slot(@sidebar, drawer_id)}</:sidebar>
-        </WikWeb.Components.drawer>
-      </div>
+      <% end %>
     </div>
 
     <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
@@ -153,7 +123,7 @@ defmodule WikWeb.Layouts do
   def page_container(assigns) do
     ~H"""
     <div class="grid grid-cols-[1fr_min(75ch,100%)_1fr] [&>*]:col-start-2 [&>*]:px-6">
-      <header class="mt-16 mb-6">
+      <header class="mt-16 mb-8">
         <h1 :if={@title != []} class="text-3xl">{render_slot(@title)}</h1>
         <p :if={@subtitle != []} class="text-sm text-base-content/70">
           {render_slot(@subtitle)}

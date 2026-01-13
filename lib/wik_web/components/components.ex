@@ -7,22 +7,22 @@ defmodule WikWeb.Components do
 
   use Phoenix.Component
 
-  # attr :ctx, :any, required: true
-  #
-  # def dialog_page_not_found(assigns) do
-  #   ~H"""
-  #   <div class="mx-auto px-6 py-16 text-center w-svw">
-  #     <h1 class="text-2xl">Ooopsie...</h1>
-  #     <p class="mt-3 text-sm opacity-70">This page does not exist.</p>
-  #     <.link
-  #       navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, "home")}
-  #       class="btn mt-3"
-  #     >
-  #       <.icon name="hero-arrow-left-mini" /> <span>Back to wiki</span>
-  #     </.link>
-  #   </div>
-  #   """
-  # end
+  attr :ctx, :any, required: true
+
+  def dialog_page_not_found(assigns) do
+    ~H"""
+    <div class="mx-auto px-6 py-16 text-center w-svw">
+      <h1 class="text-2xl">Ooopsie...</h1>
+      <p class="mt-3 text-sm opacity-70">This page does not exist.</p>
+      <.link
+        navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, "home")}
+        class="btn mt-3"
+      >
+        <.icon name="hero-arrow-left-mini" /> <span>Back to wiki</span>
+      </.link>
+    </div>
+    """
+  end
 
   attr :class, :string, default: ""
 

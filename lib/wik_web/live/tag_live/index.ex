@@ -14,7 +14,7 @@ defmodule WikWeb.TagLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx}>
+    <Layouts.drawer2 flash={@flash} ctx={@ctx}>
       <Layouts.page_container>
         <:title>Tags</:title>
 
@@ -39,7 +39,7 @@ defmodule WikWeb.TagLive.Index do
           <p>Add hashtags to headings in wiki pages to use this feature.</p>
         </div>
       </Layouts.page_container>
-    </Layouts.drawer>
+    </Layouts.drawer2>
     """
   end
 

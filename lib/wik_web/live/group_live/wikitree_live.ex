@@ -7,7 +7,7 @@ defmodule WikWeb.GroupLive.WikitreeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx} backdrop?>
+    <Layouts.drawer2 flash={@flash} ctx={@ctx} backdrop?>
       <Layouts.page_container>
         <:title>
           <div class="w-fit bg-base-200/50 backdrop-blur">Wiki tree</div>
@@ -23,7 +23,7 @@ defmodule WikWeb.GroupLive.WikitreeLive do
         >
         </div>
       </Layouts.page_container>
-    </Layouts.drawer>
+    </Layouts.drawer2>
     """
   end
 

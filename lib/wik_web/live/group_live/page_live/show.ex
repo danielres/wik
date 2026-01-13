@@ -102,45 +102,13 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     current_user = socket.assigns.current_user
     pages_tree_map = socket.assigns.ctx.pages_tree_map || %{}
 
-    with {:ok, tree, updated_map} <-
-           Wik.Wiki.PageTree.Utils.resolve_tree_by_path(
-             page_path,
-             current_group.id,
-             current_user,
-             pages_tree_map
-           ),
-         {:ok, ensured_tree} <- Wik.Wiki.PageTree.Utils.ensure_page_for_tree(tree, current_user),
-         {:ok, page} <-
-           Wik.Wiki.Page
-           |> Ash.get(ensured_tree.page_id, actor: current_user, load: [:versions_count]) do
-      if connected?(socket) do
-        pages_tree_topic = Wik.Wiki.PageTree.Utils.pages_tree_topic(current_group.id)
-        Phoenix.PubSub.subscribe(Wik.PubSub, pages_tree_topic)
-        Phoenix.PubSub.subscribe(Wik.PubSub, "page:updated:#{page.id}")
-        Phoenix.PubSub.subscribe(Wik.PubSub, "page:destroyed:#{page.id}")
-      end
-
-      updated_map = Map.put(updated_map, ensured_tree.path, ensured_tree)
-
+    with {:ok, page, ensured_tree, updated_map} <-
+           load_page_from_path(page_path, current_group, current_user, pages_tree_map) do
       {:ok,
        socket
-       |> Show.Utils.PageTree.put_pages_tree_maps(updated_map)
-       |> assign(:page, page)
-       |> assign(:page_title, Wik.Wiki.PageTree.Utils.title_from_path(ensured_tree.path))
-       |> assign(:page_tree_path, ensured_tree.path)
-       |> assign(:page_title_input, Wik.Wiki.PageTree.Utils.title_from_path(ensured_tree.path))
-       |> assign(:open?, false)
-       |> assign(:env, @env)
-       |> assign(:debug?, false)
-       |> assign(:source?, false)
-       |> set_editing(false)
-       |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
-       |> assign(:updated_fields, [])
-       |> assign(:show_unsaved_modal, false)
-       |> assign(:exit_after_save?, false)
-       |> assign(:backlinks, load_backlinks(page))
-       |> assign(:toc, Utils.Markdown.extract_toc(page.text))
-       |> maybe_subscribe_backlinks(page)}
+       |> maybe_subscribe_page(current_group, page)
+       |> maybe_subscribe_backlinks(page)
+       |> assign_loaded_page(page, ensured_tree, updated_map)}
     end
   end
 
@@ -205,26 +173,16 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     raw_path = title || ""
     pages_tree_map = socket.assigns.ctx.pages_tree_map || %{}
 
-    case Wik.Wiki.PageTree.Utils.resolve_tree_by_path(
-           raw_path,
-           current_group.id,
-           current_user,
-           pages_tree_map
-         ) do
-      {:ok, tree, updated_map} ->
-        case Wik.Wiki.PageTree.Utils.ensure_page_for_tree(tree, current_user) do
-          {:ok, ensured_tree} ->
-            updated_map = Map.put(updated_map, ensured_tree.path, ensured_tree)
-            socket = Show.Utils.PageTree.put_pages_tree_maps(socket, updated_map)
+    case resolve_tree_with_page(raw_path, current_group, current_user, pages_tree_map) do
+      {:ok, ensured_tree, updated_map} ->
+        socket = Show.Utils.PageTree.put_pages_tree_maps(socket, updated_map)
 
-            {:reply, %{ok: true, page: %{id: ensured_tree.page_id, path: ensured_tree.path}},
-             socket}
+        {:reply, %{ok: true, page: %{id: ensured_tree.page_id, path: ensured_tree.path}}, socket}
 
-          {:error, _} ->
-            {:reply, %{ok: false, error: "create_failed"}, socket}
-        end
+      {:error, :ensure, _} ->
+        {:reply, %{ok: false, error: "create_failed"}, socket}
 
-      {:error, _} ->
+      {:error, :resolve, _} ->
         {:reply, %{ok: false, error: "title_required"}, socket}
     end
   end
@@ -371,6 +329,65 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       actor: socket.assigns.current_user,
       load: [:versions_count]
     )
+  end
+
+  defp load_page_from_path(page_path, group, actor, pages_tree_map) do
+    with {:ok, ensured_tree, updated_map} <-
+           resolve_tree_with_page(page_path, group, actor, pages_tree_map),
+         {:ok, page} <-
+           Wik.Wiki.Page
+           |> Ash.get(ensured_tree.page_id, actor: actor, load: [:versions_count]) do
+      {:ok, page, ensured_tree, updated_map}
+    end
+  end
+
+  defp resolve_tree_with_page(path, group, actor, pages_tree_map) do
+    case Wik.Wiki.PageTree.Utils.resolve_tree_by_path(path, group.id, actor, pages_tree_map) do
+      {:ok, tree, updated_map} ->
+        case Wik.Wiki.PageTree.Utils.ensure_page_for_tree(tree, actor) do
+          {:ok, ensured_tree} ->
+            {:ok, ensured_tree, Map.put(updated_map, ensured_tree.path, ensured_tree)}
+
+          {:error, reason} ->
+            {:error, :ensure, reason}
+        end
+
+      {:error, reason} ->
+        {:error, :resolve, reason}
+    end
+  end
+
+  defp maybe_subscribe_page(socket, group, page) do
+    if connected?(socket) do
+      pages_tree_topic = Wik.Wiki.PageTree.Utils.pages_tree_topic(group.id)
+      Phoenix.PubSub.subscribe(Wik.PubSub, pages_tree_topic)
+      Phoenix.PubSub.subscribe(Wik.PubSub, "page:updated:#{page.id}")
+      Phoenix.PubSub.subscribe(Wik.PubSub, "page:destroyed:#{page.id}")
+    end
+
+    socket
+  end
+
+  defp assign_loaded_page(socket, page, ensured_tree, updated_map) do
+    page_title = Wik.Wiki.PageTree.Utils.title_from_path(ensured_tree.path)
+
+    socket
+    |> Show.Utils.PageTree.put_pages_tree_maps(updated_map)
+    |> assign(:page, page)
+    |> assign(:page_title, page_title)
+    |> assign(:page_tree_path, ensured_tree.path)
+    |> assign(:page_title_input, page_title)
+    |> assign(:open?, false)
+    |> assign(:env, @env)
+    |> assign(:debug?, false)
+    |> assign(:source?, false)
+    |> set_editing(false)
+    |> assign(:editor_state, %{synced?: true, has_undo?: false, has_redo?: false})
+    |> assign(:updated_fields, [])
+    |> assign(:show_unsaved_modal, false)
+    |> assign(:exit_after_save?, false)
+    |> assign(:backlinks, load_backlinks(page))
+    |> assign(:toc, Utils.Markdown.extract_toc(page.text))
   end
 
   defp set_editing(socket, value) do

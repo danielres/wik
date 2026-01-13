@@ -1,0 +1,38 @@
+/* Minimal DaisyUI-like drawer2 (checkbox-driven)
+   - no backdrop / overlay
+   - left drawer2 by default
+   - supports .drawer2-end for right side
+   - uses nested CSS + Tailwind @apply
+*/
+
+.drawer2 {
+	@apply grid w-svw;
+
+	.drawer2-content {
+		@apply grid;
+	}
+	/* the side layer sits on top of everything (contains the panel) */
+	.drawer2-side {
+		@apply hidden;
+		@apply start-auto end-0 fixed inset-y-0;
+		> :first-child {
+			@apply h-full w-80 max-w-[80vw];
+			@apply will-change-transform;
+		}
+	}
+}
+
+.drawer2-side {
+	@apply pointer-events-none;
+	> :first-child {
+		transition: transform 200ms ease;
+		transform: translateX(100%);
+	}
+}
+
+.drawer2-open .drawer2-side {
+	@apply pointer-events-auto;
+	> :first-child {
+		transform: translateX(0);
+	}
+}

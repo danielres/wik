@@ -162,7 +162,8 @@ defmodule WikWeb.GroupLive.WikimapLive do
     path_to_id =
       Enum.reduce(trees, %{}, fn tree, acc ->
         case {tree.page_id, tree.path} do
-          {page_id, path} when is_binary(page_id) and page_id != "" and is_binary(path) and path != "" ->
+          {page_id, path}
+          when is_binary(page_id) and page_id != "" and is_binary(path) and path != "" ->
             Map.put(acc, path, page_id)
 
           _ ->

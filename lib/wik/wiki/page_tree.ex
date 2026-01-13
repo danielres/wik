@@ -35,11 +35,21 @@ defmodule Wik.Wiki.PageTree do
       primary? true
     end
 
-  update :update do
-    accept [:title, :path, :page_id]
-    primary? true
-    require_atomic? false
+    update :update do
+      accept [:title, :path, :page_id]
+      primary? true
+      require_atomic? false
+    end
   end
+
+  policies do
+    policy action_type(:read) do
+      authorize_if relates_to_actor_via([:group, :users])
+    end
+
+    policy action_type([:create, :update, :destroy]) do
+      authorize_if relates_to_actor_via([:group, :users])
+    end
   end
 
   changes do
@@ -79,15 +89,5 @@ defmodule Wik.Wiki.PageTree do
 
   identities do
     identity :unique_group_path, [:group_id, :path], eager_check_with: Wik.Accounts
-  end
-
-  policies do
-    policy action_type(:read) do
-      authorize_if relates_to_actor_via([:group, :users])
-    end
-
-    policy action_type([:create, :update, :destroy]) do
-      authorize_if relates_to_actor_via([:group, :users])
-    end
   end
 end

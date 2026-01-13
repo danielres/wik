@@ -11,6 +11,26 @@ defmodule Wik.Wiki.Backlink.Utils do
   alias Wik.Accounts.User
 
   @doc """
+  Rebuild backlinks for a page when its text changes. Runs inside the page action transaction.
+  """
+  @spec rebuild_for_page(Page.t(), Ash.Changeset.t()) :: :ok | {:error, term()}
+  def rebuild_for_page(%Page{} = page, changeset) do
+    ids = parse_wikilink_ids(page.text)
+    actor = Map.get(changeset || %{}, :actor)
+
+    targets =
+      if MapSet.size(ids) == 0 do
+        []
+      else
+        resolve_tree_targets(ids, page, actor)
+      end
+
+    do_rebuild(page, targets)
+  end
+
+  # INTERNAL ==================================================================
+
+  @doc """
   Parse markdown for backlink target ids.
 
   Only supports `[text](wikid:UUID)` links. Deduplicates results.
@@ -36,24 +56,6 @@ defmodule Wik.Wiki.Backlink.Utils do
     end
   rescue
     _ -> nil
-  end
-
-  @doc """
-  Rebuild backlinks for a page when its text changes. Runs inside the page action transaction.
-  """
-  @spec rebuild_for_page(Page.t(), Ash.Changeset.t()) :: :ok | {:error, term()}
-  def rebuild_for_page(%Page{} = page, changeset) do
-    ids = parse_wikilink_ids(page.text)
-    actor = Map.get(changeset || %{}, :actor)
-
-    targets =
-      if MapSet.size(ids) == 0 do
-        []
-      else
-        resolve_tree_targets(ids, page, actor)
-      end
-
-    do_rebuild(page, targets)
   end
 
   defp do_rebuild(page, targets) do

@@ -4,7 +4,9 @@ defmodule WikWeb.GroupLive.PageLive.History do
   require Ash.Query
 
   def page_url(group, %Wik.Wiki.PageTree{path: path}, version), do: page_url(group, path, version)
-  def page_url(group, %{path: path}, version) when is_binary(path), do: page_url(group, path, version)
+
+  def page_url(group, %{path: path}, version) when is_binary(path),
+    do: page_url(group, path, version)
 
   def page_url(group, path, version) when is_binary(path) do
     encoded = encode_path(path)
@@ -45,7 +47,9 @@ defmodule WikWeb.GroupLive.PageLive.History do
                 <div class="toolbar-actions items-center text-xs">
                   <.link
                     class={["action", @v == 1 and "action-disabled"]}
-                    patch={if @v == 1, do: "#", else: page_url(@ctx.current_group, @page_tree_path, 1)}
+                    patch={
+                      if @v == 1, do: "#", else: page_url(@ctx.current_group, @page_tree_path, 1)
+                    }
                     aria-disabled={@v == 1}
                     tabindex={@v == 1 && "-1"}
                   >

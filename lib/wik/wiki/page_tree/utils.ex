@@ -38,7 +38,6 @@ defmodule Wik.Wiki.PageTree.Utils do
     "pages_tree:#{group_id}"
   end
 
-
   @spec sanitize_segment(String.t() | nil) :: String.t()
   def sanitize_segment(nil), do: ""
 

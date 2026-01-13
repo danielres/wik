@@ -150,7 +150,8 @@ defmodule Wik.Wiki.PageTree.Markdown do
 
     case pending do
       [%{target: expected_target, label: expected_label} | rest] ->
-        if trimmed_target == expected_target and match_label?(trimmed_label, expected_label, trimmed_target) do
+        if trimmed_target == expected_target and
+             match_label?(trimmed_label, expected_label, trimmed_target) do
           {replacement, _} = build_replacement(trimmed_target, trimmed_label, path_map)
           {replacement, rest}
         else
@@ -201,7 +202,6 @@ defmodule Wik.Wiki.PageTree.Markdown do
     do: take_until_double_close(rest, [char | acc])
 
   defp take_until_double_close([], _acc), do: :error
-
 
   defp take_run(chars, match) do
     do_take_run(chars, match, 0)

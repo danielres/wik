@@ -173,7 +173,8 @@ defmodule WikWeb.GroupLive.WikitreeLive do
           if MapSet.disjoint?(new_paths, rest_paths) do
             case Wik.Repo.transaction(fn ->
                    Enum.reduce_while(updates, [], fn {tree, path}, notifications ->
-                     changeset = Ash.Changeset.for_update(tree, :update, %{path: path}, actor: actor)
+                     changeset =
+                       Ash.Changeset.for_update(tree, :update, %{path: path}, actor: actor)
 
                      case Ash.update(changeset,
                             authorize?: false,

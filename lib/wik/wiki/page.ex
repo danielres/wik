@@ -352,5 +352,4 @@ defmodule Wik.Wiki.Page do
 
       {:ok, page}
   end
-
 end

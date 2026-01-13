@@ -12,7 +12,10 @@ defmodule WikWeb.Components.Page.Breadcrumbs do
   def render(assigns) do
     assigns =
       assigns
-      |> assign(:breadcrumbs, build_breadcrumbs(assigns.page_tree_path, assigns.ctx.pages_tree_map))
+      |> assign(
+        :breadcrumbs,
+        build_breadcrumbs(assigns.page_tree_path, assigns.ctx.pages_tree_map)
+      )
 
     ~H"""
     <div

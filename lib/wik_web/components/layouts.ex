@@ -5,6 +5,8 @@ defmodule WikWeb.Layouts do
   """
   use WikWeb, :html
 
+  alias WikWeb.GroupLive.PageLive.Show.ActionButton
+
   # Embed all files in layouts/* within this module.
   # The default root.html.heex file contains the HTML
   # skeleton of your application, namely HTML headers
@@ -25,6 +27,89 @@ defmodule WikWeb.Layouts do
       </Layouts.app>
 
   """
+
+  attr :title, :string, required: false
+  attr :class, :string, default: ""
+  attr :icon, :string, required: false
+  slot :inner_block, required: true
+
+  def panel(assigns) do
+    ~H"""
+    <div class={["px-6 py-4 border-b border-base-100", @class]}>
+      <h6 :if={assigns[:title]} class="flex items-center gap-2 mb-2">
+        <.icon :if={assigns[:icon]} name={@icon} />
+        <span class="uppercase tracking-wide text-xs">{@title}</span>
+      </h6>
+
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  attr :ctx, :any, required: true
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :backdrop?, :boolean, default: false
+  attr :open?, :boolean, default: true
+  slot :inner_block, required: true
+  slot :backdrop, required: false
+  slot :panels, required: false
+  slot :actions, required: false
+
+  def drawer2(assigns) do
+    ~H"""
+    <div class="stacked items-start overflow-clip">
+      <div :if={@backdrop?}>{render_slot(@backdrop)}</div>
+
+      <div class="grid grid-rows-[auto_1fr] min-h-svh">
+        <.layout_header ctx={@ctx} class="px-4 sm:px-6 lg:px-8" />
+
+        <div class={["drawer2", @open? and "drawer2-open"]}>
+          <div class="drawer2-content stacked">
+            <div class="stacked">
+              <div class="grid md:mr-64 ">
+                <main class="px-4 sm:px-6 lg:px-8">
+                  {render_slot(@inner_block)}
+                </main>
+
+                {# footer ============}
+                {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
+              </div>
+
+              {# sidebar backdrop ============}
+              <div
+                :if={@open?}
+                phx-click="toggle_open?"
+                class="bg-base-300/30 hover:bg-base-300/20 transition relative md:hidden cursor-pointer"
+              />
+            </div>
+
+            <div class="grid grid-cols-[1fr_auto]">
+              {# = ACTIONS ==================================================== }
+              <div class="sticky top-0 h-min pointer-events-none [&>*>*]:pointer-events-auto">
+                <div class="flex justify-end">
+                  {render_slot(@actions)}
+                </div>
+              </div>
+
+              {# = PANELS ==================================================== }
+              <div class={[
+                "bg-base-300/70 w-0 md:w-64 backdrop-blur transition-all ",
+                @open? and "w-64"
+              ]}>
+                <div class="sticky top-0 w-64">
+                  {render_slot(@panels)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
+    """
+  end
+
   attr :ctx, :any, required: true
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :sidebar?, :boolean, default: false
@@ -80,10 +165,13 @@ defmodule WikWeb.Layouts do
     """
   end
 
+  attr :class, :string, default: ""
+  attr :ctx, :any, required: true
+
   defp layout_header(assigns) do
     ~H"""
     <nav class={[
-      "px-4 sm:px-6 lg:px-8",
+      @class,
       "bg-base-300 pb-2",
       "space-y-2"
     ]}>

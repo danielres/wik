@@ -239,6 +239,8 @@ defmodule Wik.Wiki.Page do
       public? true
     end
 
+    has_one :page_tree, Wik.Wiki.PageTree
+
     has_many :versions, Wik.Versions.Version do
       destination_attribute :record_id
       source_attribute :id

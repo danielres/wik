@@ -1,9 +1,10 @@
 defmodule WikWeb.GroupLive.PageLive.History do
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
+  alias Wik.Wiki.PageTree
   require Ash.Query
 
-  def page_url(group, %Wik.Wiki.PageTree{path: path}, version), do: page_url(group, path, version)
+  def page_url(group, %PageTree{path: path}, version), do: page_url(group, path, version)
 
   def page_url(group, %{path: path}, version) when is_binary(path),
     do: page_url(group, path, version)
@@ -25,7 +26,8 @@ defmodule WikWeb.GroupLive.PageLive.History do
         <Layouts.page_container>
           <%= if @version.data["text"] do %>
             <% tree_by_id = @ctx.pages_tree_by_id || %{} %>
-            <% text_value = Wik.Wiki.PageTree.Markdown.to_editor(@version.data["text"], tree_by_id) %>
+            <% text_value =
+              PageTree.Markdown.rewrite_wikid_to_wikilinks(@version.data["text"], tree_by_id) %>
             <div
               id={"milkdown-editor-#{@v}"}
               phx-hook="MilkdownEditor"
@@ -39,6 +41,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
         </Layouts.page_container>
       <% end %>
 
+      {# FIXME: MIGRATE TO NEW LAYOUT }
       <:sticky_toolbar>
         <div :if={not @not_found?} class="toolbar-editor-controls">
           <div class="space-y-1">

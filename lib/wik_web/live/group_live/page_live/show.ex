@@ -401,7 +401,7 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   defp editor_markdown(socket) do
     text = socket.assigns.page.text || ""
     tree_by_id = socket.assigns.ctx.pages_tree_by_id || %{}
-    Wik.Wiki.PageTree.Markdown.to_editor(text, tree_by_id)
+    Wik.Wiki.PageTree.Markdown.rewrite_wikid_to_wikilinks(text, tree_by_id)
   end
 
   defp maybe_reseed_after_rename(socket) do
@@ -434,7 +434,10 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
     if text_changed? do
       tree_by_id = socket.assigns.ctx.pages_tree_by_id || %{}
-      markdown = Wik.Wiki.PageTree.Markdown.to_editor(updated_page.text || "", tree_by_id)
+
+      markdown =
+        Wik.Wiki.PageTree.Markdown.rewrite_wikid_to_wikilinks(updated_page.text || "", tree_by_id)
+
       push_event(socket, "collab_saved_version", %{markdown: markdown})
     else
       socket

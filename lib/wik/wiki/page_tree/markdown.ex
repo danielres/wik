@@ -19,15 +19,33 @@ defmodule Wik.Wiki.PageTree.Markdown do
   def rewrite_wikid_to_wikilinks(markdown, tree_by_id \\ %{}) do
     text = markdown || ""
 
-    Regex.replace(@wikid_regex, text, fn full, id ->
-      case Map.get(tree_by_id, id) do
-        %{path: path} when is_binary(path) and path != "" ->
-          "[[#{path}]]"
+    {lines, _state} =
+      text
+      |> String.split("\n", trim: false)
+      |> Enum.reduce({[], %{fenced?: false, fence: nil}}, fn line, {acc, state} ->
+        {state, fence_line?} = Md.update_fence_state(state, line)
 
-        _ ->
-          full
-      end
-    end)
+        if fence_line? or state.fenced? or Md.indented_code_line?(line) do
+          {[line | acc], state}
+        else
+          rewritten =
+            Md.rewrite_non_code_segments(line, fn segment ->
+              Regex.replace(@wikid_regex, segment, fn full, id ->
+                case Map.get(tree_by_id, id) do
+                  %{path: path} when is_binary(path) and path != "" ->
+                    "[[#{path}]]"
+
+                  _ ->
+                    full
+                end
+              end)
+            end)
+
+          {[rewritten | acc], state}
+        end
+      end)
+
+    lines |> Enum.reverse() |> Enum.join("\n")
   end
 
   @spec rewrite_wikilinks_to_wikid(String.t() | nil, map()) :: String.t()

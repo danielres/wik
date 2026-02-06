@@ -51,6 +51,24 @@ defmodule Wik.Wiki.PageTree.Markdown.Utils do
     {IO.iodata_to_binary(Enum.reverse(out)), pending}
   end
 
+  @doc """
+  Rewrites non-inline-code segments within a line of text.
+  Inline code spans are preserved verbatim.
+  """
+  def rewrite_non_code_segments(line, fun) when is_function(fun, 1) do
+    chars = String.to_charlist(line)
+    {out, _inline, buffer} = rewrite_non_code_chars(chars, fun, nil, [], [])
+
+    out =
+      if buffer == [] do
+        out
+      else
+        [fun.(IO.iodata_to_binary(Enum.reverse(buffer))) | out]
+      end
+
+    IO.iodata_to_binary(Enum.reverse(out))
+  end
+
   # @doc """
   # Finds a single attribute value in a list of `{key, value}` pairs.
   # Returns `nil` when the key is not present or attrs are not a list.
@@ -115,6 +133,42 @@ defmodule Wik.Wiki.PageTree.Markdown.Utils do
 
   defp rewrite_chars([char | rest], pending, path_map, inline_len, acc) do
     rewrite_chars(rest, pending, path_map, inline_len, [<<char::utf8>> | acc])
+  end
+
+  defp rewrite_non_code_chars([], _fun, inline_len, out, buffer),
+    do: {out, inline_len, buffer}
+
+  defp rewrite_non_code_chars([?` | rest], fun, nil, out, buffer) do
+    {count, rest} = take_run(rest, ?`)
+    tick_len = count + 1
+
+    out =
+      if buffer == [] do
+        out
+      else
+        [fun.(IO.iodata_to_binary(Enum.reverse(buffer))) | out]
+      end
+
+    out = [String.duplicate("`", tick_len) | out]
+    rewrite_non_code_chars(rest, fun, tick_len, out, [])
+  end
+
+  defp rewrite_non_code_chars([?` | rest], fun, inline_len, out, buffer)
+       when is_integer(inline_len) do
+    {count, rest} = take_run(rest, ?`)
+    tick_len = count + 1
+    out = [String.duplicate("`", tick_len) | out]
+    inline_len = if tick_len == inline_len, do: nil, else: inline_len
+    rewrite_non_code_chars(rest, fun, inline_len, out, buffer)
+  end
+
+  defp rewrite_non_code_chars([char | rest], fun, nil, out, buffer) do
+    rewrite_non_code_chars(rest, fun, nil, out, [<<char::utf8>> | buffer])
+  end
+
+  defp rewrite_non_code_chars([char | rest], fun, inline_len, out, buffer)
+       when is_integer(inline_len) do
+    rewrite_non_code_chars(rest, fun, inline_len, [<<char::utf8>> | out], buffer)
   end
 
   # @doc """

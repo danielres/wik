@@ -43,13 +43,21 @@ export function initCollab({
 
 		const metaMap = yDoc.getMap("meta");
 		const seededVersion = metaMap.get("seeded_version_uuid");
+		const seedHash = hashString(seedMarkdown || "");
+		const seededHash = metaMap.get("seeded_markdown_hash");
 
 		if (!seededVersion) {
 			const myUUID = generateUUID();
 			metaMap.set("seeded_version_uuid", myUUID);
+			metaMap.set("seeded_markdown_hash", seedHash);
 
 			if (seedMarkdown && seedMarkdown.trim()) {
 				collabService.applyTemplate(seedMarkdown);
+			}
+		} else if (!editable && seededHash !== seedHash) {
+			metaMap.set("seeded_markdown_hash", seedHash);
+			if (seedMarkdown && seedMarkdown.trim()) {
+				collabService.applyTemplate(seedMarkdown, () => true);
 			}
 		}
 
@@ -94,4 +102,15 @@ function generateUUID(): string {
 
 	// Last-resort fallback (not cryptographically strong, but sufficient for client ids).
 	return `uuid-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function hashString(value: string): string {
+	let hash = 0;
+
+	for (let i = 0; i < value.length; i += 1) {
+		hash = (hash << 5) - hash + value.charCodeAt(i);
+		hash |= 0;
+	}
+
+	return hash.toString(36);
 }

@@ -247,10 +247,10 @@ const Wikimap = {
 	},
 	activateNodeAt(clientX, clientY, navigation = "new-tab") {
 		const hit = this.nodeAt(clientX, clientY);
-		if (hit && hit.slug) {
+		if (hit && hit.path) {
 			const groupSlug =
 				this.graph.group_slug || this.el.dataset.groupSlug || "";
-			const url = `/${groupSlug}/wiki/${encodeURIComponent(hit.slug)}`;
+			const url = `/${groupSlug}/wiki/${encodePath(hit.path)}`;
 			if (navigation === "same-tab") {
 				window.location.assign(url);
 			} else {
@@ -359,5 +359,12 @@ const Wikimap = {
 		ctx.restore();
 	},
 };
+
+function encodePath(path) {
+	return String(path)
+		.split("/")
+		.map((segment) => encodeURIComponent(segment))
+		.join("/");
+}
 
 export default Wikimap;

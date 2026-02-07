@@ -15,7 +15,7 @@ defmodule WikWeb.TagLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx}>
+    <Layouts.drawer2 flash={@flash} ctx={@ctx}>
       <Layouts.page_container>
         <:title>
           <div class="flex items-center gap-1">
@@ -70,12 +70,14 @@ defmodule WikWeb.TagLive.Show do
             </section>
           </div>
 
-          <div class="space-y-4 mt-8">
+          <div class="space-y-6">
             <section
               :for={{block_id, block} <- @tagged_blocks}
               id={"tag-block-#{block_id}"}
               class="bg-base-100 rounded shadow-lg border border-base-300"
             >
+              <% page_path = page_tree_path_for(@ctx, block.page.id) %>
+              <% base_url = WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, page_path) %>
               <h1 class="mb-4 bg-base-200 px-4 py-1 rounded-t flex items-center gap-2">
                 <%= for {segment, idx} <- Enum.with_index(block.header_titles_stack) do %>
                   <%= if idx > 0 do %>
@@ -85,9 +87,9 @@ defmodule WikWeb.TagLive.Show do
                   <.link
                     navigate={
                       if idx == 0 do
-                        WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, block.page)
+                        base_url
                       else
-                        "/#{@ctx.current_group.slug}/wiki/#{block.page.slug}##{Enum.at(block.slug_stack, idx)}"
+                        base_url <> "##{Enum.at(block.slug_stack, idx)}"
                       end
                     }
                     class={[
@@ -113,7 +115,7 @@ defmodule WikWeb.TagLive.Show do
           </div>
         </div>
       </Layouts.page_container>
-    </Layouts.drawer>
+    </Layouts.drawer2>
     """
   end
 
@@ -186,7 +188,7 @@ defmodule WikWeb.TagLive.Show do
       tagged_blocks_per_page =
         PageToTag
         |> Ash.Query.filter(group_id == ^group_id and tag_id == ^tag.id)
-        |> Ash.Query.load(page: [:title, :slug, :text])
+        |> Ash.Query.load(page: [:text])
         |> Ash.Query.sort(inserted_at: :desc)
         |> Ash.read!(actor: actor)
         |> Enum.map(fn rel ->
@@ -218,5 +220,12 @@ defmodule WikWeb.TagLive.Show do
   defp prepare_block(page, {block, idx}) do
     id = "#{page.id}-#{idx}"
     {id, Map.put(block, :page, page)}
+  end
+
+  defp page_tree_path_for(ctx, page_id) do
+    case Map.get(ctx.pages_tree_by_page_id || %{}, page_id) do
+      %{path: path} when is_binary(path) and path != "" -> path
+      _ -> nil
+    end
   end
 end

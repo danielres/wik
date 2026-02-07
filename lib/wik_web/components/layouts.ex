@@ -25,36 +25,89 @@ defmodule WikWeb.Layouts do
       </Layouts.app>
 
   """
+
+  attr :title, :string, required: false
+  attr :class, :string, default: ""
+  attr :icon, :string, required: false
+  slot :inner_block, required: true
+
+  def panel(assigns) do
+    ~H"""
+    <div class={["px-6 py-4 border-b border-base-100", @class]}>
+      <h6 :if={assigns[:title]} class="flex items-center gap-2 mb-2">
+        <.icon :if={assigns[:icon]} name={@icon} />
+        <span class="uppercase tracking-wide text-xs">{@title}</span>
+      </h6>
+
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
   attr :ctx, :any, required: true
   attr :flash, :map, required: true, doc: "the map of flash messages"
-  attr :sidebar?, :boolean, default: false
   attr :backdrop?, :boolean, default: false
-  slot :sticky_toolbar, required: false
+  attr :open?, :boolean, default: true
+  attr :panels?, :boolean, default: false
   slot :inner_block, required: true
-  slot :sidebar, required: false
   slot :backdrop, required: false
+  slot :panels, required: false
+  slot :actions, required: false
 
-  def drawer(assigns) do
+  def drawer2(assigns) do
     ~H"""
-    <div class={@backdrop? and "stacked min-h-svh"}>
-      <div :if={@backdrop?}>
+    <div class="stacked items-start overflow-clip">
+      <div class="grid grid-rows-[auto_1fr] min-h-svh">
+        <.layout_header ctx={@ctx} class="px-4 sm:px-6 lg:px-8" />
+
+        <div class={["drawer2", @open? and "drawer2-open"]}>
+          <div class="drawer2-content stacked">
+            <div class="stacked">
+              <div class={["grid pb-6", if(@panels?, do: "md:mr-64")]}>
+                <main class="px-4 sm:px-6 lg:px-8">
+                  {render_slot(@inner_block)}
+                </main>
+
+                {# footer ============}
+                {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
+              </div>
+
+              {# sidebar backdrop ============}
+              <div
+                :if={@open?}
+                phx-click="toggle_open?"
+                class="bg-base-300/30 hover:bg-base-300/20 transition relative md:hidden cursor-pointer"
+              />
+            </div>
+
+            <div class="grid grid-cols-[1fr_auto]">
+              {# = ACTIONS ==================================================== }
+              <div class="sticky top-0 h-min pointer-events-none [&>*>*]:pointer-events-auto">
+                <div class="flex justify-end">
+                  {render_slot(@actions)}
+                </div>
+              </div>
+
+              {# = PANELS ==================================================== }
+              <div
+                :if={@panels?}
+                class={[
+                  "bg-base-300/70 w-0 md:w-64 backdrop-blur transition-all ",
+                  @open? and "w-64"
+                ]}
+              >
+                <div class="sticky top-0 w-64">
+                  {render_slot(@panels)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <%= if @backdrop? do %>
         {render_slot(@backdrop)}
-      </div>
-
-      <div class={@backdrop? and "pointer-events-none [&>*>*>*]:pointer-events-auto"}>
-        <WikWeb.Components.drawer sidebar?={@sidebar?}>
-          {render_slot(@sticky_toolbar)}
-
-          <:header>
-            <.layout_header ctx={@ctx} />
-          </:header>
-
-          {render_slot(@inner_block)}
-          {# <WikWeb.Components.footer class="mt-auto pt-8 border-t border-base-100" /> }
-
-          <:sidebar :let={drawer_id}>{render_slot(@sidebar, drawer_id)}</:sidebar>
-        </WikWeb.Components.drawer>
-      </div>
+      <% end %>
     </div>
 
     <Toast.toast_group flash={@flash} theme="dark" animation_duration={200} />
@@ -68,7 +121,7 @@ defmodule WikWeb.Layouts do
   def page_container(assigns) do
     ~H"""
     <div class="grid grid-cols-[1fr_min(75ch,100%)_1fr] [&>*]:col-start-2 [&>*]:px-6">
-      <header class="mt-16 mb-6">
+      <header class="mt-16 mb-8">
         <h1 :if={@title != []} class="text-3xl">{render_slot(@title)}</h1>
         <p :if={@subtitle != []} class="text-sm text-base-content/70">
           {render_slot(@subtitle)}
@@ -80,10 +133,13 @@ defmodule WikWeb.Layouts do
     """
   end
 
+  attr :class, :string, default: ""
+  attr :ctx, :any, required: true
+
   defp layout_header(assigns) do
     ~H"""
     <nav class={[
-      "px-4 sm:px-6 lg:px-8",
+      @class,
       "bg-base-300 pb-2",
       "space-y-2"
     ]}>
@@ -159,6 +215,11 @@ defmodule WikWeb.Layouts do
                     </.link>
                   </li>
 
+                  <li>
+                    <.link navigate={~p"/#{@ctx.current_group.slug}/tree"}>
+                      <.icon name="hero-folder-mini" /> Tree
+                    </.link>
+                  </li>
                   <li>
                     <.link navigate={~p"/#{@ctx.current_group.slug}/wiki"}>
                       <.icon name="hero-book-open-mini" /> All pages

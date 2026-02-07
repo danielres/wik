@@ -1,6 +1,7 @@
 defmodule Wik.Wiki.BacklinkTest do
   use Wik.DataCase, async: true
   import Wik.Generator
+  alias Wik.Wiki.PageTree
 
   alias Wik.Wiki.Backlink.Utils
 
@@ -16,8 +17,6 @@ defmodule Wik.Wiki.BacklinkTest do
   end
 
   test "parse_wikilink_ids extracts wikid links" do
-    user = generate(user(authorize?: false))
-
     markdown = """
     Intro [Alpha](wikid:019b1111-1111-7111-8111-111111111111)
     See [beta](wikid:019b2222-2222-7222-8222-222222222222)
@@ -36,7 +35,19 @@ defmodule Wik.Wiki.BacklinkTest do
     group = generate(group(actor: user, authorize?: false))
 
     target = create_page(group, user, "Target Page", "Content")
-    _source = create_page(group, user, "Source", "See [link](wikid:#{target.id}) for details")
+
+    {:ok, tree, _map} =
+      PageTree.Utils.resolve_tree_by_path(target.slug, group.id, user, %{})
+
+    {:ok, ensured_tree} = PageTree.Utils.ensure_page_for_tree(tree, user)
+
+    _source =
+      create_page(
+        group,
+        user,
+        "Source",
+        "See [link](wikid:#{ensured_tree.id}) for details"
+      )
 
     backlinks = Utils.list_for_page(target)
     assert length(backlinks) == 1
@@ -50,7 +61,19 @@ defmodule Wik.Wiki.BacklinkTest do
     group = generate(group(actor: user, authorize?: false))
 
     target = create_page(group, user, "Target Page", "Content")
-    source = create_page(group, user, "Source", "Link to [target](wikid:#{target.id})")
+
+    {:ok, tree, _map} =
+      PageTree.Utils.resolve_tree_by_path(target.slug, group.id, user, %{})
+
+    {:ok, ensured_tree} = PageTree.Utils.ensure_page_for_tree(tree, user)
+
+    source =
+      create_page(
+        group,
+        user,
+        "Source",
+        "Link to [target](wikid:#{ensured_tree.id})"
+      )
 
     backlinks = Utils.list_for_page(target)
     assert length(backlinks) == 1

@@ -44,6 +44,7 @@ defmodule Wik.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:earmark, "~> 1.4"},
       {:y_ex, "~> 0.10.0"},
       {:timex, "~> 3.7"},
       {:ex_unit_notifier, "~> 1.3", only: :test},

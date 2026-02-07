@@ -20,25 +20,6 @@ function normalize(content: string | undefined | null) {
 	return (content || "").trim();
 }
 
-function extractPlainTitleFromEditorView(view: any) {
-	// We derive the title from ProseMirror's document (not markdown) because `textContent`
-	// already excludes formatting markers like `**bold**`, `*italic*`, `[link](url)`, etc.
-	// We only apply our domain-specific normalization (strip `#tags`, collapse whitespace).
-	const first = view?.state?.doc?.firstChild;
-	if (!first) return null;
-	if (first.type?.name !== "heading") return null;
-	if (first.attrs?.level !== 1) return null;
-
-	let title = (first.textContent || "").trim();
-	if (title === "") return null;
-
-	// Strip tags like #tag or #tag/subtag
-	title = title.replace(/(^|\s)#[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*/g, " ");
-	title = title.replace(/\s+/g, " ").trim();
-
-	return title === "" ? null : title;
-}
-
 const EDITOR_STATE_PUSH_DEBOUNCE_MS = 150;
 
 const MilkdownEditor = {
@@ -57,26 +38,21 @@ const MilkdownEditor = {
 
 		let pages: SlashMenuWikilinksPage[] = [];
 
-		this.pagesById = new Map();
-
 		if (pagesJson) {
 			try {
 				const parsed = JSON.parse(pagesJson) as Record<
 					string,
-					{ id: string; slug: string; title?: string; updated_at?: string }
+					{ id: string; path: string; updated_at?: string }
 				>;
 
 				pages = Object.values(parsed).map((p, i) => {
 					const id = String(p.id ?? i);
-					const slug = String(p.slug ?? "");
-					const title = String(p.title ?? "");
-
-					this.pagesById.set(id, { id, slug, title });
+					const path = String(p.path ?? "");
 
 					return {
 						id,
-						label: title || slug || "",
-						slug,
+						label: path || "",
+						path,
 						updatedAtMs: p.updated_at ? Date.parse(p.updated_at) : null,
 					};
 				});
@@ -133,23 +109,6 @@ const MilkdownEditor = {
 			rootPath,
 			isStatic,
 			splitEditorEditableRef: this.splitEditorEditableRef,
-			wikilinks: {
-				getPageById: (id: string) => this.pagesById.get(id) ?? null,
-				resolveRef: async (title: string) => {
-					const reply = await this.resolveOrCreatePageByTitle(title);
-					if (!reply?.ok || !reply.page) return null;
-					this.pagesById.set(String(reply.page.id), {
-						id: String(reply.page.id),
-						slug: String(reply.page.slug),
-						title: String(reply.page.title ?? ""),
-					});
-					return {
-						id: String(reply.page.id),
-						slug: String(reply.page.slug),
-						title: String(reply.page.title ?? ""),
-					};
-				},
-			},
 		}).then(({ editor, collabService }) => {
 			this.editorInstance = editor;
 			this.collabService = collabService;
@@ -207,9 +166,6 @@ const MilkdownEditor = {
 
 			this.handleEvent("collab_saved_version", ({ markdown }) => {
 				this.status.markSaved(normalize(markdown));
-				const view = this.editorInstance?.ctx?.get?.(editorViewCtx);
-				const title = extractPlainTitleFromEditorView(view);
-				if (title) this.el.dataset.pageTitle = title;
 				ensureMarkdownValidator();
 				this.markdownValidator?.refresh({ immediate: true });
 			});
@@ -231,7 +187,7 @@ const MilkdownEditor = {
 					});
 			});
 
-			this.handleEvent("set_mode", ({ mode }) => {
+			this.handleEvent("set_mode", ({ mode, markdown, reseed }) => {
 				const nextMode = mode === "edit" ? "edit" : "view";
 				this.mode = nextMode;
 				this.el.dataset.mode = nextMode;
@@ -248,6 +204,9 @@ const MilkdownEditor = {
 						this.detachDocUpdates?.();
 						this.markdownValidator?.destroy?.();
 						this.markdownValidator = null;
+						if (reseed && typeof markdown === "string") {
+							this.reseedMarkdown(markdown);
+						}
 					}
 				}
 			});
@@ -257,18 +216,6 @@ const MilkdownEditor = {
 				ensureMarkdownValidator();
 				this.markdownValidator?.refresh({ immediate: true });
 			}
-		});
-	},
-
-	resolveOrCreatePageByTitle(title: string): Promise<{
-		ok: boolean;
-		page?: { id: string; slug: string; title: string };
-		error?: string;
-	}> {
-		return new Promise((resolve) => {
-			this.pushEvent("wikilink_create", { title }, (reply: any) => {
-				resolve(reply);
-			});
 		});
 	},
 
@@ -308,6 +255,13 @@ const MilkdownEditor = {
 		content.setAttribute("aria-readonly", editable ? "false" : "true");
 	},
 
+	reseedMarkdown(markdown: string) {
+		if (!this.collabService || !this.yDoc) return;
+		const metaMap = this.yDoc.getMap("meta");
+		metaMap.set("seeded_markdown_hash", hashString(markdown));
+		this.collabService.applyTemplate(markdown, () => true);
+	},
+
 	setupFormSync() {
 		if (this.form && this.hiddenInput) {
 			this.handleSubmit = (event: Event) => {
@@ -320,10 +274,6 @@ const MilkdownEditor = {
 					this.maybePushEditorState(true);
 					return;
 				}
-
-				const view = this.editorInstance?.ctx?.get?.(editorViewCtx);
-				const title = extractPlainTitleFromEditorView(view);
-				if (title) this.el.dataset.pageTitle = title;
 
 				this.hiddenInput.value = result.markdown;
 				this.hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
@@ -538,5 +488,16 @@ const MilkdownEditor = {
 		this.docUpdatesAttached = false;
 	},
 };
+
+function hashString(value: string): string {
+	let hash = 0;
+
+	for (let i = 0; i < value.length; i += 1) {
+		hash = (hash << 5) - hash + value.charCodeAt(i);
+		hash |= 0;
+	}
+
+	return hash.toString(36);
+}
 
 export default MilkdownEditor;

@@ -28,6 +28,7 @@ import Toast from "../../deps/toast/assets/js/toast.js";
 import MilkdownEditor from "./hooks/milkdown.js";
 import { LayoutStickyToolbar } from "./hooks/layout-sticky-toolbar.js";
 import Wikimap from "./hooks/wikimap.js";
+import Wikitree from "./hooks/wikitree.js";
 
 const csrfToken = document
 	.querySelector("meta[name='csrf-token']")
@@ -41,6 +42,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
 		MilkdownEditor,
 		LayoutStickyToolbar,
 		Wikimap,
+		Wikitree,
 	},
 });
 

@@ -6,7 +6,7 @@ defmodule WikWeb.GroupLive.WikimapLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx} backdrop?>
+    <Layouts.drawer2 flash={@flash} ctx={@ctx} backdrop?>
       <:backdrop>
         <div
           id="wikimap-canvas"
@@ -30,18 +30,18 @@ defmodule WikWeb.GroupLive.WikimapLive do
           </h3>
 
           <ul class="flex flex-wrap gap-2 text-sm">
-            <li :for={slug <- @orphan_pages}>
+            <li :for={path <- @orphan_pages}>
               <.link
-                navigate={"/#{@ctx.current_group.slug}/wiki/#{slug}"}
+                navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, path)}
                 class="px-2 py-1 rounded bg-base-300/60"
               >
-                {slug}
+                {path}
               </.link>
             </li>
           </ul>
         </div>
       </Layouts.page_container>
-    </Layouts.drawer>
+    </Layouts.drawer2>
     """
   end
 
@@ -70,11 +70,25 @@ defmodule WikWeb.GroupLive.WikimapLive do
   end
 
   defp build_graph(group, actor) do
+    trees =
+      Wik.Wiki.PageTree
+      |> Ash.Query.filter(group_id == ^group.id)
+      |> Ash.Query.select([:path, :page_id])
+      |> Ash.read!(actor: actor)
+
+    tree_by_page_id =
+      Enum.reduce(trees, %{}, fn tree, acc ->
+        case tree.page_id do
+          page_id when is_binary(page_id) and page_id != "" -> Map.put(acc, page_id, tree)
+          _ -> acc
+        end
+      end)
+
     pages =
       Wik.Wiki.Page
       |> Ash.Query.filter(group_id == ^group.id)
       |> Ash.Query.load([:backlinks_count])
-      |> Ash.Query.select([:id, :slug, :title])
+      |> Ash.Query.select([:id])
       |> Ash.read!(actor: actor)
 
     backlinks =
@@ -84,14 +98,23 @@ defmodule WikWeb.GroupLive.WikimapLive do
       |> Ash.read!(authorize?: false)
 
     existing_nodes =
-      Enum.map(pages, fn page ->
-        %{
-          id: page.id,
-          label: page.title,
-          slug: page.slug,
-          exists: true,
-          backlinks: page.backlinks_count || 0
-        }
+      Enum.reduce(pages, [], fn page, acc ->
+        case Map.get(tree_by_page_id, page.id) do
+          %{path: path} when is_binary(path) and path != "" ->
+            [
+              %{
+                id: page.id,
+                label: path,
+                path: path,
+                exists: true,
+                backlinks: page.backlinks_count || 0
+              }
+              | acc
+            ]
+
+          _ ->
+            acc
+        end
       end)
 
     # Keep only edges to existing targets
@@ -102,7 +125,7 @@ defmodule WikWeb.GroupLive.WikimapLive do
         %{source: bl.source_page_id, target: bl.target_page_id}
       end)
 
-    parent_edges = build_parent_edges(pages)
+    parent_edges = build_parent_edges(trees)
 
     edges =
       backlink_edges
@@ -112,8 +135,8 @@ defmodule WikWeb.GroupLive.WikimapLive do
       end)
       |> Enum.map(fn {source, target} -> %{source: source, target: target} end)
 
-    # Collect slugs for missing-target backlinks (orphans)
-    missing_target_slugs =
+    # Collect paths for missing-target backlinks (orphans)
+    missing_target_paths =
       backlinks
       |> Enum.filter(&is_nil(&1.target_page_id))
       |> Enum.map(& &1.target_slug)
@@ -128,42 +151,46 @@ defmodule WikWeb.GroupLive.WikimapLive do
     {orphan_nodes, connected_nodes} =
       Enum.split_with(existing_nodes, fn n -> Map.get(deg, n.id, 0) == 0 end)
 
-    orphan_slugs = Enum.map(orphan_nodes, & &1.slug)
+    orphan_paths = Enum.map(orphan_nodes, & &1.path)
     graph_nodes = connected_nodes
 
     {%{group_slug: group.slug, nodes: graph_nodes, edges: edges},
-     orphan_slugs ++ missing_target_slugs}
+     orphan_paths ++ missing_target_paths}
   end
 
-  defp build_parent_edges(pages) do
-    slug_to_id =
-      Enum.reduce(pages, %{}, fn page, acc ->
-        case page.slug do
-          slug when is_binary(slug) and slug != "" -> Map.put(acc, slug, page.id)
-          _ -> acc
+  defp build_parent_edges(trees) do
+    path_to_id =
+      Enum.reduce(trees, %{}, fn tree, acc ->
+        case {tree.page_id, tree.path} do
+          {page_id, path}
+          when is_binary(page_id) and page_id != "" and is_binary(path) and path != "" ->
+            Map.put(acc, path, page_id)
+
+          _ ->
+            acc
         end
       end)
 
-    pages
-    |> Enum.reduce([], fn page, acc ->
-      case page.slug do
-        slug when is_binary(slug) and slug != "" ->
-          segments = String.split(slug, "/", trim: true)
-
-          if length(segments) > 1 do
-            parent_slug = segments |> Enum.drop(-1) |> Enum.join("/")
-
-            case Map.get(slug_to_id, parent_slug) do
-              nil -> acc
-              parent_id -> [%{source: parent_id, target: page.id} | acc]
-            end
-          else
-            acc
-          end
-
-        _ ->
+    path_to_id
+    |> Enum.reduce([], fn {path, id}, acc ->
+      case parent_path(path) do
+        nil ->
           acc
+
+        parent_path ->
+          case Map.get(path_to_id, parent_path) do
+            nil -> acc
+            parent_id -> [%{source: parent_id, target: id} | acc]
+          end
       end
     end)
+  end
+
+  defp parent_path(path) do
+    case String.split(path || "", "/", trim: true) do
+      [] -> nil
+      [_] -> nil
+      segments -> segments |> Enum.drop(-1) |> Enum.join("/")
+    end
   end
 end

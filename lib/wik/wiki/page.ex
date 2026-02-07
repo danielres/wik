@@ -118,11 +118,6 @@ defmodule Wik.Wiki.Page do
              end,
              on: [:create]
 
-      change fn cs, _ctx ->
-               cs |> update_title_from_header()
-             end,
-             on: [:update]
-
       change fn cs, ctx ->
                cs |> set_slug(ctx)
              end,
@@ -244,6 +239,8 @@ defmodule Wik.Wiki.Page do
       public? true
     end
 
+    has_one :page_tree, Wik.Wiki.PageTree
+
     has_many :versions, Wik.Versions.Version do
       destination_attribute :record_id
       source_attribute :id
@@ -282,6 +279,17 @@ defmodule Wik.Wiki.Page do
   end
 
   def set_slug(changeset, context) do
+    raw_slug? = get_in(context.source_context, [:shared, :raw_slug]) == true
+    current_slug = Ash.Changeset.get_attribute(changeset, :slug)
+
+    if raw_slug? and is_binary(current_slug) and current_slug != "" do
+      changeset
+    else
+      do_set_slug(changeset, context)
+    end
+  end
+
+  defp do_set_slug(changeset, context) do
     group_id =
       get_in(context.source_context, [:shared, :current_group_id]) ||
         Ash.Changeset.get_attribute(changeset, :group_id)
@@ -322,18 +330,6 @@ defmodule Wik.Wiki.Page do
         scope: [group_id: group_id],
         allow_slash: true
       )
-    end
-  end
-
-  def update_title_from_header(changeset) do
-    text = Ash.Changeset.get_attribute(changeset, :text)
-
-    case Utils.Markdown.extract_page_title(text) do
-      title when is_binary(title) and title != "" ->
-        Ash.Changeset.change_attribute(changeset, :title, title)
-
-      _ ->
-        changeset
     end
   end
 

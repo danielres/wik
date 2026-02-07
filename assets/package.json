@@ -5,6 +5,7 @@
 		"@milkdown/kit": "^7.17.2",
 		"@milkdown/plugin-collab": "^7.17.2",
 		"remark-directive": "^3.0.0",
+		"tui-tree": "^4.0.9",
 		"y-websocket": "^3.0.0",
 		"yjs": "^13.6.27"
 	},

@@ -21,6 +21,16 @@ defmodule WikWeb.Router do
     plug :set_actor, :user
   end
 
+  if Application.compile_env(:wik, :dev_routes) do
+    import AshAdmin.Router
+
+    scope "/admin" do
+      pipe_through :browser
+
+      ash_admin "/"
+    end
+  end
+
   scope "/", WikWeb do
     pipe_through :browser
 
@@ -88,6 +98,7 @@ defmodule WikWeb.Router do
         live "/", GroupLive.Show, :show
         live "/members", GroupLive.MemberLive.Index, :index
         live "/map", GroupLive.WikimapLive, :show
+        live "/tree", GroupLive.WikitreeLive, :show
         live "/wiki", GroupLive.PageLive.Index, :index
         live "/v/:version/wiki/*page_slug_segments", GroupLive.PageLive.History
         live "/wiki/*page_slug_segments", GroupLive.PageLive.Show, :show
@@ -116,16 +127,6 @@ defmodule WikWeb.Router do
 
       live_dashboard "/dashboard", metrics: WikWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
-    end
-  end
-
-  if Application.compile_env(:wik, :dev_routes) do
-    import AshAdmin.Router
-
-    scope "/admin" do
-      pipe_through :browser
-
-      ash_admin "/"
     end
   end
 end

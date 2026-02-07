@@ -15,38 +15,51 @@ defmodule WikWeb.CtxAdditions do
     current_group = socket.assigns.ctx.current_group
     current_user = socket.assigns[:current_user]
 
-    pages_by_slug =
-      Wik.Wiki.Page
-      |> Ash.Query.filter(group_id == ^current_group.id)
-      |> Ash.Query.sort(updated_at: :desc)
-      |> Ash.Query.select([:id, :slug, :title, :updated_at])
-      |> Ash.read(actor: current_user)
-      |> case do
-        {:ok, pages} ->
-          pages
-          |> Enum.reduce(%{}, fn page, acc ->
-            case page.slug do
-              slug when is_binary(slug) and slug != "" -> Map.put(acc, slug, page)
-              _ -> acc
-            end
-          end)
-
-        {:error, error} ->
-          Logger.error("""
-          🔴 Failed to read pages for: 
-          Group: #{current_group} | id: #{current_group.id}
-          User: #{current_user} | id: #{current_user.id}
-          Error: #{Exception.format(:error, error)}
-          """)
-
-          %{}
-      end
+    {pages_tree_map, pages_tree_by_page_id, pages_tree_by_id} =
+      load_pages_tree_maps(current_group, current_user)
 
     socket =
       socket
-      # pages_map is keyed by slug for fast lookup in views/components.
-      |> Utils.Ctx.add(:pages_map, pages_by_slug)
+      |> Utils.Ctx.add(:pages_tree_map, pages_tree_map)
+      |> Utils.Ctx.add(:pages_tree_by_page_id, pages_tree_by_page_id)
+      |> Utils.Ctx.add(:pages_tree_by_id, pages_tree_by_id)
 
     {:cont, socket}
+  end
+
+  defp load_pages_tree_maps(current_group, current_user) do
+    Wik.Wiki.PageTree
+    |> Ash.Query.filter(group_id == ^current_group.id)
+    |> Ash.Query.select([:id, :path, :title, :page_id, :updated_at])
+    |> Ash.read(actor: current_user)
+    |> case do
+      {:ok, trees} ->
+        pages_tree_map = Map.new(trees, fn tree -> {tree.path, tree} end)
+
+        pages_tree_by_page_id =
+          Enum.reduce(trees, %{}, fn tree, acc ->
+            case tree.page_id do
+              page_id when is_binary(page_id) and page_id != "" ->
+                Map.put(acc, page_id, tree)
+
+              _ ->
+                acc
+            end
+          end)
+
+        pages_tree_by_id = Map.new(trees, fn tree -> {tree.id, tree} end)
+
+        {pages_tree_map, pages_tree_by_page_id, pages_tree_by_id}
+
+      {:error, error} ->
+        Logger.error("""
+        🔴 Failed to read page tree for:
+        Group: #{current_group} | id: #{current_group.id}
+        User: #{current_user} | id: #{current_user.id}
+        Error: #{Exception.format(:error, error)}
+        """)
+
+        {%{}, %{}, %{}}
+    end
   end
 end

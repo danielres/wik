@@ -6,7 +6,7 @@ defmodule WikWeb.GroupLive.MemberLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx}>
+    <Layouts.drawer2 flash={@flash} ctx={@ctx}>
       <Layouts.page_container>
         <:title>Members</:title>
 
@@ -17,7 +17,7 @@ defmodule WikWeb.GroupLive.MemberLive.Index do
           </:col>
         </.table>
       </Layouts.page_container>
-    </Layouts.drawer>
+    </Layouts.drawer2>
     """
   end
 

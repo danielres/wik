@@ -15,7 +15,7 @@ defmodule WikWeb.Components do
       <h1 class="text-2xl">Ooopsie...</h1>
       <p class="mt-3 text-sm opacity-70">This page does not exist.</p>
       <.link
-        navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, %{slug: "home"})}
+        navigate={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, "home")}
         class="btn mt-3"
       >
         <.icon name="hero-arrow-left-mini" /> <span>Back to wiki</span>
@@ -69,7 +69,7 @@ defmodule WikWeb.Components do
       <div class="drawer drawer-open drawer-end pointer-events-none">
         <input id={@drawer_id} type="checkbox" class="drawer-toggle" />
 
-        <div :if={@sidebar?} class="drawer-side">
+        <div :if={@sidebar?} class="drawer-side overflow-visible">
           <div class={[
             "flex h-full",
             "is-drawer-close:w-12 md:is-drawer-close:w-64 is-drawer-open:w-64"

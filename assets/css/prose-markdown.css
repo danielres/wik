@@ -20,6 +20,10 @@
 		@apply hyphens-auto;
 	}
 
+	.ProseMirror-selectednode {
+		@apply border border-yellow-500;
+	}
+
 	h1 {
 		@apply text-3xl;
 		@apply text-base-content;

@@ -1,26 +1,39 @@
 defmodule WikWeb.GroupLive.PageLive.History do
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
+  alias Wik.Wiki.PageTree
+  alias WikWeb.GroupLive.PageLive.Utils, as: PageUtils
   require Ash.Query
 
-  def page_url(group, page, version) do
-    "/#{group.slug}/v/#{version}/wiki/#{page.slug}"
+  def page_url(group, %PageTree{path: path}, version), do: page_url(group, path, version)
+
+  def page_url(group, %{path: path}, version) when is_binary(path),
+    do: page_url(group, path, version)
+
+  def page_url(group, path, version) when is_binary(path) do
+    encoded = PageUtils.encode_path(path)
+    "/#{group.slug}/v/#{version}/wiki/#{encoded}"
   end
+
+  def page_url(_group, _path, _version), do: "#"
 
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.drawer flash={@flash} ctx={@ctx}>
+    <Layouts.drawer2 flash={@flash} ctx={@ctx} panels?>
       <%= if(@not_found?) do %>
         <WikWeb.Components.dialog_page_not_found ctx={@ctx} />
       <% else %>
         <Layouts.page_container>
           <%= if @version.data["text"] do %>
+            <% tree_by_id = @ctx.pages_tree_by_id || %{} %>
+            <% text_value =
+              PageTree.Markdown.rewrite_wikid_to_wikilinks(@version.data["text"], tree_by_id) %>
             <div
               id={"milkdown-editor-#{@v}"}
               phx-hook="MilkdownEditor"
               phx-update="ignore"
-              data-markdown={@version.data["text"]}
+              data-markdown={text_value}
               data-mode="static"
             />
           <% else %>
@@ -29,6 +42,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
         </Layouts.page_container>
       <% end %>
 
+      {# FIXME: MIGRATE TO NEW LAYOUT }
       <:sticky_toolbar>
         <div :if={not @not_found?} class="toolbar-editor-controls">
           <div class="space-y-1">
@@ -37,7 +51,9 @@ defmodule WikWeb.GroupLive.PageLive.History do
                 <div class="toolbar-actions items-center text-xs">
                   <.link
                     class={["action", @v == 1 and "action-disabled"]}
-                    patch={if @v == 1, do: "#", else: page_url(@ctx.current_group, @page, 1)}
+                    patch={
+                      if @v == 1, do: "#", else: page_url(@ctx.current_group, @page_tree_path, 1)
+                    }
                     aria-disabled={@v == 1}
                     tabindex={@v == 1 && "-1"}
                   >
@@ -45,7 +61,9 @@ defmodule WikWeb.GroupLive.PageLive.History do
                   </.link>
                   <.link
                     class={["action", @v == 1 and "action-disabled"]}
-                    patch={if @v > 1, do: page_url(@ctx.current_group, @page, @v - 1), else: "#"}
+                    patch={
+                      if @v > 1, do: page_url(@ctx.current_group, @page_tree_path, @v - 1), else: "#"
+                    }
                     aria-disabled={@v == 1}
                     tabindex={@v == 1 && "-1"}
                   >
@@ -59,7 +77,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
                   <.link
                     patch={
                       if @v < @page.versions_count,
-                        do: page_url(@ctx.current_group, @page, @v + 1),
+                        do: page_url(@ctx.current_group, @page_tree_path, @v + 1),
                         else: "#"
                     }
                     class={["action", @v == @page.versions_count and "action-disabled"]}
@@ -69,7 +87,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
                     <.icon name="hero-chevron-right-mini" />
                   </.link>
                   <.link
-                    patch={page_url(@ctx.current_group, @page, @page.versions_count)}
+                    patch={page_url(@ctx.current_group, @page_tree_path, @page.versions_count)}
                     class={["action", @v == @page.versions_count and "action-disabled"]}
                     aria-disabled={@v == @page.versions_count}
                     tabindex={@v == @page.versions_count && "-1"}
@@ -97,7 +115,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
               <div class="toolbar-actions ">
                 <.link
                   class="action !btn-ghost opacity-40 hover:opacity-100 transition"
-                  patch={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, @page)}
+                  patch={WikWeb.GroupLive.PageLive.Show.page_url(@ctx.current_group, @page_tree_path)}
                 >
                   <.icon name="hero-x-mark size-6" />
                 </.link>
@@ -106,7 +124,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
           </div>
         </div>
       </:sticky_toolbar>
-    </Layouts.drawer>
+    </Layouts.drawer2>
     """
   end
 
@@ -123,22 +141,39 @@ defmodule WikWeb.GroupLive.PageLive.History do
 
   @impl true
   def mount(%{"page_slug_segments" => page_slug_segments}, _session, socket) do
-    page_slug = page_slug_segments |> Enum.join("/")
+    page_path = page_slug_segments |> Enum.join("/")
+    current_group = socket.assigns.ctx.current_group
+    current_user = socket.assigns.current_user
+    pages_tree_map = socket.assigns.ctx.pages_tree_map || %{}
 
-    case Wik.Wiki.Page
-         |> Ash.get(
-           %{group_id: socket.assigns.ctx.current_group.id, slug: page_slug},
-           actor: socket.assigns.current_user,
-           load: [:versions_count]
-         ) do
-      {:ok, page} ->
-        {:ok, socket |> assign(:page, page) |> assign(:not_found?, false)}
-
-      {:error, _} ->
+    with {:ok, tree, _} <-
+           Wik.Wiki.PageTree.Utils.resolve_tree_by_path(
+             page_path,
+             current_group.id,
+             current_user,
+             pages_tree_map
+           ),
+         {:ok, ensured_tree} <- Wik.Wiki.PageTree.Utils.ensure_page_for_tree(tree, current_user),
+         {:ok, page} <-
+           Wik.Wiki.Page
+           |> Ash.get(
+             ensured_tree.page_id,
+             actor: current_user,
+             load: [:versions_count]
+           ) do
+      {:ok,
+       socket
+       |> assign(:page, page)
+       |> assign(:page_tree_path, ensured_tree.path)
+       |> assign(:not_found?, false)
+       |> assign(:page_title, Wik.Wiki.PageTree.Utils.title_from_path(ensured_tree.path))}
+    else
+      _ ->
         {:ok,
          socket
          |> assign(:not_found?, true)
          |> assign(:page, nil)
+         |> assign(:page_tree_path, page_path)
          |> assign(:page_title, "Page not found")}
     end
   end

@@ -11,12 +11,13 @@ defmodule WikWeb.GroupLive.PageLive.Show do
   alias WikWeb.Components.RealtimeToast
   alias WikWeb.GroupLive.PageLive.Show
   alias WikWeb.Layouts
+  alias WikWeb.GroupLive.PageLive.Utils, as: PageUtils
   require Logger
   require Ash.Query
 
   def page_url(group, %Wik.Wiki.PageTree{path: path}), do: page_url(group, path)
   def page_url(group, %{path: path}) when is_binary(path), do: page_url(group, path)
-  def page_url(group, path) when is_binary(path), do: "/#{group.slug}/wiki/#{encode_path(path)}"
+  def page_url(group, path) when is_binary(path), do: "/#{group.slug}/wiki/#{PageUtils.encode_path(path)}"
 
   def page_url(_group, _page), do: "#"
 
@@ -387,12 +388,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
     end
   end
 
-  defp encode_path(path) do
-    path
-    |> String.split("/", trim: true)
-    |> Enum.map(&URI.encode/1)
-    |> Enum.join("/")
-  end
 
   defp load_backlinks(page) do
     Wik.Wiki.Backlink.Utils.list_for_page(page)

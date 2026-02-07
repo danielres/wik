@@ -2,6 +2,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
   use WikWeb, :live_view
   use WikWeb.Presence.Handlers
   alias Wik.Wiki.PageTree
+  alias WikWeb.GroupLive.PageLive.Utils, as: PageUtils
   require Ash.Query
 
   def page_url(group, %PageTree{path: path}, version), do: page_url(group, path, version)
@@ -10,7 +11,7 @@ defmodule WikWeb.GroupLive.PageLive.History do
     do: page_url(group, path, version)
 
   def page_url(group, path, version) when is_binary(path) do
-    encoded = encode_path(path)
+    encoded = PageUtils.encode_path(path)
     "/#{group.slug}/v/#{version}/wiki/#{encoded}"
   end
 
@@ -204,12 +205,5 @@ defmodule WikWeb.GroupLive.PageLive.History do
           {:noreply, assign(socket, :not_found?, true)}
       end
     end
-  end
-
-  defp encode_path(path) do
-    path
-    |> String.split("/", trim: true)
-    |> Enum.map(&URI.encode/1)
-    |> Enum.join("/")
   end
 end

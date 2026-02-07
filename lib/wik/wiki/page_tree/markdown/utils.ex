@@ -31,17 +31,6 @@ defmodule Wik.Wiki.PageTree.Markdown.Utils do
   end
 
   @doc """
-  Updates fenced code block state for a single line.
-  Returns `{new_state, fence_line?}` where `fence_line?` is true when a fence starts/ends.
-  """
-  def update_fence_state(%{fenced?: false} = state, line) do
-    case fence_marker(line) do
-      {char, len} -> {%{state | fenced?: true, fence: {char, len}}, true}
-      nil -> {state, false}
-    end
-  end
-
-  @doc """
   Rewrites wikilinks within a single line of text.
   Returns the rewritten line and the remaining pending link state.
   """
@@ -274,6 +263,17 @@ defmodule Wik.Wiki.PageTree.Markdown.Utils do
     case fence_marker(line) do
       {^char, new_len} when new_len >= len -> {%{state | fenced?: false, fence: nil}, true}
       _ -> {state, false}
+    end
+  end
+
+  @doc """
+  Updates fenced code block state for a single line.
+  Returns `{new_state, fence_line?}` where `fence_line?` is true when a fence starts/ends.
+  """
+  def update_fence_state(%{fenced?: false} = state, line) do
+    case fence_marker(line) do
+      {char, len} -> {%{state | fenced?: true, fence: {char, len}}, true}
+      nil -> {state, false}
     end
   end
 

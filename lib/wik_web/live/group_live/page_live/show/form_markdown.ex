@@ -20,14 +20,8 @@ defmodule WikWeb.GroupLive.PageLive.Show.FormMarkdown do
         phx-change="validate"
         phx-target={@myself}
       >
-        <% tree_by_id =
-          @pages_tree_map
-          |> Kernel.||(%{})
-          |> Map.values()
-          |> Enum.map(fn tree -> {tree.id, tree} end)
-          |> Enum.into(%{}) %>
         <% raw_text = @form[:text].value || @page.text || "" %>
-        <% text_value = Md.rewrite_wikid_to_wikilinks(raw_text, tree_by_id) %>
+        <% text_value = Md.rewrite_wikid_to_wikilinks(raw_text, @tree_by_id) %>
 
         <textarea id={"page_text_#{@id}"} name={@form[:text].name} hidden>{text_value}</textarea>
 
@@ -47,21 +41,7 @@ defmodule WikWeb.GroupLive.PageLive.Show.FormMarkdown do
             data-redo-id={@redo_button_id}
             data-user-meta={%{name: @actor |> to_string} |> Jason.encode!()}
             data-root-path={"/#{@group.slug}/wiki"}
-            data-pages-json={
-              @pages_tree_map
-              |> Kernel.||(%{})
-              |> Map.values()
-              |> Enum.map(fn page ->
-                {page.id,
-                 %{
-                   id: page.id,
-                   path: page.path,
-                   updated_at: page.updated_at
-                 }}
-              end)
-              |> Enum.into(%{})
-              |> Jason.encode!()
-            }
+            data-pages-json={@pages_json}
           />
         </div>
       </.form>
@@ -71,7 +51,7 @@ defmodule WikWeb.GroupLive.PageLive.Show.FormMarkdown do
 
   @impl true
   def update(assigns, socket) do
-    socket = socket |> assign(assigns) |> assign_form()
+    socket = socket |> assign(assigns) |> assign_form() |> assign_tree_maps()
     {:ok, socket}
   end
 
@@ -129,6 +109,31 @@ defmodule WikWeb.GroupLive.PageLive.Show.FormMarkdown do
       end
 
     assign(socket, form: to_form(form))
+  end
+
+  defp assign_tree_maps(socket) do
+    pages_tree_map = socket.assigns.pages_tree_map || %{}
+    values = Map.values(pages_tree_map)
+
+    tree_by_id =
+      values
+      |> Enum.map(fn tree -> {tree.id, tree} end)
+      |> Enum.into(%{})
+
+    pages_json =
+      values
+      |> Enum.map(fn page ->
+        {page.id,
+         %{
+           id: page.id,
+           path: page.path,
+           updated_at: page.updated_at
+         }}
+      end)
+      |> Enum.into(%{})
+      |> Jason.encode!()
+
+    assign(socket, tree_by_id: tree_by_id, pages_json: pages_json)
   end
 
   defp ensure_page_tree_stubs(text, group_id, actor, path_map) do

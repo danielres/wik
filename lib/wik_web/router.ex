@@ -34,18 +34,19 @@ defmodule WikWeb.Router do
   scope "/", WikWeb do
     pipe_through :browser
 
+    get "/auth/telegram/callback", AuthController.Telegram, :callback
     auth_routes AuthController, Wik.Accounts.User, path: "/auth"
     sign_out_route AuthController
 
-    # Remove these if you'd like to use your own authentication views
-    sign_in_route register_path: "/register",
-                  reset_path: "/reset",
-                  auth_routes_prefix: "/auth",
-                  on_mount: [{WikWeb.LiveUserAuth, :live_no_user}],
-                  overrides: [
-                    WikWeb.AuthOverrides,
-                    Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI
-                  ]
+    # # Remove these if you'd like to use your own authentication views
+    # sign_in_route register_path: "/register",
+    #               reset_path: "/reset",
+    #               auth_routes_prefix: "/auth",
+    #               on_mount: [{WikWeb.LiveUserAuth, :live_no_user}],
+    #               overrides: [
+    #                 WikWeb.AuthOverrides,
+    #                 Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI
+    #               ]
 
     # Remove this if you do not want to use the reset password feature
     reset_route auth_routes_prefix: "/auth",
@@ -64,6 +65,8 @@ defmodule WikWeb.Router do
       auth_routes_prefix: "/auth",
       overrides: [WikWeb.AuthOverrides, Elixir.AshAuthentication.Phoenix.Overrides.DaisyUI]
     )
+
+    live "/sign-in", SignInLive, :show
   end
 
   scope "/", WikWeb do
@@ -125,6 +128,8 @@ defmodule WikWeb.Router do
     scope "/dev" do
       pipe_through :browser
 
+      get "/login", WikWeb.AuthController.Dev, :login
+      live "/telegram", WikWeb.TelegramLive.BotUpdates, :index
       live_dashboard "/dashboard", metrics: WikWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end

@@ -17,7 +17,9 @@ defmodule WikWeb.GroupLive.PageLive.Show do
 
   def page_url(group, %Wik.Wiki.PageTree{path: path}), do: page_url(group, path)
   def page_url(group, %{path: path}) when is_binary(path), do: page_url(group, path)
-  def page_url(group, path) when is_binary(path), do: "/#{group.slug}/wiki/#{PageUtils.encode_path(path)}"
+
+  def page_url(group, path) when is_binary(path),
+    do: "/#{group.slug}/wiki/#{PageUtils.encode_path(path)}"
 
   def page_url(_group, _page), do: "#"
 
@@ -387,7 +389,6 @@ defmodule WikWeb.GroupLive.PageLive.Show do
       socket
     end
   end
-
 
   defp load_backlinks(page) do
     Wik.Wiki.Backlink.Utils.list_for_page(page)

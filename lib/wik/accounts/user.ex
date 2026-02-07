@@ -8,8 +8,7 @@ defmodule Wik.Accounts.User do
 
   defimpl String.Chars do
     def to_string(user) do
-      [username, _] = Kernel.to_string(user.email) |> String.split("@", parts: 2)
-      username
+      Kernel.to_string(user.tg_username)
     end
   end
 
@@ -62,7 +61,7 @@ defmodule Wik.Accounts.User do
 
     create :create do
       primary? true
-      accept [:email]
+      accept [:email, :tg_id, :tg_first_name, :tg_last_name, :tg_username, :tg_photo_url]
     end
 
     create :sign_in_with_magic_link do
@@ -87,7 +86,7 @@ defmodule Wik.Accounts.User do
 
     action :request_magic_link do
       argument :email, :ci_string do
-        allow_nil? false
+        allow_nil? true
       end
 
       run AshAuthentication.Strategy.MagicLink.Request
@@ -111,13 +110,49 @@ defmodule Wik.Accounts.User do
                      )
                    )
     end
+
+    policy action_type(:create) do
+      authorize_if always()
+    end
   end
 
   attributes do
     uuid_primary_key :id
 
     attribute :email, :ci_string do
-      allow_nil? false
+      allow_nil? true
+      public? true
+    end
+
+    attribute :confirmed_at, :utc_datetime_usec
+
+    attribute :role, :atom do
+      public? true
+      constraints one_of: [:user, :admin, :moderator]
+      default :user
+    end
+
+    attribute :tz, :string do
+      public? true
+    end
+
+    attribute :tg_id, :string do
+      public? true
+    end
+
+    attribute :tg_first_name, :string do
+      public? true
+    end
+
+    attribute :tg_last_name, :string do
+      public? true
+    end
+
+    attribute :tg_username, :string do
+      public? true
+    end
+
+    attribute :tg_photo_url, :string do
       public? true
     end
   end
@@ -136,5 +171,6 @@ defmodule Wik.Accounts.User do
 
   identities do
     identity :unique_email, [:email]
+    identity :unique_tg_id, [:tg_id]
   end
 end

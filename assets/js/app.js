@@ -29,6 +29,7 @@ import MilkdownEditor from "./hooks/milkdown.js";
 import { LayoutStickyToolbar } from "./hooks/layout-sticky-toolbar.js";
 import Wikimap from "./hooks/wikimap.js";
 import Wikitree from "./hooks/wikitree.js";
+import { TelegramLoginHook } from "./hooks/telegram_login.js"
 
 const csrfToken = document
 	.querySelector("meta[name='csrf-token']")
@@ -43,6 +44,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
 		LayoutStickyToolbar,
 		Wikimap,
 		Wikitree,
+    TelegramLogin: TelegramLoginHook,
 	},
 });
 

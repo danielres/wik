@@ -46,3 +46,5 @@ tmp_test_data
 backups
 data
 .aider*
+.devenv
+.devenv.flake.nix

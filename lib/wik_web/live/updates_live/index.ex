@@ -22,7 +22,33 @@ defmodule WikWeb.UpdatesLive.Index do
      |> assign(:group_name, group_name)
      |> assign(:updates_limit, @updates_limit)
      |> assign(:page_title, "Recent updates | #{group_name}")
-     |> assign(:updates, list_recent_updates(group_slug, @updates_limit))}
+     |> assign(:updates, [])
+     |> assign(:page, 1)
+     |> assign(:has_prev, false)
+     |> assign(:has_next, false)
+     |> assign(:prev_page, 1)
+     |> assign(:next_page, 1)}
+  end
+
+  @impl true
+  def handle_params(params, _uri, socket) do
+    group_slug = socket.assigns.group_slug
+    requested_page = parse_page(params["page"])
+    total_updates = count_updates(group_slug)
+    total_pages = total_pages(total_updates, @updates_limit)
+    page = min(requested_page, total_pages)
+    offset = (page - 1) * @updates_limit
+
+    updates = list_recent_updates(group_slug, @updates_limit, offset)
+
+    {:noreply,
+     socket
+     |> assign(:updates, updates)
+     |> assign(:page, page)
+     |> assign(:has_prev, page > 1)
+     |> assign(:has_next, page < total_pages)
+     |> assign(:prev_page, max(page - 1, 1))
+     |> assign(:next_page, page + 1)}
   end
 
   @impl true
@@ -104,6 +130,32 @@ defmodule WikWeb.UpdatesLive.Index do
                 </tbody>
               </table>
             </div>
+
+            <div class="mt-6 flex items-center justify-between">
+              <%= if @has_prev do %>
+                <.link
+                  patch={~p"/#{@group_slug}/updates?page=#{@prev_page}"}
+                  class="text-sm text-blue-600 hover:underline"
+                >
+                  Previous
+                </.link>
+              <% else %>
+                <span class="text-sm text-slate-400">Previous</span>
+              <% end %>
+
+              <span class="text-sm text-slate-500">Page {@page}</span>
+
+              <%= if @has_next do %>
+                <.link
+                  patch={~p"/#{@group_slug}/updates?page=#{@next_page}"}
+                  class="text-sm text-blue-600 hover:underline"
+                >
+                  Next
+                </.link>
+              <% else %>
+                <span class="text-sm text-slate-400">Next</span>
+              <% end %>
+            </div>
           <% end %>
         </Layouts.card>
       </:main>
@@ -111,7 +163,7 @@ defmodule WikWeb.UpdatesLive.Index do
     """
   end
 
-  defp list_recent_updates(group_slug, limit) do
+  defp list_recent_updates(group_slug, limit, offset) do
     grouped_revisions_query =
       from(r in Revision,
         where: like(r.resource_path, ^"#{group_slug}/wiki/%"),
@@ -130,6 +182,7 @@ defmodule WikWeb.UpdatesLive.Index do
       on: u.id == r.user_id,
       order_by: [desc: r.inserted_at, desc: r.id],
       limit: ^limit,
+      offset: ^offset,
       select: %{
         resource_path: r.resource_path,
         revision_number: r.revision_number,
@@ -142,6 +195,23 @@ defmodule WikWeb.UpdatesLive.Index do
     )
     |> Repo.all()
     |> Enum.map(&to_update_row(&1, group_slug))
+  end
+
+  defp count_updates(group_slug) do
+    from(r in Revision, where: like(r.resource_path, ^"#{group_slug}/wiki/%"))
+    |> Repo.aggregate(:count)
+  end
+
+  defp total_pages(total_updates, _per_page) when total_updates <= 0, do: 1
+  defp total_pages(total_updates, per_page), do: div(total_updates + per_page - 1, per_page)
+
+  defp parse_page(nil), do: 1
+
+  defp parse_page(page) do
+    case Integer.parse(page) do
+      {n, ""} when n > 0 -> n
+      _ -> 1
+    end
   end
 
   defp to_update_row(revision, group_slug) do

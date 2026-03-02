@@ -76,7 +76,8 @@ defmodule Wik.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
       {:hunt_szymanski_diff,
-       git: "https://github.com/danielres/hunt_szymanski_diff.git", branch: "main"}
+       git: "https://github.com/danielres/hunt_szymanski_diff.git", branch: "main"},
+      {:timex, "~> 3.7"}
     ]
   end
 

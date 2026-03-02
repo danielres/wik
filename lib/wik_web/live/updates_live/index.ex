@@ -73,24 +73,47 @@ defmodule WikWeb.UpdatesLive.Index do
 
       <:menu>
         <div class="flex justify-between items-end">
-          <.link href={~p"/#{@group_slug}/wiki"} class="text-sm text-blue-600 hover:underline">
-            Go to wiki
-          </.link>
+          <Components.shortcut key="b">
+            <.link
+              id="btn-cancel"
+              navigate={~p"/#{@group_slug}/wiki"}
+              class="btn text-slate-700 font-bold bg-slate-300"
+              title="Go back"
+              autofocus
+            >
+              <i class="hero-arrow-left-mini"></i>
+              <span>Back to wiki</span>
+            </.link>
+          </Components.shortcut>
         </div>
       </:menu>
 
       <:main>
         <Layouts.card>
-          <h2 class="text-2xl mb-4">Latest updates</h2>
+          <div class="flex justify-between items-end mb-8">
+            <h2 class="text-2xl">Latest updates</h2>
+
+            <%= if !Enum.empty?(@updates) do %>
+              <WikWeb.UpdatesLive.Components.pagination
+                group_slug={@group_slug}
+                page={@page}
+                has_prev={@has_prev}
+                has_next={@has_next}
+                prev_page={@prev_page}
+                next_page={@next_page}
+              />
+            <% end %>
+          </div>
+
           <%= if Enum.empty?(@updates) do %>
             <div class="text-sm">No updates yet.</div>
           <% else %>
             <div class="overflow-x-auto">
-              <table id="updates" class="[&_td]:align-top [&_th]:text-left w-full">
+              <table id="updates" class="[&_td]:align-top [&_th]:text-left w-full text-sm">
                 <thead class="opacity-60">
                   <tr class="[&_th]:whitespace-nowrap [&_th]:pb-5">
                     <th class="">Page title</th>
-                    <th class="">Revision</th>
+                    <th class="">Version</th>
                     <th class="">Updated</th>
                     <th class="">By</th>
                     <th class="">Type</th>
@@ -98,7 +121,7 @@ defmodule WikWeb.UpdatesLive.Index do
                 </thead>
                 <tbody class="">
                   <tr :for={update <- @updates} class="">
-                    <td class="">
+                    <td class="max-w-64">
                       <.link
                         href={~p"/#{@group_slug}/wiki/#{update.page_slug}"}
                         class="text-blue-600 hover:underline"
@@ -131,31 +154,18 @@ defmodule WikWeb.UpdatesLive.Index do
               </table>
             </div>
 
-            <div class="mt-6 flex items-center justify-between">
-              <%= if @has_prev do %>
-                <.link
-                  patch={~p"/#{@group_slug}/updates?page=#{@prev_page}"}
-                  class="text-sm text-blue-600 hover:underline"
-                >
-                  Previous
-                </.link>
-              <% else %>
-                <span class="text-sm text-slate-400">Previous</span>
-              <% end %>
-
-              <span class="text-sm text-slate-500">Page {@page}</span>
-
-              <%= if @has_next do %>
-                <.link
-                  patch={~p"/#{@group_slug}/updates?page=#{@next_page}"}
-                  class="text-sm text-blue-600 hover:underline"
-                >
-                  Next
-                </.link>
-              <% else %>
-                <span class="text-sm text-slate-400">Next</span>
-              <% end %>
-            </div>
+            <%= if !Enum.empty?(@updates) do %>
+              <div class="flex justify-end items-end my-8">
+                <WikWeb.UpdatesLive.Components.pagination
+                  group_slug={@group_slug}
+                  page={@page}
+                  has_prev={@has_prev}
+                  has_next={@has_next}
+                  prev_page={@prev_page}
+                  next_page={@next_page}
+                />
+              </div>
+            <% end %>
           <% end %>
         </Layouts.card>
       </:main>
@@ -247,4 +257,38 @@ defmodule WikWeb.UpdatesLive.Index do
 
   defp change_type(1), do: "created"
   defp change_type(_revision_number), do: "updated"
+end
+
+defmodule WikWeb.UpdatesLive.Components do
+  use WikWeb, :live_view
+
+  def pagination(assigns) do
+    ~H"""
+    <div class="flex gap-4 w-min whitespace-nowrap border bg-black/5 px-4 py-2">
+      <%= if @has_prev do %>
+        <.link
+          patch={~p"/#{@group_slug}/updates?page=#{@prev_page}"}
+          class="text-sm text-blue-600 hover:underline"
+        >
+          Previous
+        </.link>
+      <% else %>
+        <span class="text-sm text-slate-400">Previous</span>
+      <% end %>
+
+      <span class="text-sm text-slate-500">Page {@page}</span>
+
+      <%= if @has_next do %>
+        <.link
+          patch={~p"/#{@group_slug}/updates?page=#{@next_page}"}
+          class="text-sm text-blue-600 hover:underline"
+        >
+          Next
+        </.link>
+      <% else %>
+        <span class="text-sm text-slate-400">Next</span>
+      <% end %>
+    </div>
+    """
+  end
 end

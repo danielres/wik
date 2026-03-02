@@ -68,6 +68,8 @@ defmodule WikWeb.Router do
 
       get "/", PageController, :group_index
 
+      live "/updates", UpdatesLive.Index
+
       scope "/wiki" do
         get "/", PageController, :wiki_index
         live "/:slug", Page.ShowLive

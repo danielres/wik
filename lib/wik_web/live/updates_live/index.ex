@@ -8,7 +8,7 @@ defmodule WikWeb.UpdatesLive.Index do
   alias Wik.Revisions.Revision
   alias Wik.Users.User
 
-  @updates_limit 100
+  @updates_limit 50
 
   @impl true
   def mount(%{"group_slug" => group_slug}, session, socket) do
@@ -109,48 +109,46 @@ defmodule WikWeb.UpdatesLive.Index do
             <div class="text-sm">No updates yet.</div>
           <% else %>
             <div class="overflow-x-auto">
-              <table id="updates" class="[&_td]:align-top [&_th]:text-left w-full text-sm">
-                <thead class="opacity-60">
-                  <tr class="[&_th]:whitespace-nowrap [&_th]:pb-5">
-                    <th class="">Page title</th>
-                    <th class="">Version</th>
-                    <th class="">Updated</th>
-                    <th class="">By</th>
-                    <th class="">Type</th>
-                  </tr>
-                </thead>
-                <tbody class="">
-                  <tr :for={update <- @updates} class="">
-                    <td class="max-w-64">
-                      <.link
-                        href={~p"/#{@group_slug}/wiki/#{update.page_slug}"}
-                        class="text-blue-600 hover:underline"
-                      >
-                        {update.page_title}
-                      </.link>
-                    </td>
-                    <td class="">
-                      <.link
-                        href={
-                          ~p"/#{@group_slug}/wiki/#{update.page_slug}/revisions/#{update.revision_number}"
-                        }
-                        class="text-blue-600 hover:underline"
-                      >
-                        #{update.revision_number}
-                      </.link>
-                    </td>
-                    <td class="">
-                      {update.updated_at |> Utils.Time.relative() |> String.replace(" ago", "")}
-                    </td>
-                    <td class="">{update.updated_by}</td>
-                    <td class={[
-                      update.change_type == "created" && "text-green-700",
-                      update.change_type == "updated" && "text-gray-400"
+              <table id="updates" class="w-full text-sm border-t">
+                <tr :for={update <- @updates} class="border-b [&_td]:py-2">
+                  <td>
+                    <span class={[
+                      update.change_type == "created" && "text-green-600 hero-plus-circle-mini",
+                      update.change_type == "updated" && "text-gray-400 hero-chevron-up-mini"
                     ]}>
-                      {update.change_type}
-                    </td>
-                  </tr>
-                </tbody>
+                    </span>
+                  </td>
+
+                  <td>
+                    <.link
+                      href={~p"/#{@group_slug}/wiki/#{update.page_slug}"}
+                      class="text-blue-600 hover:underline"
+                    >
+                      {update.page_title}
+                    </.link>
+                  </td>
+
+                  <td class="text-right w-12">
+                    <.link
+                      href={
+                        ~p"/#{@group_slug}/wiki/#{update.page_slug}/revisions/#{update.revision_number}"
+                      }
+                      class="text-blue-600 hover:underline"
+                    >
+                      #{update.revision_number}
+                    </.link>
+                  </td>
+
+                  <td class="text-right w-12 px-2">
+                    {update.updated_at
+                    |> Utils.Time.relative()
+                    |> String.replace(" ago", "")
+                    |> String.replace("yesterday", "1d")
+                    |> String.replace(" days", "d")}
+                  </td>
+
+                  <td class="text-right">{update.updated_by}</td>
+                </tr>
               </table>
             </div>
 
